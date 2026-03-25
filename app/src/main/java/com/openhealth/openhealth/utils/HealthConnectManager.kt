@@ -46,7 +46,9 @@ object HealthConnectManager {
         HealthPermission.getReadPermission(BodyTemperatureRecord::class),
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(OxygenSaturationRecord::class),
-        HealthPermission.getReadPermission(RespiratoryRateRecord::class)
+        HealthPermission.getReadPermission(RespiratoryRateRecord::class),
+        HealthPermission.getReadPermission(SpeedRecord::class),
+        HealthPermission.getReadPermission(PowerRecord::class)
     )
 
     fun checkForHealthConnectInstalled(context: Context): Int {

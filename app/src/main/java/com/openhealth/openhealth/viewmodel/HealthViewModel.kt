@@ -42,6 +42,7 @@ import com.openhealth.openhealth.model.NutritionData
 import com.openhealth.openhealth.model.HydrationData
 import com.openhealth.openhealth.model.MindfulnessSessionData
 import com.openhealth.openhealth.utils.HealthConnectManager
+import com.openhealth.openhealth.utils.PermissionManager
 import com.openhealth.openhealth.utils.SettingsManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -103,17 +104,12 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val _showSettings = MutableStateFlow(false)
     val showSettings: StateFlow<Boolean> = _showSettings.asStateFlow()
 
-    // Required permissions
-    val requiredPermissions = setOf(
-        HealthPermission.getReadPermission(StepsRecord::class),
-        HealthPermission.getReadPermission(HeartRateRecord::class),
-        HealthPermission.getReadPermission(SleepSessionRecord::class),
-        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
-        HealthPermission.getReadPermission(Vo2MaxRecord::class),
-        HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
-    )
+    // Required permissions - use all permissions from HealthConnectManager
+    val requiredPermissions = HealthConnectManager.PERMISSIONS
 
     init {
+        // Initialize PermissionManager
+        PermissionManager.init(context)
         checkHealthConnectAvailability()
     }
 
@@ -137,10 +133,23 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val granted = HealthConnectManager.checkPermissions()
             if (granted) {
+                // Save permission state to SharedPreferences
+                PermissionManager.setPermissionsGranted(true)
                 _uiState.value = UiState.Ready(_healthData.value, false)
                 refreshData()
             } else {
-                _uiState.value = UiState.PermissionsRequired
+                // Check if permissions were previously granted
+                // If yes, don't show permission screen again (user may have revoked some permissions)
+                // If no, show permission screen for first-time users
+                if (PermissionManager.hasPermissionsBeenGranted()) {
+                    // Permissions were granted before, user may have revoked some
+                    // Still show the app but with limited data
+                    _uiState.value = UiState.Ready(_healthData.value, false)
+                    refreshData()
+                } else {
+                    // First time - show permission screen
+                    _uiState.value = UiState.PermissionsRequired
+                }
             }
         }
     }
@@ -148,6 +157,8 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     // Called from MainActivity when permissions are granted
     fun onPermissionsGranted() {
         viewModelScope.launch {
+            // Save permission state
+            PermissionManager.setPermissionsGranted(true)
             // Re-initialize HealthConnectManager
             HealthConnectManager.checkForHealthConnectInstalled(context)
             _uiState.value = UiState.Ready(_healthData.value, false)
