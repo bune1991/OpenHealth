@@ -42,7 +42,13 @@ data class SettingsData(
     val showPower: Boolean = true,
     val showNutrition: Boolean = true,
     val showHydration: Boolean = true,
-    val showMindfulness: Boolean = true
+    val showMindfulness: Boolean = true,
+
+    // Daily Goals
+    val stepsGoal: Int = 10000,
+    val floorsGoal: Int = 10,
+    val caloriesGoal: Int = 500,
+    val distanceGoalKm: Float = 5.0f
 ) {
     companion object {
         val DEFAULT = SettingsData()

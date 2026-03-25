@@ -63,6 +63,12 @@ class SettingsManager private constructor(context: Context) {
         private const val KEY_SHOW_HYDRATION = "show_hydration"
         private const val KEY_SHOW_MINDFULNESS = "show_mindfulness"
 
+        // Daily Goals
+        private const val KEY_STEPS_GOAL = "steps_goal"
+        private const val KEY_FLOORS_GOAL = "floors_goal"
+        private const val KEY_CALORIES_GOAL = "calories_goal"
+        private const val KEY_DISTANCE_GOAL_KM = "distance_goal_km"
+
         @Volatile
         private var instance: SettingsManager? = null
 
@@ -118,7 +124,13 @@ class SettingsManager private constructor(context: Context) {
             showPower = prefs.getBoolean(KEY_SHOW_POWER, true),
             showNutrition = prefs.getBoolean(KEY_SHOW_NUTRITION, true),
             showHydration = prefs.getBoolean(KEY_SHOW_HYDRATION, true),
-            showMindfulness = prefs.getBoolean(KEY_SHOW_MINDFULNESS, true)
+            showMindfulness = prefs.getBoolean(KEY_SHOW_MINDFULNESS, true),
+
+            // Daily Goals
+            stepsGoal = prefs.getInt(KEY_STEPS_GOAL, 10000),
+            floorsGoal = prefs.getInt(KEY_FLOORS_GOAL, 10),
+            caloriesGoal = prefs.getInt(KEY_CALORIES_GOAL, 500),
+            distanceGoalKm = prefs.getFloat(KEY_DISTANCE_GOAL_KM, 5.0f)
         )
     }
 
@@ -166,6 +178,12 @@ class SettingsManager private constructor(context: Context) {
             putBoolean(KEY_SHOW_NUTRITION, settings.showNutrition)
             putBoolean(KEY_SHOW_HYDRATION, settings.showHydration)
             putBoolean(KEY_SHOW_MINDFULNESS, settings.showMindfulness)
+
+            // Daily Goals
+            putInt(KEY_STEPS_GOAL, settings.stepsGoal)
+            putInt(KEY_FLOORS_GOAL, settings.floorsGoal)
+            putInt(KEY_CALORIES_GOAL, settings.caloriesGoal)
+            putFloat(KEY_DISTANCE_GOAL_KM, settings.distanceGoalKm)
 
             apply()
         }

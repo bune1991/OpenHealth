@@ -2,69 +2,84 @@ package com.openhealth.openhealth.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// OpenHealth Dark Theme Colors
-
-// Primary Colors
-val PrimaryBlue = Color(0xFF4FC3F7)
-val PrimaryBlueDark = Color(0xFF0288D1)
-val AccentCyan = Color(0xFF00BCD4)
-val AccentTeal = Color(0xFF009688)
+// Fitbit-Style Dark Theme Colors
 
 // Background Colors
-val BackgroundDark = Color(0xFF0D1B2A)
-val SurfaceDark = Color(0xFF1B263B)
-val SurfaceVariant = Color(0xFF2D3E50)
+val BackgroundBlack = Color(0xFF000000)
+val SurfaceDark = Color(0xFF1C1C1E)
+val SurfaceVariant = Color(0xFF2C2C2E)
+val CardBackground = Color(0xFF1C1C1E)
 
-// Card Colors for Metrics
-val CardSteps = Color(0xFF4FC3F7)      // Blue
-val CardHeartRate = Color(0xFFFF6B6B)  // Red
-val CardSleep = Color(0xFF9C27B0)      // Purple
-val CardExercise = Color(0xFF4CAF50)   // Green
-val CardVo2Max = Color(0xFFFF9800)     // Orange
-val CardCalories = Color(0xFFFF5722)   // Deep Orange
-val CardDistance = Color(0xFF00BCD4)   // Cyan
-val CardFloors = Color(0xFF8BC34A)     // Light Green
-val CardBodyFat = Color(0xFFE91E63)    // Pink
-val CardWeight = Color(0xFF3F51B5)     // Indigo
-val CardBMR = Color(0xFFFFA726)        // Orange
-val CardBodyWater = Color(0xFF29B6F6)  // Light Blue
-val CardBoneMass = Color(0xFF8D6E63)   // Brown
-val CardLeanBodyMass = Color(0xFF66BB6A) // Green
+// Primary Accent Colors (Fitbit-style)
+val PrimaryBlue = Color(0xFF00B4D8)
+val AccentCyan = Color(0xFF00B4D8)
+val AccentTeal = Color(0xFF00B4D8)
+
+// Metric Colors (Fitbit-inspired)
+val CardSteps = Color(0xFF00B4D8)           // Cyan/Blue
+val CardHeartRate = Color(0xFFFF6B6B)       // Red/Pink
+val CardSleep = Color(0xFF9B59B6)           // Purple
+val CardCalories = Color(0xFFFF9500)          // Orange
+val CardExercise = Color(0xFF4CD964)        // Green
+val CardVo2Max = Color(0xFFFF9500)          // Orange
+val CardDistance = Color(0xFF00B4D8)          // Cyan
+val CardFloors = Color(0xFF4CD964)            // Green
+val CardBodyFat = Color(0xFFFF6B6B)           // Red
+val CardWeight = Color(0xFF9B59B6)            // Purple
+val CardBMR = Color(0xFFFF9500)               // Orange
+val CardBodyWater = Color(0xFF00B4D8)         // Cyan
+val CardBoneMass = Color(0xFF8E8E93)          // Gray
+val CardLeanBodyMass = Color(0xFF4CD964)      // Green
 
 // Vitals Card Colors
-val CardBloodGlucose = Color(0xFFEF5350)      // Red
-val CardBloodPressure = Color(0xFFAB47BC)     // Purple
-val CardBodyTemperature = Color(0xFFFF7043)   // Deep Orange
-val CardHRV = Color(0xFF42A5F5)               // Blue
-val CardSpO2 = Color(0xFF26C6DA)              // Cyan
-val CardRespiratoryRate = Color(0xFF9CCC65)   // Light Green
+val CardBloodGlucose = Color(0xFFFF6B6B)      // Red
+val CardBloodPressure = Color(0xFF9B59B6)       // Purple
+val CardBodyTemperature = Color(0xFFFF9500)     // Orange
+val CardHRV = Color(0xFF00B4D8)                 // Cyan
+val CardSpO2 = Color(0xFF00B4D8)                // Cyan
+val CardRespiratoryRate = Color(0xFF4CD964)     // Green
 
-// Legacy card colors (for backward compatibility)
-val StepsCard = Color(0xFF1E3A5F)
-val HeartRateCard = Color(0xFF3D1E3A)
-val SleepCard = Color(0xFF2D1E4E)
-val ExerciseCard = Color(0xFF1E4E3D)
-val Vo2MaxCard = Color(0xFF4E3D1E)
+// Readiness Score Colors
+val ReadinessExcellent = Color(0xFF4CD964)      // Green
+val ReadinessGood = Color(0xFF34C759)           // Light Green
+val ReadinessFair = Color(0xFFFF9500)           // Orange
+val ReadinessPoor = Color(0xFFFF3B30)           // Red
 
 // Text Colors
-val TextPrimary = Color(0xFFE0E1DD)
-val TextSecondary = Color(0xFF90A4AE)
-val TextTertiary = Color(0xFF607D8B)
-
-// Accent Colors for Metrics
-val StepsAccent = Color(0xFF4FC3F7)
-val HeartRateAccent = Color(0xFFFF6B6B)
-val SleepAccent = Color(0xFF9C27B0)
-val ExerciseAccent = Color(0xFF4CAF50)
-val Vo2MaxAccent = Color(0xFFFF9800)
-val CaloriesAccent = Color(0xFFFF5722)
-val DistanceAccent = Color(0xFF00BCD4)
+val TextPrimary = Color(0xFFFFFFFF)
+val TextSecondary = Color(0xFF8E8E93)
+val TextTertiary = Color(0xFF636366)
 
 // Status Colors
-val SuccessGreen = Color(0xFF4CAF50)
-val WarningOrange = Color(0xFFFF9800)
-val ErrorRed = Color(0xFFE53935)
+val SuccessGreen = Color(0xFF4CD964)
+val WarningOrange = Color(0xFFFF9500)
+val ErrorRed = Color(0xFFFF3B30)
 
-// Gradient Colors
-val GradientStart = Color(0xFF0D1B2A)
-val GradientEnd = Color(0xFF1B263B)
+// Chart Colors
+val ChartLineSteps = Color(0xFF00B4D8)
+val ChartLineHeartRate = Color(0xFFFF6B6B)
+val ChartLineSleep = Color(0xFF9B59B6)
+val ChartLineCalories = Color(0xFFFF9500)
+val ChartGridLine = Color(0xFF2C2C2E)
+val ChartFillSteps = Color(0x2000B4D8)
+val ChartFillHeartRate = Color(0x20FF6B6B)
+val ChartFillSleep = Color(0x209B59B6)
+val ChartFillCalories = Color(0x20FF9500)
+
+// Legacy colors (for backward compatibility)
+val BackgroundDark = BackgroundBlack
+val StepsCard = SurfaceDark
+val HeartRateCard = SurfaceDark
+val SleepCard = SurfaceDark
+val ExerciseCard = SurfaceDark
+val Vo2MaxCard = SurfaceDark
+val StepsAccent = CardSteps
+val HeartRateAccent = CardHeartRate
+val SleepAccent = CardSleep
+val ExerciseAccent = CardExercise
+val Vo2MaxAccent = CardVo2Max
+val CaloriesAccent = CardCalories
+val DistanceAccent = CardDistance
+val GradientStart = BackgroundBlack
+val GradientEnd = SurfaceDark
+val FabColor = PrimaryBlue

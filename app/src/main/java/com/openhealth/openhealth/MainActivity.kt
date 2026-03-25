@@ -48,7 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openhealth.openhealth.screens.DashboardScreen
 import com.openhealth.openhealth.screens.MetricDetailScreen
 import com.openhealth.openhealth.screens.SettingsScreen
-import com.openhealth.openhealth.ui.theme.BackgroundDark
+import com.openhealth.openhealth.ui.theme.BackgroundBlack
 import com.openhealth.openhealth.ui.theme.ErrorRed
 import com.openhealth.openhealth.ui.theme.OpenHealthTheme
 import com.openhealth.openhealth.ui.theme.PrimaryBlue
@@ -115,12 +115,12 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = BackgroundDark
+                    containerColor = BackgroundBlack
                 ) { paddingValues ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(BackgroundDark)
+                            .background(BackgroundBlack)
                             .padding(paddingValues)
                     ) {
                         when (uiState) {
@@ -212,7 +212,7 @@ fun PermissionsRequiredScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(BackgroundBlack)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -269,7 +269,7 @@ fun PermissionsRequiredScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PrimaryBlue,
-                        contentColor = BackgroundDark
+                        contentColor = BackgroundBlack
                     )
                 ) {
                     Text(
@@ -311,7 +311,7 @@ fun HealthConnectNotAvailableScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(BackgroundBlack)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -357,7 +357,7 @@ fun HealthConnectNotAvailableScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PrimaryBlue,
-                        contentColor = BackgroundDark
+                        contentColor = BackgroundBlack
                     )
                 ) {
                     Text(

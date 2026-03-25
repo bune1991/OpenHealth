@@ -1,6 +1,9 @@
 package com.openhealth.openhealth.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import java.time.LocalDate
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,40 +38,60 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.DailyDataPoint
 import com.openhealth.openhealth.model.MetricHistory
 import com.openhealth.openhealth.model.SleepStagesData
-import com.openhealth.openhealth.ui.theme.BackgroundDark
-import com.openhealth.openhealth.ui.theme.CardSteps
-import com.openhealth.openhealth.ui.theme.CardHeartRate
-import com.openhealth.openhealth.ui.theme.CardSleep
-import com.openhealth.openhealth.ui.theme.CardCalories
-import com.openhealth.openhealth.ui.theme.CardDistance
-import com.openhealth.openhealth.ui.theme.CardFloors
-import com.openhealth.openhealth.ui.theme.CardVo2Max
-import com.openhealth.openhealth.ui.theme.CardBodyFat
-import com.openhealth.openhealth.ui.theme.CardWeight
-import com.openhealth.openhealth.ui.theme.CardBMR
-import com.openhealth.openhealth.ui.theme.CardBodyWater
-import com.openhealth.openhealth.ui.theme.CardBoneMass
-import com.openhealth.openhealth.ui.theme.CardLeanBodyMass
+import com.openhealth.openhealth.ui.theme.BackgroundBlack
 import com.openhealth.openhealth.ui.theme.CardBloodGlucose
 import com.openhealth.openhealth.ui.theme.CardBloodPressure
+import com.openhealth.openhealth.ui.theme.CardBodyFat
 import com.openhealth.openhealth.ui.theme.CardBodyTemperature
+import com.openhealth.openhealth.ui.theme.CardBodyWater
+import com.openhealth.openhealth.ui.theme.CardBoneMass
+import com.openhealth.openhealth.ui.theme.CardBMR
+import com.openhealth.openhealth.ui.theme.CardCalories
+import com.openhealth.openhealth.ui.theme.CardDistance
+import com.openhealth.openhealth.ui.theme.CardExercise
+import com.openhealth.openhealth.ui.theme.CardFloors
+import com.openhealth.openhealth.ui.theme.CardHeartRate
 import com.openhealth.openhealth.ui.theme.CardHRV
-import com.openhealth.openhealth.ui.theme.CardSpO2
+import com.openhealth.openhealth.ui.theme.CardLeanBodyMass
 import com.openhealth.openhealth.ui.theme.CardRespiratoryRate
+import com.openhealth.openhealth.ui.theme.CardSleep
+import com.openhealth.openhealth.ui.theme.CardSpO2
+import com.openhealth.openhealth.ui.theme.CardSteps
+import com.openhealth.openhealth.ui.theme.CardVo2Max
+import com.openhealth.openhealth.ui.theme.CardWeight
 import com.openhealth.openhealth.ui.theme.SurfaceDark
+import com.openhealth.openhealth.ui.theme.SurfaceVariant
 import com.openhealth.openhealth.ui.theme.TextPrimary
 import com.openhealth.openhealth.ui.theme.TextSecondary
+import com.openhealth.openhealth.ui.theme.TextTertiary
 import com.openhealth.openhealth.viewmodel.HealthViewModel
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,17 +105,14 @@ fun MetricDetailScreen(
 ) {
     val metricInfo = getMetricInfo(metricType)
 
-    // Track the currently selected date (default to today)
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
-    // Get the value for the selected date from history
     val selectedDateValue = remember(metricHistory, selectedDate) {
         metricHistory?.allHistoricalData?.find { it.date == selectedDate }?.value
             ?: metricHistory?.todayValue
             ?: 0.0
     }
 
-    // Determine if we should show skeleton (no cached data) or content with refresh indicator
     val showSkeleton = isLoading && metricHistory == null
     val showContent = metricHistory != null
 
@@ -130,7 +145,6 @@ fun MetricDetailScreen(
                     }
                 },
                 actions = {
-                    // Previous day button
                     IconButton(
                         onClick = {
                             selectedDate = selectedDate.minusDays(1)
@@ -143,7 +157,6 @@ fun MetricDetailScreen(
                             tint = TextPrimary
                         )
                     }
-                    // Next day button (disabled if today)
                     IconButton(
                         onClick = {
                             if (selectedDate.isBefore(LocalDate.now())) {
@@ -156,37 +169,35 @@ fun MetricDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                             contentDescription = "Next Day",
-                            tint = if (selectedDate.isBefore(LocalDate.now())) TextPrimary else TextSecondary.copy(alpha = 0.3f)
+                            tint = if (selectedDate.isBefore(LocalDate.now())) TextPrimary else TextTertiary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundDark
+                    containerColor = BackgroundBlack
                 )
             )
         },
-        containerColor = BackgroundDark
+        containerColor = BackgroundBlack
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundDark)
+                .background(BackgroundBlack)
                 .padding(paddingValues)
         ) {
             when {
                 showSkeleton -> {
-                    // Show skeleton loading UI
                     SkeletonLoadingContent(metricInfo.color)
                 }
                 showContent -> {
-                    // Show content with optional refresh indicator
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Selected Date Value Card
+                        // Today's Value Card
                         item {
                             val isToday = selectedDate == LocalDate.now()
                             val dateLabel = if (isToday) "Today" else selectedDate.format(
@@ -194,11 +205,35 @@ fun MetricDetailScreen(
                             )
                             TodayValueCard(
                                 value = formatValue(selectedDateValue, metricInfo.decimalPlaces),
-                                unit = metricHistory!!.unit,
+                                unit = metricHistory?.unit ?: "",
                                 color = metricInfo.color,
                                 dateLabel = dateLabel,
-                                isLoading = isLoading // Show subtle shimmer if refreshing
+                                isLoading = isLoading
                             )
+                        }
+
+                        // Line Chart - 30 Day Trend
+                        if (metricHistory?.last30Days?.isNotEmpty() == true) {
+                            item {
+                                LineChartCard(
+                                    data = metricHistory.last30Days,
+                                    color = metricInfo.color,
+                                    title = "30 Day Trend",
+                                    isSleep = metricType == HealthViewModel.MetricType.SLEEP
+                                )
+                            }
+                        }
+
+                        // Bar Chart - Weekly Average
+                        if ((metricHistory?.last30Days?.size ?: 0) >= 7) {
+                            item {
+                                BarChartCard(
+                                    data = metricHistory!!.last30Days.takeLast(7),
+                                    color = metricInfo.color,
+                                    title = "Last 7 Days",
+                                    isSleep = metricType == HealthViewModel.MetricType.SLEEP
+                                )
+                            }
                         }
 
                         // Statistics Cards
@@ -208,9 +243,9 @@ fun MetricDetailScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 StatCard(
-                                    title = "All-Time Avg",
-                                    value = formatValue(metricHistory!!.monthlyAverage, metricInfo.decimalPlaces),
-                                    unit = metricHistory.unit,
+                                    title = "30-Day Avg",
+                                    value = formatValue(metricHistory?.monthlyAverage ?: 0.0, metricInfo.decimalPlaces),
+                                    unit = metricHistory?.unit ?: "",
                                     icon = Icons.Default.TrendingUp,
                                     color = metricInfo.color,
                                     modifier = Modifier.weight(1f),
@@ -219,10 +254,10 @@ fun MetricDetailScreen(
 
                                 StatCard(
                                     title = "Best Day",
-                                    value = metricHistory.bestDay?.let {
+                                    value = metricHistory?.bestDay?.let {
                                         formatValue(it.value, metricInfo.decimalPlaces)
                                     } ?: "--",
-                                    unit = metricHistory.unit,
+                                    unit = metricHistory?.unit ?: "",
                                     icon = Icons.Default.EmojiEvents,
                                     color = metricInfo.color,
                                     modifier = Modifier.weight(1f),
@@ -232,7 +267,7 @@ fun MetricDetailScreen(
                         }
 
                         // Best Day Info
-                        metricHistory!!.bestDay?.let { bestDay ->
+                        metricHistory?.bestDay?.let { bestDay ->
                             item {
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
@@ -275,7 +310,7 @@ fun MetricDetailScreen(
                         }
 
                         // Sleep Stages Chart (only for Sleep metric)
-                        if (metricType == HealthViewModel.MetricType.SLEEP && metricHistory.sleepStages != null) {
+                        if (metricType == HealthViewModel.MetricType.SLEEP && metricHistory?.sleepStages != null) {
                             item {
                                 SleepStagesChart(
                                     sleepStages = metricHistory.sleepStages
@@ -284,7 +319,7 @@ fun MetricDetailScreen(
                         }
 
                         // All History Header
-                        val totalRecords = metricHistory.allHistoricalData.size
+                        val totalRecords = metricHistory?.allHistoricalData?.size ?: 0
                         item {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -298,7 +333,6 @@ fun MetricDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
-                                // Show loading indicator if refreshing in background
                                 if (isLoading) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(16.dp),
@@ -309,14 +343,16 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // History List - Show ALL available data
-                        items(metricHistory.allHistoricalData.reversed()) { dayData ->
-                            HistoryItem(
-                                dayData = dayData,
-                                color = metricInfo.color,
-                                decimalPlaces = metricInfo.decimalPlaces,
-                                isSleep = metricType == HealthViewModel.MetricType.SLEEP
-                            )
+                        // History List
+                        metricHistory?.allHistoricalData?.let { historicalData ->
+                            items(historicalData.reversed()) { dayData ->
+                                HistoryItem(
+                                    dayData = dayData,
+                                    color = metricInfo.color,
+                                    decimalPlaces = metricInfo.decimalPlaces,
+                                    isSleep = metricType == HealthViewModel.MetricType.SLEEP
+                                )
+                            }
                         }
 
                         // Bottom spacing
@@ -326,7 +362,6 @@ fun MetricDetailScreen(
                     }
                 }
                 else -> {
-                    // No data available
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -344,6 +379,310 @@ fun MetricDetailScreen(
 }
 
 @Composable
+private fun LineChartCard(
+    data: List<DailyDataPoint>,
+    color: Color,
+    title: String,
+    isSleep: Boolean = false
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceDark
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Line Chart
+            LineChart(
+                data = data,
+                lineColor = color,
+                fillColor = color.copy(alpha = 0.2f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+                isSleep = isSleep
+            )
+
+            // X-axis labels
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                val labels = listOf(
+                    data.firstOrNull()?.date?.format(DateTimeFormatter.ofPattern("MMM d")) ?: "",
+                    data.getOrNull(data.size / 2)?.date?.format(DateTimeFormatter.ofPattern("MMM d")) ?: "",
+                    data.lastOrNull()?.date?.format(DateTimeFormatter.ofPattern("MMM d")) ?: ""
+                )
+                labels.forEach { label ->
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextTertiary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LineChart(
+    data: List<DailyDataPoint>,
+    lineColor: Color,
+    fillColor: Color,
+    modifier: Modifier = Modifier,
+    isSleep: Boolean = false
+) {
+    if (data.size < 2) return
+
+    val values = data.map { it.value }
+    val maxValue = values.maxOrNull() ?: 1.0
+    val minValue = values.minOrNull() ?: 0.0
+    val range = maxValue - minValue
+
+    Box(
+        modifier = modifier
+            .drawBehind {
+                val width = size.width
+                val height = size.height
+                val padding = 8.dp.toPx()
+
+                val chartWidth = width - 2 * padding
+                val chartHeight = height - 2 * padding
+
+                val stepX = chartWidth / (data.size - 1)
+
+                // Draw grid lines
+                for (i in 0..4) {
+                    val y = padding + (chartHeight * i / 4)
+                    drawLine(
+                        color = SurfaceVariant,
+                        start = Offset(padding, y),
+                        end = Offset(width - padding, y),
+                        strokeWidth = 1f
+                    )
+                }
+
+                // Create path for the line
+                val path = Path().apply {
+                    data.forEachIndexed { index, point ->
+                        val x = padding + index * stepX
+                        val normalizedValue = if (range > 0) (point.value - minValue) / range else 0.5
+                        val y = padding + chartHeight * (1 - normalizedValue).toFloat()
+
+                        if (index == 0) {
+                            moveTo(x, y)
+                        } else {
+                            lineTo(x, y)
+                        }
+                    }
+                }
+
+                // Create path for fill
+                val fillPath = Path().apply {
+                    val firstX = padding
+                    val firstY = padding + chartHeight * (1 - if (range > 0) (data.first().value - minValue) / range else 0.5).toFloat()
+                    val lastX = padding + (data.size - 1) * stepX
+                    val lastY = padding + chartHeight * (1 - if (range > 0) (data.last().value - minValue) / range else 0.5).toFloat()
+
+                    moveTo(firstX, height - padding)
+                    lineTo(firstX, firstY)
+
+                    data.forEachIndexed { index, point ->
+                        val x = padding + index * stepX
+                        val normalizedValue = if (range > 0) (point.value - minValue) / range else 0.5
+                        val y = padding + chartHeight * (1 - normalizedValue).toFloat()
+                        lineTo(x, y)
+                    }
+
+                    lineTo(lastX, height - padding)
+                    close()
+                }
+
+                // Draw fill with gradient
+                drawPath(
+                    path = fillPath,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(fillColor, fillColor.copy(alpha = 0.0f)),
+                        startY = padding,
+                        endY = height - padding
+                    )
+                )
+
+                // Draw line
+                drawPath(
+                    path = path,
+                    color = lineColor,
+                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                )
+
+                // Draw points
+                data.forEachIndexed { index, point ->
+                    if (index % 5 == 0 || index == data.size - 1) { // Draw every 5th point + last
+                        val x = padding + index * stepX
+                        val normalizedValue = if (range > 0) (point.value - minValue) / range else 0.5
+                        val y = padding + chartHeight * (1 - normalizedValue).toFloat()
+
+                        drawCircle(
+                            color = lineColor,
+                            radius = 4.dp.toPx(),
+                            center = Offset(x, y)
+                        )
+                        drawCircle(
+                            color = BackgroundBlack,
+                            radius = 2.dp.toPx(),
+                            center = Offset(x, y)
+                        )
+                    }
+                }
+            }
+    )
+}
+
+@Composable
+private fun BarChartCard(
+    data: List<DailyDataPoint>,
+    color: Color,
+    title: String,
+    isSleep: Boolean = false
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceDark
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Bar Chart
+            BarChart(
+                data = data,
+                barColor = color,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
+                isSleep = isSleep
+            )
+        }
+    }
+}
+
+@Composable
+private fun BarChart(
+    data: List<DailyDataPoint>,
+    barColor: Color,
+    modifier: Modifier = Modifier,
+    isSleep: Boolean = false
+) {
+    if (data.isEmpty()) return
+
+    val values = data.map { it.value }
+    val maxValue = values.maxOrNull() ?: 1.0
+    val minValue = 0.0
+
+    val dayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        data.forEachIndexed { index, point ->
+            val dayOfWeek = point.date.dayOfWeek.value % 7
+            val label = dayLabels.getOrNull(dayOfWeek) ?: ""
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1f)
+            ) {
+                // Value label on top of bar
+                val displayValue = if (isSleep) {
+                    "${point.value.toInt()}h"
+                } else {
+                    if (point.value >= 1000) {
+                        "${(point.value / 1000).roundToInt()}k"
+                    } else {
+                        point.value.roundToInt().toString()
+                    }
+                }
+
+                Text(
+                    text = displayValue,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    fontSize = 10.sp
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Animated bar
+                val targetHeight = if (maxValue > 0) (point.value / maxValue).toFloat() else 0f
+                var animationPlayed by remember { mutableStateOf(false) }
+                val animatedHeight by animateFloatAsState(
+                    targetValue = if (animationPlayed) targetHeight else 0f,
+                    animationSpec = tween(1000),
+                    label = "bar_height"
+                )
+
+                LaunchedEffect(Unit) {
+                    animationPlayed = true
+                }
+
+                Box(
+                    modifier = Modifier
+                        .width(24.dp)
+                        .fillMaxHeight(0.7f * animatedHeight.coerceIn(0.05f, 1f))
+                        .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    barColor,
+                                    barColor.copy(alpha = 0.6f)
+                                )
+                            )
+                        )
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Day label
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextTertiary,
+                    fontSize = 10.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun SkeletonLoadingContent(color: Color) {
     LazyColumn(
         modifier = Modifier
@@ -351,7 +690,6 @@ private fun SkeletonLoadingContent(color: Color) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Skeleton for Today Value Card
         item {
             SkeletonCard(
                 modifier = Modifier
@@ -361,7 +699,15 @@ private fun SkeletonLoadingContent(color: Color) {
             )
         }
 
-        // Skeleton for Statistics Cards
+        item {
+            SkeletonCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                color = color
+            )
+        }
+
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -382,27 +728,6 @@ private fun SkeletonLoadingContent(color: Color) {
             }
         }
 
-        // Skeleton for Best Day Card
-        item {
-            SkeletonCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                color = color
-            )
-        }
-
-        // Skeleton for History Header
-        item {
-            SkeletonText(
-                modifier = Modifier
-                    .width(150.dp)
-                    .height(24.dp),
-                color = color
-            )
-        }
-
-        // Skeleton for History Items
         items(5) {
             SkeletonCard(
                 modifier = Modifier
@@ -431,7 +756,6 @@ private fun SkeletonCard(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Shimmer effect using a pulsing box
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -442,20 +766,6 @@ private fun SkeletonCard(
             )
         }
     }
-}
-
-@Composable
-private fun SkeletonText(
-    modifier: Modifier = Modifier,
-    color: Color
-) {
-    Box(
-        modifier = modifier
-            .background(
-                color = color.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(4.dp)
-            )
-    )
 }
 
 @Composable
@@ -470,7 +780,7 @@ private fun TodayValueCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isLoading) SurfaceDark else color.copy(alpha = 0.15f)
+            containerColor = SurfaceDark
         )
     ) {
         Column(
@@ -489,7 +799,6 @@ private fun TodayValueCard(
                 verticalAlignment = Alignment.Bottom
             ) {
                 if (isLoading) {
-                    // Show skeleton shimmer effect
                     Box(
                         modifier = Modifier
                             .width(120.dp)
@@ -556,7 +865,6 @@ private fun StatCard(
                 verticalAlignment = Alignment.Bottom
             ) {
                 if (isLoading) {
-                    // Show skeleton shimmer effect
                     Box(
                         modifier = Modifier
                             .width(80.dp)
@@ -625,7 +933,6 @@ private fun HistoryItem(
                 )
             }
 
-            // Format value - sleep shows hours and minutes, others show normal format
             val displayValue = if (isSleep) {
                 formatHoursAndMinutes(dayData.value)
             } else {
@@ -642,7 +949,6 @@ private fun HistoryItem(
     }
 }
 
-// Format hours as "8h 47m" format
 private fun formatHoursAndMinutes(hours: Double): String {
     val totalMinutes = (hours * 60).roundToInt()
     val h = totalMinutes / 60
@@ -654,9 +960,9 @@ private fun formatHoursAndMinutes(hours: Double): String {
 private fun SleepStagesChart(
     sleepStages: SleepStagesData
 ) {
-    val totalMinutes = sleepStages.deepSleepMinutes + sleepStages.lightSleepMinutes + 
+    val totalMinutes = sleepStages.deepSleepMinutes + sleepStages.lightSleepMinutes +
                       sleepStages.remSleepMinutes + sleepStages.awakeMinutes
-    
+
     if (totalMinutes == 0L) return
 
     val deepPercent = sleepStages.deepSleepMinutes.toFloat() / totalMinutes
@@ -675,7 +981,7 @@ private fun SleepStagesChart(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Last Night's Sleep Stages",
+                text = "Sleep Stages",
                 style = MaterialTheme.typography.titleMedium,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
@@ -688,12 +994,11 @@ private fun SleepStagesChart(
                     .fillMaxWidth()
                     .height(32.dp)
                     .background(
-                        color = BackgroundDark,
+                        color = BackgroundBlack,
                         shape = RoundedCornerShape(8.dp)
                     )
             ) {
                 Row(modifier = Modifier.fillMaxSize()) {
-                    // Deep sleep (dark blue/purple)
                     if (deepPercent > 0f) {
                         Box(
                             modifier = Modifier
@@ -708,7 +1013,6 @@ private fun SleepStagesChart(
                                 )
                         )
                     }
-                    // Light sleep (medium blue)
                     if (lightPercent > 0f) {
                         Box(
                             modifier = Modifier
@@ -717,7 +1021,6 @@ private fun SleepStagesChart(
                                 .background(color = Color(0xFF1976D2))
                         )
                     }
-                    // REM sleep (cyan)
                     if (remPercent > 0f) {
                         Box(
                             modifier = Modifier
@@ -726,7 +1029,6 @@ private fun SleepStagesChart(
                                 .background(color = Color(0xFF00BCD4))
                         )
                     }
-                    // Awake (orange)
                     if (awakePercent > 0f) {
                         Box(
                             modifier = Modifier
