@@ -58,6 +58,7 @@ OpenHealth is a modern, privacy-focused health dashboard for Android that seamle
 - **Additional Vitals**
   - Blood glucose levels
   - Body temperature
+  - Skin temperature (wearable delta)
   - Hydration tracking
   - Nutrition data
   - Mindfulness sessions
@@ -71,6 +72,9 @@ OpenHealth is a modern, privacy-focused health dashboard for Android that seamle
 - 🔒 **Privacy First** - Your data stays on your device
 - 🎯 **Customizable** - Settings to personalize your experience
 - 📱 **Modern UI** - Smooth animations and skeleton loading screens
+- 📅 **Custom Calendar** - Beautiful calendar with step progress rings
+- 💪 **Readiness Score** - Daily readiness based on sleep, HRV, and activity
+- 🎯 **Daily Goals** - Configurable step, calorie, distance, and floor goals
 
 ## 📋 Requirements
 
@@ -127,11 +131,10 @@ OpenHealth is a modern, privacy-focused health dashboard for Android that seamle
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="screenshots/dashboard.jpg" alt="OpenHealth Dashboard" width="300">
-</p>
-
-<p align="center">
-  <i>More screenshots coming soon...</i>
+  <img src="screenshots/dashboard.jpg" alt="Dashboard with Calendar" width="220">
+  <img src="screenshots/readiness.jpg" alt="Readiness Score" width="220">
+  <img src="screenshots/steps.jpg" alt="Steps Detail with Calendar Rings" width="220">
+  <img src="screenshots/settings.jpg" alt="Settings & Daily Goals" width="220">
 </p>
 
 ## 🏗️ Architecture
