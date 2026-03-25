@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- OpenHealth Dark Theme Colors -->
+
+    <!-- Primary Colors -->
+    <color name="primary_blue">#FF4FC3F7</color>
+    <color name="primary_blue_dark">#FF0288D1</color>
+    <color name="accent_cyan">#FF00BCD4</color>
+    <color name="accent_teal">#FF009688</color>
+
+    <!-- Background Colors -->
+    <color name="background_dark">#FF0D1B2A</color>
+    <color name="surface_dark">#FF1B263B</color>
+    <color name="surface_variant">#FF2D3E50</color>
+
+    <!-- Card Colors for Metrics -->
+    <color name="steps_card">#FF1E3A5F</color>
+    <color name="heart_rate_card">#FF3D1E3A</color>
+    <color name="sleep_card">#FF2D1E4E</color>
+    <color name="exercise_card">#FF1E4E3D</color>
+    <color name="vo2max_card">#FF4E3D1E</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#FFE0E1DD</color>
+    <color name="text_secondary">#FF90A4AE</color>
+    <color name="text_tertiary">#FF607D8B</color>
+
+    <!-- Accent Colors for Metrics -->
+    <color name="steps_accent">#FF4FC3F7</color>
+    <color name="heart_rate_accent">#FFFF6B6B</color>
+    <color name="sleep_accent">#FF9C27B0</color>
+    <color name="exercise_accent">#FF4CAF50</color>
+    <color name="vo2max_accent">#FFFF9800</color>
+    <color name="calories_accent">#FFFF5722</color>
+    <color name="distance_accent">#FF00BCD4</color>
+
+    <!-- Status Colors -->
+    <color name="success_green">#FF4CAF50</color>
+    <color name="warning_orange">#FFFF9800</color>
+    <color name="error_red">#FFE53935</color>
+
+    <!-- Legacy colors (kept for compatibility) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>

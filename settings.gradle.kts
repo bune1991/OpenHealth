@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HealthConnectBaseProject"
+rootProject.name = "OpenHealth"
 include(":app")

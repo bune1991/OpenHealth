@@ -1,4 +1,4 @@
-package com.pranathicodes.healthconnectbaseproject
+package com.openhealth.openhealth
 
 import org.junit.Test
 
