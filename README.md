@@ -131,7 +131,11 @@ OpenHealth is a modern, privacy-focused health dashboard for Android that seamle
 ## 📸 Screenshots
 
 <p align="center">
-  <i>Screenshots coming soon...</i>
+  <img src="screenshots/dashboard.jpg" alt="OpenHealth Dashboard" width="300">
+</p>
+
+<p align="center">
+  <i>More screenshots coming soon...</i>
 </p>
 
 ## 🏗️ Architecture
