@@ -38,6 +38,7 @@ val CardBodyTemperature = Color(0xFFFF9500)     // Orange
 val CardHRV = Color(0xFF00B4D8)                 // Cyan
 val CardSpO2 = Color(0xFF00B4D8)                // Cyan
 val CardRespiratoryRate = Color(0xFF4CD964)     // Green
+val CardSkinTemperature = Color(0xFFFF9800)     // Orange
 
 // Readiness Score Colors
 val ReadinessExcellent = Color(0xFF4CD964)      // Green

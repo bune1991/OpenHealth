@@ -47,6 +47,7 @@ import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openhealth.openhealth.screens.DashboardScreen
 import com.openhealth.openhealth.screens.MetricDetailScreen
+import com.openhealth.openhealth.screens.ReadinessDetailScreen
 import com.openhealth.openhealth.screens.SettingsScreen
 import com.openhealth.openhealth.ui.theme.BackgroundBlack
 import com.openhealth.openhealth.ui.theme.ErrorRed
@@ -86,6 +87,9 @@ class MainActivity : ComponentActivity() {
                     viewModel.showSettings.value -> {
                         viewModel.hideSettings()
                     }
+                    viewModel.showReadinessDetail.value -> {
+                        viewModel.hideReadinessDetail()
+                    }
                     viewModel.selectedMetric.value != null -> {
                         viewModel.clearSelectedMetric()
                     }
@@ -111,6 +115,7 @@ class MainActivity : ComponentActivity() {
                 val metricHistory by viewModel.metricHistory.collectAsState()
                 val isMetricDetailLoading by viewModel.isMetricDetailLoading.collectAsState()
                 val showSettings by viewModel.showSettings.collectAsState()
+                val showReadinessDetail by viewModel.showReadinessDetail.collectAsState()
                 val settings by viewModel.settings.collectAsState()
 
                 Scaffold(
@@ -144,6 +149,13 @@ class MainActivity : ComponentActivity() {
                                             onBackClick = { viewModel.hideSettings() }
                                         )
                                     }
+                                    showReadinessDetail -> {
+                                        // Show readiness detail screen
+                                        ReadinessDetailScreen(
+                                            healthData = healthData,
+                                            onBackClick = { viewModel.hideReadinessDetail() }
+                                        )
+                                    }
                                     selectedMetric != null -> {
                                         // Show detail screen
                                         MetricDetailScreen(
@@ -151,16 +163,16 @@ class MainActivity : ComponentActivity() {
                                             metricHistory = metricHistory,
                                             isLoading = isMetricDetailLoading,
                                             onBackClick = { viewModel.clearSelectedMetric() },
-                                            onDateChange = { _ ->
-                                                // Optional: Load data for specific date if needed
-                                                // For now, the screen handles date selection internally
-                                            }
+                                            onHomeClick = { viewModel.clearSelectedMetric() },
+                                            onDateChange = { _ -> },
+                                            stepsGoal = settings.stepsGoal
                                         )
                                     }
                                     else -> {
                                         // Show dashboard with restored scroll position
                                         val (scrollIndex, scrollOffset) = viewModel.getScrollPosition()
                                         val selectedDate by viewModel.selectedDate.collectAsState()
+                                        val stepsCalendarData by viewModel.stepsCalendarData.collectAsState()
                                         DashboardScreen(
                                             healthData = healthData,
                                             isLoading = isLoading,
@@ -173,9 +185,12 @@ class MainActivity : ComponentActivity() {
                                                 viewModel.selectMetric(metricType)
                                             },
                                             onSettingsClick = { viewModel.showSettings() },
+                                        onReadinessClick = { viewModel.showReadinessDetail() },
                                             onPreviousDay = { viewModel.navigateToPreviousDay() },
                                             onNextDay = { viewModel.navigateToNextDay() },
                                             onToday = { viewModel.navigateToToday() },
+                                            onDateSelected = { date -> viewModel.navigateToDate(date) },
+                                            stepsCalendarData = stepsCalendarData,
                                             initialScrollIndex = scrollIndex,
                                             initialScrollOffset = scrollOffset,
                                             onScrollPositionChanged = { index, offset ->

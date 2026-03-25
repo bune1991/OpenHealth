@@ -35,6 +35,7 @@ import com.openhealth.openhealth.model.BasalMetabolicRateData
 import com.openhealth.openhealth.model.BodyWaterMassData
 import com.openhealth.openhealth.model.BoneMassData
 import com.openhealth.openhealth.model.LeanBodyMassData
+import com.openhealth.openhealth.model.SkinTemperatureData
 import com.openhealth.openhealth.model.SettingsData
 import com.openhealth.openhealth.model.SpeedData
 import com.openhealth.openhealth.model.PowerData
@@ -70,8 +71,11 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // Kuwait timezone for consistent date handling
+    private val kuwaitZone = ZoneId.systemDefault()
+
     // Current selected date for dashboard
-    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    private val _selectedDate = MutableStateFlow(LocalDate.now(kuwaitZone))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
     // Selected metric for detail screen
@@ -86,8 +90,12 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val _isMetricDetailLoading = MutableStateFlow(false)
     val isMetricDetailLoading: StateFlow<Boolean> = _isMetricDetailLoading.asStateFlow()
 
-    // Cache for metric histories to enable instant display
-    private val metricHistoryCache = mutableMapOf<MetricType, MetricHistory>()
+    // In-memory cache: date -> HealthData (avoids repeated API calls during date navigation)
+    private val healthDataCache = mutableMapOf<LocalDate, HealthData>()
+
+    // Steps history for calendar rings on Dashboard
+    private val _stepsCalendarData = MutableStateFlow<List<com.openhealth.openhealth.model.DailyDataPoint>>(emptyList())
+    val stepsCalendarData: StateFlow<List<com.openhealth.openhealth.model.DailyDataPoint>> = _stepsCalendarData.asStateFlow()
 
     // Scroll position for dashboard (saved when navigating to detail, restored when returning)
     private val _dashboardScrollIndex = MutableStateFlow(0)
@@ -103,6 +111,10 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     // Navigation state for settings screen
     private val _showSettings = MutableStateFlow(false)
     val showSettings: StateFlow<Boolean> = _showSettings.asStateFlow()
+
+    // Navigation state for readiness detail screen
+    private val _showReadinessDetail = MutableStateFlow(false)
+    val showReadinessDetail: StateFlow<Boolean> = _showReadinessDetail.asStateFlow()
 
     // Required permissions - use all permissions from HealthConnectManager
     val requiredPermissions = HealthConnectManager.PERMISSIONS
@@ -201,10 +213,14 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
             }
 
             try {
+                // Clear today's cache entry so we get fresh data
+                val today = LocalDate.now(kuwaitZone)
+                healthDataCache.remove(today)
                 Log.d("HealthViewModel", "Starting data refresh...")
 
                 // Fetch all health data using HealthConnectManager
-                val steps = HealthConnectManager.getTodaySteps()
+                val currentSettings = settingsManager.settings.value
+                val steps = HealthConnectManager.getTodaySteps().copy(goal = currentSettings.stepsGoal.toLong())
                 Log.d("HealthViewModel", "Steps fetched: ${steps.count}")
 
                 val heartRate = HealthConnectManager.getTodayHeartRate()
@@ -270,6 +286,9 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 val respiratoryRate = HealthConnectManager.getRespiratoryRate()
                 Log.d("HealthViewModel", "Respiratory rate: ${respiratoryRate.ratePerMinute} breaths/min")
 
+                val skinTemperature = HealthConnectManager.getSkinTemperature()
+                Log.d("HealthViewModel", "Skin temperature: ${skinTemperature.temperatureCelsius}°C")
+
                 val newHealthData = HealthData(
                     steps = steps,
                     heartRate = heartRate,
@@ -285,16 +304,34 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     basalMetabolicRate = basalMetabolicRate,
                     bodyWaterMass = bodyWaterMass,
                     boneMass = boneMass,
-                    leanBodyMass = leanBodyMass
+                    leanBodyMass = leanBodyMass,
+                    bloodGlucose = bloodGlucose,
+                    bloodPressure = bloodPressure,
+                    bodyTemperature = bodyTemperature,
+                    heartRateVariability = heartRateVariability,
+                    oxygenSaturation = oxygenSaturation,
+                    respiratoryRate = respiratoryRate,
+                    skinTemperature = skinTemperature
                 )
 
                 _healthData.value = newHealthData
                 _isLoading.value = false
-                
+
+                // Cache today's data (reuses 'today' from above)
+                healthDataCache[today] = newHealthData
+
                 // Update UI state with new data and loading = false
                 _uiState.value = UiState.Ready(newHealthData, false)
 
-                Log.d("HealthViewModel", "Data refresh complete")
+                Log.d("HealthViewModel", "Data refresh complete, cached for $today")
+
+                // Load steps history for calendar rings (background, non-blocking)
+                try {
+                    val stepsHistory = HealthConnectManager.getStepsHistory()
+                    _stepsCalendarData.value = stepsHistory.allHistoricalData ?: emptyList()
+                } catch (e: Exception) {
+                    Log.e("HealthViewModel", "Error loading steps calendar data: ${e.message}")
+                }
             } catch (e: Exception) {
                 Log.e("HealthViewModel", "Error refreshing data: ${e.message}", e)
                 _isLoading.value = false
@@ -310,6 +347,9 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     // Select a metric and load its history
     fun selectMetric(metricType: MetricType) {
+        // Clear any existing metric history to force fresh data fetch
+        // This ensures Dashboard and DetailScreen show consistent values
+        _metricHistory.value = null
         _selectedMetric.value = metricType
         loadMetricHistory(metricType)
     }
@@ -346,6 +386,15 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         _showSettings.value = false
     }
 
+    // Readiness detail navigation
+    fun showReadinessDetail() {
+        _showReadinessDetail.value = true
+    }
+
+    fun hideReadinessDetail() {
+        _showReadinessDetail.value = false
+    }
+
     fun updateSettings(settings: SettingsData) {
         settingsManager.updateSettings(settings)
     }
@@ -357,7 +406,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun navigateToNextDay() {
-        val today = LocalDate.now()
+        val today = LocalDate.now(kuwaitZone)
         if (_selectedDate.value.isBefore(today)) {
             _selectedDate.value = _selectedDate.value.plusDays(1)
             refreshDataForDate(_selectedDate.value)
@@ -365,22 +414,39 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun navigateToToday() {
-        _selectedDate.value = LocalDate.now()
-        refreshDataForDate(_selectedDate.value)
+        val today = LocalDate.now(kuwaitZone)
+        healthDataCache.remove(today)  // Always fetch fresh for today
+        _selectedDate.value = today
+        refreshDataForDate(today)
+    }
+
+    fun navigateToDate(date: LocalDate) {
+        _selectedDate.value = date
+        refreshDataForDate(date)
     }
 
     fun refreshDataForDate(date: LocalDate) {
         viewModelScope.launch {
+            // Check cache first - no API calls if already loaded
+            val cached = healthDataCache[date]
+            if (cached != null) {
+                Log.d("HealthViewModel", "Cache hit for date: $date")
+                _healthData.value = cached
+                _uiState.value = UiState.Ready(cached, false)
+                return@launch
+            }
+
             _isLoading.value = true
             try {
-                Log.d("HealthViewModel", "Loading data for date: $date")
+                Log.d("HealthViewModel", "Cache miss, loading data for date: $date")
 
                 // Fetch all health data for the specific date
-                val steps = HealthConnectManager.getStepsForDate(date)
+                val dateSettings = settingsManager.settings.value
+                val steps = HealthConnectManager.getStepsForDate(date).copy(goal = dateSettings.stepsGoal.toLong())
                 val heartRate = HealthConnectManager.getHeartRateForDate(date)
                 val sleep = HealthConnectManager.getSleepForDate(date)
                 val exercise = HealthConnectManager.getExerciseForDate(date)
-                val vo2Max = HealthConnectManager.getLatestVO2Max() // VO2 Max is typically latest only
+                val vo2Max = HealthConnectManager.getLatestVO2Max()
                 val calories = HealthConnectManager.getCaloriesForDate(date)
                 val distance = HealthConnectManager.getDistanceForDate(date)
                 val floors = HealthConnectManager.getFloorsForDate(date)
@@ -397,6 +463,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 val heartRateVariability = HealthConnectManager.getHeartRateVariabilityForDate(date)
                 val oxygenSaturation = HealthConnectManager.getOxygenSaturationForDate(date)
                 val respiratoryRate = HealthConnectManager.getRespiratoryRateForDate(date)
+                val skinTemperature = HealthConnectManager.getSkinTemperatureForDate(date)
 
                 val newHealthData = HealthData(
                     steps = steps,
@@ -419,14 +486,18 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     bodyTemperature = bodyTemperature,
                     heartRateVariability = heartRateVariability,
                     oxygenSaturation = oxygenSaturation,
-                    respiratoryRate = respiratoryRate
+                    respiratoryRate = respiratoryRate,
+                    skinTemperature = skinTemperature
                 )
+
+                // Cache the result
+                healthDataCache[date] = newHealthData
 
                 _healthData.value = newHealthData
                 _isLoading.value = false
                 _uiState.value = UiState.Ready(newHealthData, false)
 
-                Log.d("HealthViewModel", "Data refresh complete for date: $date")
+                Log.d("HealthViewModel", "Data loaded and cached for date: $date")
             } catch (e: Exception) {
                 Log.e("HealthViewModel", "Error refreshing data for date: ${e.message}", e)
                 _isLoading.value = false
@@ -440,17 +511,13 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun loadMetricHistory(metricType: MetricType) {
         viewModelScope.launch {
-            // Show cached data immediately if available
-            val cachedHistory = metricHistoryCache[metricType]
-            if (cachedHistory != null) {
-                _metricHistory.value = cachedHistory
-                _isMetricDetailLoading.value = false
-            } else {
-                // No cache - show skeleton loading
-                _isMetricDetailLoading.value = true
-            }
+            // Always show loading state - no caching
+            _isMetricDetailLoading.value = true
+            _metricHistory.value = null
 
             try {
+                Log.d("HealthViewModel", "Loading fresh metric history for: $metricType")
+                
                 val history = when (metricType) {
                     MetricType.STEPS -> HealthConnectManager.getStepsHistory()
                     MetricType.DISTANCE -> HealthConnectManager.getDistanceHistory()
@@ -473,17 +540,15 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     MetricType.HEART_RATE_VARIABILITY -> HealthConnectManager.getHeartRateVariabilityHistory()
                     MetricType.OXYGEN_SATURATION -> HealthConnectManager.getOxygenSaturationHistory()
                     MetricType.RESPIRATORY_RATE -> HealthConnectManager.getRespiratoryRateHistory()
+                    MetricType.SKIN_TEMPERATURE -> HealthConnectManager.getSkinTemperatureHistory()
                 }
 
-                // Cache the result and update UI
-                metricHistoryCache[metricType] = history
+                // Update UI with fresh data - no caching
                 _metricHistory.value = history
+                Log.d("HealthViewModel", "Metric history loaded: ${history.todayValue} ${history.unit}")
             } catch (e: Exception) {
                 Log.e("HealthViewModel", "Error loading metric history: ${e.message}", e)
-                // If we have cached data, keep showing it even on error
-                if (cachedHistory == null) {
-                    _metricHistory.value = null
-                }
+                _metricHistory.value = null
             } finally {
                 _isMetricDetailLoading.value = false
             }
@@ -527,6 +592,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         BODY_TEMPERATURE,
         HEART_RATE_VARIABILITY,
         OXYGEN_SATURATION,
-        RESPIRATORY_RATE
+        RESPIRATORY_RATE,
+        SKIN_TEMPERATURE
     }
 }

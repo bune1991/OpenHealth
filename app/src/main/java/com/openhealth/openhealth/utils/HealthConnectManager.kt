@@ -23,8 +23,8 @@ import kotlin.reflect.KClass
 object HealthConnectManager {
     private var healthConnectClient: HealthConnectClient? = null
 
-    // All permissions needed for OpenHealth
-    val PERMISSIONS = setOf(
+    // Core permissions required for OpenHealth
+    private val REQUIRED_PERMISSIONS = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class),
@@ -51,6 +51,14 @@ object HealthConnectManager {
         HealthPermission.getReadPermission(PowerRecord::class)
     )
 
+    // Optional permissions (newer APIs, may not be available on all devices)
+    private val OPTIONAL_PERMISSIONS = setOf(
+        HealthPermission.getReadPermission(SkinTemperatureRecord::class)
+    )
+
+    // All permissions to request from user
+    val PERMISSIONS = REQUIRED_PERMISSIONS + OPTIONAL_PERMISSIONS
+
     fun checkForHealthConnectInstalled(context: Context): Int {
         val availabilityStatus =
             HealthConnectClient.getSdkStatus(context, "com.google.android.apps.healthdata")
@@ -69,23 +77,23 @@ object HealthConnectManager {
 
     suspend fun checkPermissions(): Boolean {
         val granted = healthConnectClient?.permissionController?.getGrantedPermissions()
-        val hasAll = granted?.containsAll(PERMISSIONS) ?: false
-        Log.d("HealthConnectManager", "Permissions granted: $hasAll")
-        return hasAll
+        val hasRequired = granted?.containsAll(REQUIRED_PERMISSIONS) ?: false
+        Log.d("HealthConnectManager", "Required permissions granted: $hasRequired")
+        return hasRequired
     }
 
     // Get today's steps data
     suspend fun getTodaySteps(): StepsData {
         return try {
             val client = healthConnectClient ?: run {
-                Log.e("HealthConnectManager", "HealthConnectClient is null")
+                Log.e("OpenHealth_Steps", "HealthConnectClient is null")
                 return StepsData(0)
             }
 
-            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            val startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault())
             val now = ZonedDateTime.now(ZoneId.systemDefault())
 
-            Log.d("HealthConnectManager", "Fetching steps from $startOfDay to $now")
+            Log.d("OpenHealth_Steps", "Query: $startOfDay to $now")
 
             val response = client.aggregate(
                 AggregateRequest(
@@ -102,7 +110,7 @@ object HealthConnectManager {
 
             val steps = response[StepsRecord.COUNT_TOTAL] ?: 0L
 
-            Log.d("HealthConnectManager", "Steps fetched: $steps")
+            Log.d("OpenHealth_Steps", "Today: $steps steps, Records: 1 (aggregated)")
 
             StepsData(
                 count = steps,
@@ -110,7 +118,7 @@ object HealthConnectManager {
                 lastUpdated = now.toInstant()
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading steps: ${e.message}", e)
+            Log.e("OpenHealth_Steps", "Error reading steps: ${e.message}", e)
             StepsData(0)
         }
     }
@@ -119,45 +127,48 @@ object HealthConnectManager {
     suspend fun getTodayHeartRate(): HeartRateData {
         return try {
             val client = healthConnectClient ?: run {
-                Log.e("HealthConnectManager", "HealthConnectClient is null")
+                Log.e("OpenHealth_HeartRate", "HealthConnectClient is null")
                 return HeartRateData(currentBpm = 0)
             }
 
-            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            // Query only last 1 hour to get the most recent sample
             val now = ZonedDateTime.now(ZoneId.systemDefault())
+            val oneHourAgo = now.minusHours(1)
 
-            Log.d("HealthConnectManager", "Fetching heart rate from $startOfDay to $now")
+            Log.d("OpenHealth_HeartRate", "Query: $oneHourAgo to $now")
 
-            // Read heart rate records for today
+            // Read heart rate records for the last hour
             val response = client.readRecords(
                 ReadRecordsRequest(
                     HeartRateRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        startOfDay.toInstant(),
+                        oneHourAgo.toInstant(),
                         now.toInstant()
                     )
                 )
             )
 
             val records = response.records
-            Log.d("HealthConnectManager", "Heart rate records found: ${records.size}")
+            Log.d("OpenHealth_HeartRate", "Records: ${records.size}, Latest: ${if (records.isNotEmpty()) records.flatMap { it.samples }.maxByOrNull { it.time }?.beatsPerMinute?.toInt() ?: 0 else 0} bpm")
 
             if (records.isEmpty()) {
                 return HeartRateData(currentBpm = 0)
             }
 
-            // Extract all BPM samples
+            // Extract all BPM samples and sort by timestamp to get the most recent
             val allSamples = records.flatMap { it.samples }
+                .sortedBy { it.time }  // Sort by timestamp to ensure correct ordering
             val bpmValues = allSamples.map { it.beatsPerMinute }
 
-            val currentBpm = bpmValues.lastOrNull()?.toInt() ?: 0
+            // Get the most recent reading (last in sorted list), not max
+            val currentBpm = allSamples.lastOrNull()?.beatsPerMinute?.toInt() ?: 0
             val minBpm = bpmValues.minOrNull()?.toInt() ?: 0
             val maxBpm = bpmValues.maxOrNull()?.toInt() ?: 0
 
             // Estimate resting heart rate (minimum during non-active periods)
             val restingBpm = minBpm
 
-            Log.d("HealthConnectManager", "Heart rate - current: $currentBpm, min: $minBpm, max: $maxBpm")
+            Log.d("OpenHealth_HeartRate", "Today: $currentBpm bpm (latest), Range: $minBpm-$maxBpm, Records: ${records.size}")
 
             HeartRateData(
                 currentBpm = currentBpm,
@@ -167,7 +178,7 @@ object HealthConnectManager {
                 readings = allSamples.map { HeartRateReading(it.beatsPerMinute.toInt(), it.time) }
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading heart rate: ${e.message}", e)
+            Log.e("OpenHealth_HeartRate", "Error reading heart rate: ${e.message}", e)
             HeartRateData(currentBpm = 0)
         }
     }
@@ -176,15 +187,15 @@ object HealthConnectManager {
     suspend fun getLastNightSleep(): SleepData {
         return try {
             val client = healthConnectClient ?: run {
-                Log.e("HealthConnectManager", "HealthConnectClient is null")
+                Log.e("OpenHealth_Sleep", "HealthConnectClient is null")
                 return SleepData()
             }
 
             // Look for sleep from yesterday evening to today afternoon
-            val yesterday = LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault())
-            val todayAfternoon = LocalDate.now().atTime(LocalTime.NOON).atZone(ZoneId.systemDefault())
+            val yesterday = LocalDate.now(ZoneId.systemDefault()).minusDays(1).atStartOfDay(ZoneId.systemDefault())
+            val todayAfternoon = LocalDate.now(ZoneId.systemDefault()).atTime(LocalTime.NOON).atZone(ZoneId.systemDefault())
 
-            Log.d("HealthConnectManager", "Fetching sleep from $yesterday to $todayAfternoon")
+            Log.d("OpenHealth_Sleep", "Query: $yesterday to $todayAfternoon")
 
             val response = client.readRecords(
                 ReadRecordsRequest(
@@ -197,16 +208,15 @@ object HealthConnectManager {
             )
 
             val records = response.records
-            Log.d("HealthConnectManager", "Sleep records found: ${records.size}")
+            val lastSession = records.maxByOrNull { it.endTime }
+            val totalDuration = lastSession?.let { Duration.between(it.startTime, it.endTime) }
+            val hours = totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+
+            Log.d("OpenHealth_Sleep", "Records: ${records.size}, Today: ${String.format("%.1f", hours)}h, First: ${records.minByOrNull { it.startTime }?.startTime}, Last: ${lastSession?.endTime}")
 
             if (records.isEmpty()) {
                 return SleepData()
             }
-
-            // Get the most recent sleep session
-            val lastSession = records.maxByOrNull { it.endTime } ?: return SleepData()
-
-            val totalDuration = Duration.between(lastSession.startTime, lastSession.endTime)
 
             val sessions = records.map { session ->
                 SleepSession(
@@ -217,14 +227,12 @@ object HealthConnectManager {
                 )
             }
 
-            Log.d("HealthConnectManager", "Sleep duration: $totalDuration")
-
             SleepData(
                 totalDuration = totalDuration,
                 sessions = sessions
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading sleep: ${e.message}", e)
+            Log.e("OpenHealth_Sleep", "Error reading sleep: ${e.message}", e)
             SleepData()
         }
     }
@@ -237,7 +245,7 @@ object HealthConnectManager {
                 return ExerciseData()
             }
 
-            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            val startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault())
             val now = ZonedDateTime.now(ZoneId.systemDefault())
 
             Log.d("HealthConnectManager", "Fetching exercise from $startOfDay to $now")
@@ -289,18 +297,20 @@ object HealthConnectManager {
     // Get today's calories data
     suspend fun getTodayCalories(): CaloriesData {
         return try {
-            val client = healthConnectClient ?: return CaloriesData()
+            val client = healthConnectClient ?: run {
+                Log.e("OpenHealth_Calories", "HealthConnectClient is null")
+                return CaloriesData()
+            }
 
-            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            val startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault())
             val now = ZonedDateTime.now(ZoneId.systemDefault())
 
-            val response = client.aggregate(
-                AggregateRequest(
-                    metrics = setOf(
-                        TotalCaloriesBurnedRecord.ENERGY_TOTAL,
-                        ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL,
-                        BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL
-                    ),
+            Log.d("OpenHealth_Calories", "Query: $startOfDay to $now")
+
+            // Read individual TotalCaloriesBurnedRecord records to check data source
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = TotalCaloriesBurnedRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
                         startOfDay.toInstant(),
                         now.toInstant()
@@ -308,13 +318,48 @@ object HealthConnectManager {
                 )
             )
 
+            // Check for Garmin Connect data first (package name: com.garmin.android.apps.connectmobile)
+            val garminRecords = response.records.filter { record ->
+                val dataOrigin = record.metadata.dataOrigin.packageName
+                dataOrigin.contains("garmin", ignoreCase = true)
+            }
+
+            val totalBurned: Double
+            val activeBurned: Double
+
+            if (garminRecords.isNotEmpty()) {
+                // Use only Garmin Connect data (daily total from Garmin)
+                val garminTotal = garminRecords.sumOf { it.energy.inKilocalories }
+                totalBurned = garminTotal
+                activeBurned = garminTotal
+                Log.d("OpenHealth_Calories", "Records: ${response.records.size} (Garmin: ${garminRecords.size}), Today: ${String.format("%.0f", totalBurned)} kcal")
+            } else {
+                // No Garmin data, fall back to aggregating all sources
+                val aggregateResponse = client.aggregate(
+                    AggregateRequest(
+                        metrics = setOf(
+                            TotalCaloriesBurnedRecord.ENERGY_TOTAL,
+                            ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL
+                        ),
+                        timeRangeFilter = TimeRangeFilter.between(
+                            startOfDay.toInstant(),
+                            now.toInstant()
+                        )
+                    )
+                )
+
+                totalBurned = aggregateResponse[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories ?: 0.0
+                activeBurned = aggregateResponse[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories ?: 0.0
+                Log.d("OpenHealth_Calories", "Records: ${response.records.size}, Today: ${String.format("%.0f", totalBurned)} kcal (aggregated)")
+            }
+
             CaloriesData(
-                totalBurned = response[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories ?: 0.0,
-                activeBurned = response[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories ?: 0.0,
-                basalBurned = response[BasalMetabolicRateRecord.BASAL_CALORIES_TOTAL]?.inKilocalories ?: 0.0
+                totalBurned = totalBurned,
+                activeBurned = activeBurned,
+                basalBurned = 0.0
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading calories: ${e.message}", e)
+            Log.e("OpenHealth_Calories", "Error reading calories: ${e.message}", e)
             CaloriesData()
         }
     }
@@ -322,10 +367,15 @@ object HealthConnectManager {
     // Get today's distance data
     suspend fun getTodayDistance(): DistanceData {
         return try {
-            val client = healthConnectClient ?: return DistanceData()
+            val client = healthConnectClient ?: run {
+                Log.e("OpenHealth_Distance", "HealthConnectClient is null")
+                return DistanceData()
+            }
 
-            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            val startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault())
             val now = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_Distance", "Query: $startOfDay to $now")
 
             val response = client.aggregate(
                 AggregateRequest(
@@ -337,11 +387,14 @@ object HealthConnectManager {
                 )
             )
 
+            val distanceKm = response[DistanceRecord.DISTANCE_TOTAL]?.inKilometers ?: 0.0
+            Log.d("OpenHealth_Distance", "Today: ${String.format("%.2f", distanceKm)} km, Records: 1 (aggregated)")
+
             DistanceData(
                 totalMeters = response[DistanceRecord.DISTANCE_TOTAL]?.inMeters ?: 0.0
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading distance: ${e.message}", e)
+            Log.e("OpenHealth_Distance", "Error reading distance: ${e.message}", e)
             DistanceData()
         }
     }
@@ -351,7 +404,7 @@ object HealthConnectManager {
         return try {
             val client = healthConnectClient ?: return FloorsData()
 
-            val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            val startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault())
             val now = ZonedDateTime.now(ZoneId.systemDefault())
 
             val response = client.aggregate(
@@ -376,26 +429,37 @@ object HealthConnectManager {
     // Get latest resting heart rate
     suspend fun getRestingHeartRate(): RestingHeartRateData {
         return try {
-            val client = healthConnectClient ?: return RestingHeartRateData()
+            val client = healthConnectClient ?: run {
+                Log.e("OpenHealth_RestingHeartRate", "HealthConnectClient is null")
+                return RestingHeartRateData()
+            }
+
+            val startTime = LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault())
+            val endTime = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_RestingHeartRate", "Query: $startTime to $endTime")
 
             val response = client.readRecords(
                 ReadRecordsRequest(
                     recordType = RestingHeartRateRecord::class,
-                    timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
-                        Instant.now()
-                    )
+                    timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant())
                 )
             )
 
-            val latestRecord = response.records.maxByOrNull { it.time } ?: return RestingHeartRateData()
+            val records = response.records
+            val latestRecord = records.maxByOrNull { it.time }
+            val todayValue = latestRecord?.beatsPerMinute?.toInt() ?: 0
+
+            Log.d("OpenHealth_RestingHeartRate", "Records: ${records.size}, Today: $todayValue bpm, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+
+            if (latestRecord == null) return RestingHeartRateData()
 
             RestingHeartRateData(
-                bpm = latestRecord.beatsPerMinute.toInt(),
+                bpm = todayValue,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading resting heart rate: ${e.message}", e)
+            Log.e("OpenHealth_RestingHeartRate", "Error reading resting heart rate: ${e.message}", e)
             RestingHeartRateData()
         }
     }
@@ -403,26 +467,37 @@ object HealthConnectManager {
     // Get latest body fat
     suspend fun getBodyFat(): BodyFatData {
         return try {
-            val client = healthConnectClient ?: return BodyFatData()
+            val client = healthConnectClient ?: run {
+                Log.e("OpenHealth_BodyFat", "HealthConnectClient is null")
+                return BodyFatData()
+            }
+
+            val startTime = LocalDate.now(ZoneId.systemDefault()).minusDays(180).atStartOfDay(ZoneId.systemDefault())
+            val endTime = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_BodyFat", "Query: $startTime to $endTime")
 
             val response = client.readRecords(
                 ReadRecordsRequest(
                     recordType = BodyFatRecord::class,
-                    timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant(),
-                        Instant.now()
-                    )
+                    timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant())
                 )
             )
 
-            val latestRecord = response.records.maxByOrNull { it.time } ?: return BodyFatData()
+            val records = response.records
+            val latestRecord = records.maxByOrNull { it.time }
+            val todayValue = latestRecord?.percentage?.value ?: 0.0
+
+            Log.d("OpenHealth_BodyFat", "Records: ${records.size}, Today: ${String.format("%.1f", todayValue)}%, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+
+            if (latestRecord == null) return BodyFatData()
 
             BodyFatData(
-                percentage = latestRecord.percentage.value,
+                percentage = todayValue,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading body fat: ${e.message}", e)
+            Log.e("OpenHealth_BodyFat", "Error reading body fat: ${e.message}", e)
             BodyFatData()
         }
     }
@@ -436,7 +511,7 @@ object HealthConnectManager {
                 ReadRecordsRequest(
                     recordType = BasalMetabolicRateRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusDays(30).atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                        LocalDate.now(ZoneId.systemDefault()).minusDays(180).atStartOfDay(ZoneId.systemDefault()).toInstant(),
                         Instant.now()
                     )
                 )
@@ -463,7 +538,7 @@ object HealthConnectManager {
                 ReadRecordsRequest(
                     recordType = BodyWaterMassRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                        LocalDate.now(ZoneId.systemDefault()).minusDays(180).atStartOfDay(ZoneId.systemDefault()).toInstant(),
                         Instant.now()
                     )
                 )
@@ -490,7 +565,7 @@ object HealthConnectManager {
                 ReadRecordsRequest(
                     recordType = BoneMassRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                        LocalDate.now(ZoneId.systemDefault()).minusDays(180).atStartOfDay(ZoneId.systemDefault()).toInstant(),
                         Instant.now()
                     )
                 )
@@ -517,7 +592,7 @@ object HealthConnectManager {
                 ReadRecordsRequest(
                     recordType = LeanBodyMassRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                        LocalDate.now(ZoneId.systemDefault()).minusDays(180).atStartOfDay(ZoneId.systemDefault()).toInstant(),
                         Instant.now()
                     )
                 )
@@ -543,7 +618,7 @@ object HealthConnectManager {
                 return Vo2MaxData()
             }
 
-            val startOfMonth = LocalDate.now().minusDays(30).atStartOfDay(ZoneId.systemDefault())
+            val startOfMonth = LocalDate.now(ZoneId.systemDefault()).minusDays(30).atStartOfDay(ZoneId.systemDefault())
             val now = ZonedDateTime.now(ZoneId.systemDefault())
 
             Log.d("HealthConnectManager", "Fetching VO2 Max from $startOfMonth to $now")
@@ -581,31 +656,39 @@ object HealthConnectManager {
     suspend fun getWeight(): WeightData {
         return try {
             val client = healthConnectClient ?: run {
-                Log.e("HealthConnectManager", "HealthConnectClient is null")
+                Log.e("OpenHealth_BodyWeight", "HealthConnectClient is null")
                 return WeightData()
             }
 
-            val startOfYear = LocalDate.now().minusYears(1).atStartOfDay(ZoneId.systemDefault())
+            val startOf30Days = LocalDate.now(ZoneId.systemDefault()).minusDays(180).atStartOfDay(ZoneId.systemDefault())
             val now = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_BodyWeight", "Query: $startOf30Days to $now")
 
             val response = client.readRecords(
                 ReadRecordsRequest(
                     recordType = WeightRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        startOfYear.toInstant(),
+                        startOf30Days.toInstant(),
                         now.toInstant()
                     )
                 )
             )
 
-            val latestRecord = response.records.maxByOrNull { it.time } ?: return WeightData()
+            val records = response.records
+            val latestRecord = records.maxByOrNull { it.time }
+            val todayValue = latestRecord?.weight?.inKilograms ?: 0.0
+
+            Log.d("OpenHealth_BodyWeight", "Records: ${records.size}, Today: ${String.format("%.1f", todayValue)} kg, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+
+            if (latestRecord == null) return WeightData()
 
             return WeightData(
-                kilograms = latestRecord.weight.inKilograms,
+                kilograms = todayValue,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading weight: ${e.message}", e)
+            Log.e("OpenHealth_BodyWeight", "Error reading weight: ${e.message}", e)
             WeightData()
         }
     }
@@ -659,7 +742,7 @@ object HealthConnectManager {
         recordClass = FloorsClimbedRecord::class,
         unit = "floors",
         timeExtractor = { it.startTime },
-        valueExtractor = { it.floors }
+        valueExtractor = { it.floors.toDouble() }
     )
 
     suspend fun getBodyFatHistory() = getMetricHistory(
@@ -771,8 +854,21 @@ object HealthConnectManager {
             val dailySleep = response.records
                 .groupBy { it.endTime.atZone(ZoneId.systemDefault()).toLocalDate() }
                 .map { (date, records) ->
-                    val totalDuration = records.sumOf { Duration.between(it.startTime, it.endTime).toMinutes() }
-                    DailyDataPoint(date, totalDuration.toDouble() / 60.0, "hours")
+                    // Find the longest sleep session for this day (main sleep)
+                    val mainSession = records.maxByOrNull { 
+                        Duration.between(it.startTime, it.endTime).toMinutes() 
+                    }
+                    // Calculate duration from the main session only
+                    val durationMinutes = if (mainSession != null) {
+                        Duration.between(mainSession.startTime, mainSession.endTime).toMinutes()
+                    } else 0L
+                    DailyDataPoint(
+                        date = date,
+                        value = durationMinutes.toDouble() / 60.0,
+                        unit = "hours",
+                        sleepStartTime = mainSession?.startTime,
+                        sleepEndTime = mainSession?.endTime
+                    )
                 }
                 .sortedBy { it.date }
 
@@ -781,6 +877,10 @@ object HealthConnectManager {
             val allTimeAverage = if (dailySleep.isNotEmpty()) dailySleep.map { it.value }.average() else 0.0
             val bestDay = dailySleep.maxByOrNull { it.value }
 
+            // Get today's sleep start and end times from the most recent session
+            val todaySleepStartTime = mostRecentSession?.startTime
+            val todaySleepEndTime = mostRecentSession?.endTime
+
             MetricHistory(
                 todayValue = todayValue,
                 unit = "hours",
@@ -788,7 +888,9 @@ object HealthConnectManager {
                 monthlyAverage = allTimeAverage, // Now shows all-time average
                 bestDay = bestDay,
                 allHistoricalData = dailySleep,
-                sleepStages = sleepStages
+                sleepStages = sleepStages,
+                todaySleepStartTime = todaySleepStartTime,
+                todaySleepEndTime = todaySleepEndTime
             )
         } catch (e: Exception) {
             Log.e("HealthConnectManager", "Error reading sleep history: ${e.message}", e)
@@ -806,10 +908,15 @@ object HealthConnectManager {
         return try {
             val client = healthConnectClient ?: return MetricHistory(0.0, unit, emptyList(), 0.0, null)
 
-            // Get all historical data (from January 1, 2024 to now)
-            val startDate = LocalDate.of(2024, 1, 1)
-            val startOfDay = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
-            val now = Instant.now()
+            val metricName = recordClass.simpleName ?: "Unknown"
+
+            // Query 30 days back using LocalDateTime for proper local-day alignment
+            val today = LocalDate.now(ZoneId.systemDefault())
+            val startDate = today.minusDays(30)
+            val localStart = startDate.atStartOfDay()
+            val localEnd = today.plusDays(1).atStartOfDay()
+
+            Log.d("OpenHealth_History", "[$metricName] Query: $localStart to $localEnd (local time)")
 
             // Try to get aggregated daily data first
             val allDailyData = if (metric != null) {
@@ -818,12 +925,14 @@ object HealthConnectManager {
                         AggregateGroupByPeriodRequest(
                             metrics = setOf(metric),
                             timeRangeFilter = TimeRangeFilter.between(
-                                startOfDay,
-                                now
+                                localStart,
+                                localEnd
                             ),
                             timeRangeSlicer = Period.ofDays(1)
                         )
                     )
+
+                    Log.d("OpenHealth_History", "[$metricName] Aggregation returned ${response.size} periods")
 
                     response.mapNotNull { result ->
                         val rawValue = result.result[metric] ?: return@mapNotNull null
@@ -838,29 +947,36 @@ object HealthConnectManager {
                         }
                         val date = result.startTime.toLocalDate()
                         DailyDataPoint(date, value, unit)
-                    }
+                    }.sortedBy { it.date }
                 } catch (e: Exception) {
-                    Log.w("HealthConnectManager", "Aggregation failed, falling back to records: ${e.message}")
+                    Log.w("OpenHealth_History", "[$metricName] Aggregation failed: ${e.message}")
                     emptyList()
                 }
             } else {
                 emptyList()
             }
 
-            // If aggregation didn't work, read individual records
+            // If aggregation didn't work, read individual records with pagination
             val allHistoricalData = if (allDailyData.isEmpty()) {
-                val response = client.readRecords(
-                    ReadRecordsRequest(
+                val allRecords = mutableListOf<T>()
+                var pageToken: String? = null
+
+                do {
+                    val request = ReadRecordsRequest(
                         recordType = recordClass,
-                        timeRangeFilter = TimeRangeFilter.between(
-                            startOfDay,
-                            now
-                        )
+                        timeRangeFilter = TimeRangeFilter.between(localStart, localEnd),
+                        pageToken = pageToken
                     )
-                )
+                    val response = client.readRecords(request)
+                    allRecords.addAll(response.records)
+                    pageToken = response.pageToken
+                    Log.d("OpenHealth_History", "[$metricName] readRecords page: ${response.records.size} records, hasMore: ${pageToken != null}")
+                } while (pageToken != null)
+
+                Log.d("OpenHealth_History", "[$metricName] Total records read: ${allRecords.size}")
 
                 // Group records by date and calculate daily values
-                response.records
+                allRecords
                     .groupBy { record ->
                         timeExtractor(record).atZone(ZoneId.systemDefault()).toLocalDate()
                     }
@@ -873,27 +989,31 @@ object HealthConnectManager {
                 allDailyData
             }
 
-            // Calculate today's value
-            val todayValue = allHistoricalData.lastOrNull()?.value ?: 0.0
+            Log.d("OpenHealth_History", "[$metricName] Final: ${allHistoricalData.size} days, First: ${allHistoricalData.firstOrNull()?.date}, Last: ${allHistoricalData.lastOrNull()?.date}")
 
-            // Calculate average from ALL historical data
-            val allTimeAverage = if (allHistoricalData.isNotEmpty()) {
+            // Calculate today's value from history
+            val todayValue = allHistoricalData.find { it.date == today }?.value
+                ?: allHistoricalData.lastOrNull()?.value
+                ?: 0.0
+
+            // Calculate average
+            val average = if (allHistoricalData.isNotEmpty()) {
                 allHistoricalData.map { it.value }.average()
             } else 0.0
 
-            // Find best day from all historical data
+            // Find best day
             val bestDay = allHistoricalData.maxByOrNull { it.value }
 
             MetricHistory(
                 todayValue = todayValue,
                 unit = unit,
-                last30Days = allHistoricalData, // Now contains ALL data
-                monthlyAverage = allTimeAverage, // Now shows all-time average
+                last30Days = allHistoricalData,
+                monthlyAverage = average,
                 bestDay = bestDay,
                 allHistoricalData = allHistoricalData
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading metric history: ${e.message}", e)
+            Log.e("OpenHealth_History", "Error reading metric history: ${e.message}", e)
             MetricHistory(0.0, unit, emptyList(), 0.0, null)
         }
     }
@@ -907,7 +1027,7 @@ object HealthConnectManager {
                 ReadRecordsRequest(
                     recordType = BloodGlucoseRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                        LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
                         Instant.now()
                     )
                 )
@@ -934,7 +1054,7 @@ object HealthConnectManager {
                 ReadRecordsRequest(
                     recordType = BloodPressureRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                        LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
                         Instant.now()
                     )
                 )
@@ -962,7 +1082,7 @@ object HealthConnectManager {
                 ReadRecordsRequest(
                     recordType = BodyTemperatureRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                        LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
                         Instant.now()
                     )
                 )
@@ -983,26 +1103,37 @@ object HealthConnectManager {
     // Get latest HRV
     suspend fun getHeartRateVariability(): HeartRateVariabilityData {
         return try {
-            val client = healthConnectClient ?: return HeartRateVariabilityData()
+            val client = healthConnectClient ?: run {
+                Log.e("OpenHealth_HRV", "HealthConnectClient is null")
+                return HeartRateVariabilityData()
+            }
+
+            val startTime = LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault())
+            val endTime = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_HRV", "Query: $startTime to $endTime")
 
             val response = client.readRecords(
                 ReadRecordsRequest(
                     recordType = HeartRateVariabilityRmssdRecord::class,
-                    timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
-                        Instant.now()
-                    )
+                    timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant())
                 )
             )
 
-            val latestRecord = response.records.maxByOrNull { it.time } ?: return HeartRateVariabilityData()
+            val records = response.records
+            val latestRecord = records.maxByOrNull { it.time }
+            val todayValue = latestRecord?.heartRateVariabilityMillis ?: 0.0
+
+            Log.d("OpenHealth_HRV", "Records: ${records.size}, Today: ${String.format("%.1f", todayValue)} ms, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+
+            if (latestRecord == null) return HeartRateVariabilityData()
 
             HeartRateVariabilityData(
-                rmssdMs = latestRecord.heartRateVariabilityMillis,
+                rmssdMs = todayValue,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading HRV: ${e.message}", e)
+            Log.e("OpenHealth_HRV", "Error reading HRV: ${e.message}", e)
             HeartRateVariabilityData()
         }
     }
@@ -1010,26 +1141,37 @@ object HealthConnectManager {
     // Get latest SpO2
     suspend fun getOxygenSaturation(): OxygenSaturationData {
         return try {
-            val client = healthConnectClient ?: return OxygenSaturationData()
+            val client = healthConnectClient ?: run {
+                Log.e("OpenHealth_SpO2", "HealthConnectClient is null")
+                return OxygenSaturationData()
+            }
+
+            val startTime = LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault())
+            val endTime = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_SpO2", "Query: $startTime to $endTime")
 
             val response = client.readRecords(
                 ReadRecordsRequest(
                     recordType = OxygenSaturationRecord::class,
-                    timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
-                        Instant.now()
-                    )
+                    timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant())
                 )
             )
 
-            val latestRecord = response.records.maxByOrNull { it.time } ?: return OxygenSaturationData()
+            val records = response.records
+            val latestRecord = records.maxByOrNull { it.time }
+            val todayValue = latestRecord?.percentage?.value ?: 0.0
+
+            Log.d("OpenHealth_SpO2", "Records: ${records.size}, Today: ${String.format("%.1f", todayValue)}%, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+
+            if (latestRecord == null) return OxygenSaturationData()
 
             OxygenSaturationData(
-                percentage = latestRecord.percentage.value,
+                percentage = todayValue,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading SpO2: ${e.message}", e)
+            Log.e("OpenHealth_SpO2", "Error reading SpO2: ${e.message}", e)
             OxygenSaturationData()
         }
     }
@@ -1037,26 +1179,37 @@ object HealthConnectManager {
     // Get latest respiratory rate
     suspend fun getRespiratoryRate(): RespiratoryRateData {
         return try {
-            val client = healthConnectClient ?: return RespiratoryRateData()
+            val client = healthConnectClient ?: run {
+                Log.e("OpenHealth_RespiratoryRate", "HealthConnectClient is null")
+                return RespiratoryRateData()
+            }
+
+            val startTime = LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault())
+            val endTime = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_RespiratoryRate", "Query: $startTime to $endTime")
 
             val response = client.readRecords(
                 ReadRecordsRequest(
                     recordType = RespiratoryRateRecord::class,
-                    timeRangeFilter = TimeRangeFilter.between(
-                        LocalDate.now().minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant(),
-                        Instant.now()
-                    )
+                    timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant())
                 )
             )
 
-            val latestRecord = response.records.maxByOrNull { it.time } ?: return RespiratoryRateData()
+            val records = response.records
+            val latestRecord = records.maxByOrNull { it.time }
+            val todayValue = latestRecord?.rate?.toDouble() ?: 0.0
+
+            Log.d("OpenHealth_RespiratoryRate", "Records: ${records.size}, Today: $todayValue breaths/min, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+
+            if (latestRecord == null) return RespiratoryRateData()
 
             RespiratoryRateData(
-                ratePerMinute = latestRecord.rate,
+                ratePerMinute = todayValue,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
-            Log.e("HealthConnectManager", "Error reading respiratory rate: ${e.message}", e)
+            Log.e("OpenHealth_RespiratoryRate", "Error reading respiratory rate: ${e.message}", e)
             RespiratoryRateData()
         }
     }
@@ -1107,8 +1260,103 @@ object HealthConnectManager {
         recordClass = RespiratoryRateRecord::class,
         unit = "breaths/min",
         timeExtractor = { it.time },
-        valueExtractor = { it.rate }
+        valueExtractor = { record: RespiratoryRateRecord -> record.rate.toDouble() }
     )
+
+    // Get latest skin temperature
+    suspend fun getSkinTemperature(): SkinTemperatureData {
+        return try {
+            val client = healthConnectClient ?: run {
+                Log.e("OpenHealth_SkinTemp", "HealthConnectClient is null")
+                return SkinTemperatureData()
+            }
+
+            val startTime = LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault())
+            val endTime = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_SkinTemp", "Query: $startTime to $endTime")
+
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = SkinTemperatureRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant())
+                )
+            )
+
+            val records = response.records
+            val latestRecord = records.maxByOrNull { it.startTime }
+
+            Log.d("OpenHealth_SkinTemp", "Records: ${records.size}")
+
+            if (latestRecord == null) return SkinTemperatureData()
+
+            // Average the temperature deltas (variations from baseline)
+            val avgDelta = if (latestRecord.deltas.isNotEmpty()) {
+                latestRecord.deltas.map { it.delta.inCelsius }.average()
+            } else {
+                0.0
+            }
+
+            Log.d("OpenHealth_SkinTemp", "Latest avg delta: ${String.format("%.1f", avgDelta)}°C")
+
+            SkinTemperatureData(
+                temperatureCelsius = avgDelta,
+                measurementTime = latestRecord.startTime
+            )
+        } catch (e: Exception) {
+            Log.e("OpenHealth_SkinTemp", "Error reading skin temperature: ${e.message}", e)
+            SkinTemperatureData()
+        }
+    }
+
+    suspend fun getSkinTemperatureHistory(): MetricHistory {
+        return try {
+            val client = healthConnectClient ?: return MetricHistory(0.0, "°C", emptyList(), 0.0, null)
+
+            val today = LocalDate.now(ZoneId.systemDefault())
+            val startDate = today.minusDays(30)
+            val startOfDay = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
+            val now = ZonedDateTime.now(ZoneId.systemDefault()).toInstant()
+
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = SkinTemperatureRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(startOfDay, now)
+                )
+            )
+
+            val allHistoricalData = response.records
+                .groupBy { it.startTime.atZone(ZoneId.systemDefault()).toLocalDate() }
+                .map { (date, records) ->
+                    val avgValue = records.map { record ->
+                        if (record.deltas.isNotEmpty()) {
+                            record.deltas.map { it.delta.inCelsius }.average()
+                        } else 0.0
+                    }.average()
+                    DailyDataPoint(date, avgValue, "°C")
+                }
+                .sortedBy { it.date }
+
+            val todayValue = allHistoricalData.find { it.date == today }?.value
+                ?: allHistoricalData.lastOrNull()?.value
+                ?: 0.0
+
+            val monthlyAverage = if (allHistoricalData.isNotEmpty()) allHistoricalData.map { it.value }.average() else 0.0
+            val bestDay = allHistoricalData.maxByOrNull { it.value }
+
+            MetricHistory(
+                todayValue = todayValue,
+                unit = "°C",
+                last30Days = allHistoricalData,
+                monthlyAverage = monthlyAverage,
+                bestDay = bestDay,
+                allHistoricalData = allHistoricalData
+            )
+        } catch (e: Exception) {
+            Log.e("OpenHealth_SkinTemp", "Error reading skin temperature history: ${e.message}", e)
+            MetricHistory(0.0, "°C", emptyList(), 0.0, null)
+        }
+    }
 
     private fun getExerciseTypeName(type: Int): String {
         return when (type) {
@@ -1633,6 +1881,34 @@ object HealthConnectManager {
         } catch (e: Exception) {
             Log.e("HealthConnectManager", "Error reading respiratory rate for date $date: ${e.message}", e)
             RespiratoryRateData()
+        }
+    }
+
+    suspend fun getSkinTemperatureForDate(date: LocalDate): SkinTemperatureData {
+        return try {
+            val client = healthConnectClient ?: return SkinTemperatureData()
+            val (start, end) = getDateTimeRange(date)
+
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = SkinTemperatureRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(start, end)
+                )
+            )
+
+            val latestRecord = response.records.maxByOrNull { it.startTime } ?: return SkinTemperatureData()
+
+            val avgDelta = if (latestRecord.deltas.isNotEmpty()) {
+                latestRecord.deltas.map { it.delta.inCelsius }.average()
+            } else 0.0
+
+            SkinTemperatureData(
+                temperatureCelsius = avgDelta,
+                measurementTime = latestRecord.startTime
+            )
+        } catch (e: Exception) {
+            Log.e("HealthConnectManager", "Error reading skin temperature for date $date: ${e.message}", e)
+            SkinTemperatureData()
         }
     }
 }

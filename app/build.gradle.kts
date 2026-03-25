@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "com.openhealth.openhealth"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.openhealth.openhealth"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -91,5 +91,5 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     // Health Connect dependency
-    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
+    implementation("androidx.health.connect:connect-client:1.1.0-beta01")
 }

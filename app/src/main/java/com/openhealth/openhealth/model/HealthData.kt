@@ -27,6 +27,7 @@ data class HealthData(
     val heartRateVariability: HeartRateVariabilityData = HeartRateVariabilityData(),
     val oxygenSaturation: OxygenSaturationData = OxygenSaturationData(),
     val respiratoryRate: RespiratoryRateData = RespiratoryRateData(),
+    val skinTemperature: SkinTemperatureData = SkinTemperatureData(),
     // Additional metrics
     val speed: SpeedData = SpeedData(),
     val power: PowerData = PowerData(),
@@ -46,7 +47,9 @@ data class HealthSummary(
 data class DailyDataPoint(
     val date: LocalDate,
     val value: Double,
-    val unit: String
+    val unit: String,
+    val sleepStartTime: Instant? = null,
+    val sleepEndTime: Instant? = null
 )
 
 // Metric history for detail screen
@@ -57,7 +60,9 @@ data class MetricHistory(
     val monthlyAverage: Double,
     val bestDay: DailyDataPoint?,
     val allHistoricalData: List<DailyDataPoint> = emptyList(),
-    val sleepStages: SleepStagesData? = null
+    val sleepStages: SleepStagesData? = null,
+    val todaySleepStartTime: Instant? = null,
+    val todaySleepEndTime: Instant? = null
 )
 
 // Sleep stages data for detail screen
@@ -271,6 +276,12 @@ data class OxygenSaturationData(
 // Respiratory Rate Data
 data class RespiratoryRateData(
     val ratePerMinute: Double? = null,
+    val measurementTime: Instant? = null
+)
+
+// Skin Temperature Data
+data class SkinTemperatureData(
+    val temperatureCelsius: Double? = null,
     val measurementTime: Instant? = null
 )
 

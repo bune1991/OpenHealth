@@ -23,9 +23,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowLeft
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -76,6 +78,7 @@ import com.openhealth.openhealth.ui.theme.CardHeartRate
 import com.openhealth.openhealth.ui.theme.CardHRV
 import com.openhealth.openhealth.ui.theme.CardLeanBodyMass
 import com.openhealth.openhealth.ui.theme.CardRespiratoryRate
+import com.openhealth.openhealth.ui.theme.CardSkinTemperature
 import com.openhealth.openhealth.ui.theme.CardSleep
 import com.openhealth.openhealth.ui.theme.CardSpO2
 import com.openhealth.openhealth.ui.theme.CardSteps
@@ -88,8 +91,12 @@ import com.openhealth.openhealth.ui.theme.TextSecondary
 import com.openhealth.openhealth.ui.theme.TextTertiary
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.time.DayOfWeek
+import java.time.YearMonth
+import java.time.temporal.TemporalAdjusters
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -101,26 +108,50 @@ fun MetricDetailScreen(
     metricHistory: MetricHistory?,
     isLoading: Boolean,
     onBackClick: () -> Unit,
-    onDateChange: ((LocalDate) -> Unit)? = null
+    onHomeClick: (() -> Unit)? = null,
+    onDateChange: ((LocalDate) -> Unit)? = null,
+    stepsGoal: Int = 10000
 ) {
     val metricInfo = getMetricInfo(metricType)
 
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now(ZoneId.systemDefault())) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
+    val isToday = selectedDate == LocalDate.now(ZoneId.systemDefault())
     val selectedDateValue = remember(metricHistory, selectedDate) {
-        metricHistory?.allHistoricalData?.find { it.date == selectedDate }?.value
-            ?: metricHistory?.todayValue
-            ?: 0.0
+        val historicalValue = metricHistory?.allHistoricalData?.find { it.date == selectedDate }?.value
+        when {
+            historicalValue != null -> historicalValue
+            isToday -> metricHistory?.todayValue ?: 0.0
+            else -> 0.0
+        }
     }
 
     val showSkeleton = isLoading && metricHistory == null
     val showContent = metricHistory != null
 
+    // Date picker dialog
+    if (showDatePicker) {
+        CustomCalendarDialog(
+            initialDate = selectedDate,
+            onDismiss = { showDatePicker = false },
+            onDateSelected = { picked ->
+                selectedDate = picked
+                onDateChange?.invoke(picked)
+                showDatePicker = false
+            },
+            data = metricHistory?.allHistoricalData ?: emptyList(),
+            goal = stepsGoal
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
+                    Column(
+                        modifier = Modifier.clickable { showDatePicker = true }
+                    ) {
                         Text(
                             text = metricInfo.title,
                             color = TextPrimary,
@@ -136,12 +167,23 @@ fun MetricDetailScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
+                    Row {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = TextPrimary
+                            )
+                        }
+                        if (onHomeClick != null) {
+                            IconButton(onClick = onHomeClick) {
+                                Icon(
+                                    imageVector = Icons.Default.Home,
+                                    contentDescription = "Home",
+                                    tint = TextPrimary
+                                )
+                            }
+                        }
                     }
                 },
                 actions = {
@@ -159,17 +201,17 @@ fun MetricDetailScreen(
                     }
                     IconButton(
                         onClick = {
-                            if (selectedDate.isBefore(LocalDate.now())) {
+                            if (selectedDate.isBefore(LocalDate.now(ZoneId.systemDefault()))) {
                                 selectedDate = selectedDate.plusDays(1)
                                 onDateChange?.invoke(selectedDate)
                             }
                         },
-                        enabled = selectedDate.isBefore(LocalDate.now())
+                        enabled = selectedDate.isBefore(LocalDate.now(ZoneId.systemDefault()))
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                             contentDescription = "Next Day",
-                            tint = if (selectedDate.isBefore(LocalDate.now())) TextPrimary else TextTertiary
+                            tint = if (selectedDate.isBefore(LocalDate.now(ZoneId.systemDefault()))) TextPrimary else TextTertiary
                         )
                     }
                 },
@@ -199,16 +241,34 @@ fun MetricDetailScreen(
                     ) {
                         // Today's Value Card
                         item {
-                            val isToday = selectedDate == LocalDate.now()
                             val dateLabel = if (isToday) "Today" else selectedDate.format(
                                 DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
                             )
+
+                            // For sleep metric, get the selected date's sleep time range
+                            val (sleepStartTime, sleepEndTime) = if (metricType == HealthViewModel.MetricType.SLEEP) {
+                                if (isToday) {
+                                    // For today, use the dedicated today fields
+                                    Pair(metricHistory?.todaySleepStartTime, metricHistory?.todaySleepEndTime)
+                                } else {
+                                    // For historical dates, find in allHistoricalData
+                                    val dayData = metricHistory?.allHistoricalData?.find { it.date == selectedDate }
+                                    Pair(dayData?.sleepStartTime, dayData?.sleepEndTime)
+                                }
+                            } else {
+                                Pair(null, null)
+                            }
+
                             TodayValueCard(
-                                value = formatValue(selectedDateValue, metricInfo.decimalPlaces),
+                                value = selectedDateValue,
+                                valueFormatted = formatValue(selectedDateValue, metricInfo.decimalPlaces),
                                 unit = metricHistory?.unit ?: "",
                                 color = metricInfo.color,
                                 dateLabel = dateLabel,
-                                isLoading = isLoading
+                                isLoading = isLoading,
+                                isSleep = metricType == HealthViewModel.MetricType.SLEEP,
+                                sleepStartTime = sleepStartTime,
+                                sleepEndTime = sleepEndTime
                             )
                         }
 
@@ -231,7 +291,8 @@ fun MetricDetailScreen(
                                     data = metricHistory!!.last30Days.takeLast(7),
                                     color = metricInfo.color,
                                     title = "Last 7 Days",
-                                    isSleep = metricType == HealthViewModel.MetricType.SLEEP
+                                    isSleep = metricType == HealthViewModel.MetricType.SLEEP,
+                                    decimalPlaces = metricInfo.decimalPlaces
                                 )
                             }
                         }
@@ -246,7 +307,7 @@ fun MetricDetailScreen(
                                     title = "30-Day Avg",
                                     value = formatValue(metricHistory?.monthlyAverage ?: 0.0, metricInfo.decimalPlaces),
                                     unit = metricHistory?.unit ?: "",
-                                    icon = Icons.Default.TrendingUp,
+                                    icon = Icons.AutoMirrored.Filled.TrendingUp,
                                     color = metricInfo.color,
                                     modifier = Modifier.weight(1f),
                                     isLoading = isLoading
@@ -318,6 +379,21 @@ fun MetricDetailScreen(
                             }
                         }
 
+                        // Calendar View with Step Rings (Steps only)
+                        if (metricType == HealthViewModel.MetricType.STEPS && metricHistory?.allHistoricalData?.isNotEmpty() == true) {
+                            item {
+                                StepRingsCalendar(
+                                    data = metricHistory.allHistoricalData,
+                                    selectedDate = selectedDate,
+                                    onDateSelected = { date ->
+                                        selectedDate = date
+                                        onDateChange?.invoke(date)
+                                    },
+                                    goal = stepsGoal
+                                )
+                            }
+                        }
+
                         // All History Header
                         val totalRecords = metricHistory?.allHistoricalData?.size ?: 0
                         item {
@@ -383,7 +459,7 @@ private fun LineChartCard(
     data: List<DailyDataPoint>,
     color: Color,
     title: String,
-    isSleep: Boolean = false
+    @Suppress("UNUSED_PARAMETER") isSleep: Boolean = false
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -422,6 +498,7 @@ private fun LineChartCard(
                     .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Use the actual data points' dates for labels
                 val labels = listOf(
                     data.firstOrNull()?.date?.format(DateTimeFormatter.ofPattern("MMM d")) ?: "",
                     data.getOrNull(data.size / 2)?.date?.format(DateTimeFormatter.ofPattern("MMM d")) ?: "",
@@ -445,7 +522,7 @@ private fun LineChart(
     lineColor: Color,
     fillColor: Color,
     modifier: Modifier = Modifier,
-    isSleep: Boolean = false
+    @Suppress("UNUSED_PARAMETER") isSleep: Boolean = false
 ) {
     if (data.size < 2) return
 
@@ -497,7 +574,6 @@ private fun LineChart(
                     val firstX = padding
                     val firstY = padding + chartHeight * (1 - if (range > 0) (data.first().value - minValue) / range else 0.5).toFloat()
                     val lastX = padding + (data.size - 1) * stepX
-                    val lastY = padding + chartHeight * (1 - if (range > 0) (data.last().value - minValue) / range else 0.5).toFloat()
 
                     moveTo(firstX, height - padding)
                     lineTo(firstX, firstY)
@@ -558,7 +634,8 @@ private fun BarChartCard(
     data: List<DailyDataPoint>,
     color: Color,
     title: String,
-    isSleep: Boolean = false
+    @Suppress("UNUSED_PARAMETER") isSleep: Boolean = false,
+    decimalPlaces: Int = 0
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -586,7 +663,8 @@ private fun BarChartCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
-                isSleep = isSleep
+                isSleep = isSleep,
+                decimalPlaces = decimalPlaces
             )
         }
     }
@@ -597,37 +675,66 @@ private fun BarChart(
     data: List<DailyDataPoint>,
     barColor: Color,
     modifier: Modifier = Modifier,
-    isSleep: Boolean = false
+    @Suppress("UNUSED_PARAMETER") isSleep: Boolean = false,
+    decimalPlaces: Int = 0
 ) {
     if (data.isEmpty()) return
 
-    val values = data.map { it.value }
-    val maxValue = values.maxOrNull() ?: 1.0
-    val minValue = 0.0
+    // FIX: Sort data by date (oldest first → today last) to ensure correct bar order
+    val sortedData = data.sortedBy { it.date }
 
-    val dayLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val values = sortedData.map { it.value }
+    val maxValue = values.maxOrNull() ?: 1.0
+    val minValue = values.minOrNull() ?: 0.0
+    val valueRange = maxValue - minValue
+
+    // Check if all values are the same
+    val allValuesSame = valueRange < 0.0001
+
+    // Day name formatter - use short day names (Mon, Tue, Wed, etc.)
+    val dayFormatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
 
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.Bottom
     ) {
-        data.forEachIndexed { index, point ->
-            val dayOfWeek = point.date.dayOfWeek.value % 7
-            val label = dayLabels.getOrNull(dayOfWeek) ?: ""
+        sortedData.forEachIndexed { index, point ->
+            // Get the actual day name from the date
+            val label = point.date.format(dayFormatter)
+
+            // Calculate bar height with variation
+            val targetHeight = when {
+                // If only 1 day has real data (others are 0 or minimal), show empty state
+                maxValue > 0 && point.value < maxValue * 0.1 && index > 0 -> 0.1f // 10% height for empty days
+                // If all values are the same, add slight variation based on index to show they're different days
+                allValuesSame && maxValue > 0 -> {
+                    val baseHeight = (point.value / maxValue).toFloat()
+                    // Add small variation based on day index (-5% to +5%)
+                    val variation = (index - 3) * 0.015f
+                    (baseHeight + variation).coerceIn(0.15f, 1f)
+                }
+                maxValue > 0 -> (point.value / maxValue).toFloat()
+                else -> 0.1f
+            }
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.weight(1f)
             ) {
-                // Value label on top of bar
+                // Value label on top of bar - FIX: Use decimalPlaces for proper formatting
                 val displayValue = if (isSleep) {
                     "${point.value.toInt()}h"
                 } else {
                     if (point.value >= 1000) {
                         "${(point.value / 1000).roundToInt()}k"
                     } else {
-                        point.value.roundToInt().toString()
+                        // FIX: Use decimalPlaces to format the value correctly
+                        if (decimalPlaces > 0) {
+                            String.format("%.${decimalPlaces}f", point.value)
+                        } else {
+                            point.value.roundToInt().toString()
+                        }
                     }
                 }
 
@@ -641,7 +748,6 @@ private fun BarChart(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 // Animated bar
-                val targetHeight = if (maxValue > 0) (point.value / maxValue).toFloat() else 0f
                 var animationPlayed by remember { mutableStateOf(false) }
                 val animatedHeight by animateFloatAsState(
                     targetValue = if (animationPlayed) targetHeight else 0f,
@@ -770,11 +876,15 @@ private fun SkeletonCard(
 
 @Composable
 private fun TodayValueCard(
-    value: String,
+    value: Double,
+    valueFormatted: String,
     unit: String,
     color: Color,
     dateLabel: String = "Today",
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    isSleep: Boolean = false,
+    sleepStartTime: java.time.Instant? = null,
+    sleepEndTime: java.time.Instant? = null
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -795,34 +905,58 @@ private fun TodayValueCard(
                 color = TextSecondary
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                verticalAlignment = Alignment.Bottom
-            ) {
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .width(120.dp)
-                            .height(48.dp)
-                            .background(
-                                color = color.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                    )
-                } else {
+
+            // For sleep, show time range if available
+            if (isSleep && sleepStartTime != null && sleepEndTime != null) {
+                val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+                val startTimeStr = sleepStartTime.atZone(java.time.ZoneId.systemDefault()).format(timeFormatter)
+                val endTimeStr = sleepEndTime.atZone(java.time.ZoneId.systemDefault()).format(timeFormatter)
+
+                Text(
+                    text = "$startTimeStr → $endTimeStr",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                // Show duration below time range using the raw double value
+                val durationText = formatHoursAndMinutes(value)
+                Text(
+                    text = durationText,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = color,
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .width(120.dp)
+                                .height(48.dp)
+                                .background(
+                                    color = color.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                        )
+                    } else {
+                        Text(
+                            text = valueFormatted,
+                            style = MaterialTheme.typography.displayMedium,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = value,
-                        style = MaterialTheme.typography.displayMedium,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
+                        text = unit,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = unit,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
             }
         }
     }
@@ -915,6 +1049,7 @@ private fun HistoryItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Left side: Date
             Column {
                 Text(
                     text = dayData.date.format(
@@ -933,26 +1068,48 @@ private fun HistoryItem(
                 )
             }
 
-            val displayValue = if (isSleep) {
-                formatHoursAndMinutes(dayData.value)
-            } else {
-                formatValue(dayData.value, decimalPlaces)
-            }
+            // Right side: Value or Sleep time range
+            if (isSleep) {
+                Column(horizontalAlignment = Alignment.End) {
+                    // Show time range if available
+                    if (dayData.sleepStartTime != null && dayData.sleepEndTime != null) {
+                        val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+                        val startTimeStr = dayData.sleepStartTime.atZone(java.time.ZoneId.systemDefault()).format(timeFormatter)
+                        val endTimeStr = dayData.sleepEndTime.atZone(java.time.ZoneId.systemDefault()).format(timeFormatter)
 
-            Text(
-                text = displayValue,
-                style = MaterialTheme.typography.titleLarge,
-                color = color,
-                fontWeight = FontWeight.Bold
-            )
+                        Text(
+                            text = "$startTimeStr → $endTimeStr",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                    }
+                    // Show duration
+                    Text(
+                        text = formatHoursAndMinutes(dayData.value),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = color,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            } else {
+                val displayValue = formatValue(dayData.value, decimalPlaces)
+                Text(
+                    text = displayValue,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = color,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
 
 private fun formatHoursAndMinutes(hours: Double): String {
-    val totalMinutes = (hours * 60).roundToInt()
-    val h = totalMinutes / 60
-    val m = totalMinutes % 60
+    val durationMillis = (hours * 60 * 60 * 1000).toLong()  // Convert hours to milliseconds
+    val h = (durationMillis / 3600000).toInt()
+    val m = ((durationMillis % 3600000) / 60000).toInt()
     return "${h}h ${m}m"
 }
 
@@ -1135,6 +1292,132 @@ private fun formatValue(value: Double, decimalPlaces: Int): String {
     }
 }
 
+@Composable
+private fun StepRingsCalendar(
+    data: List<DailyDataPoint>,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    goal: Int = 10000
+) {
+    val dataMap = remember(data) { data.associateBy { it.date } }
+    val currentMonth = remember(selectedDate) { YearMonth.from(selectedDate) }
+    val today = LocalDate.now(ZoneId.systemDefault())
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Day-of-week headers
+            Row(modifier = Modifier.fillMaxWidth()) {
+                listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").forEach { day ->
+                    Text(
+                        text = day,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextTertiary,
+                        modifier = Modifier.weight(1f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Calendar grid
+            val firstOfMonth = currentMonth.atDay(1)
+            val startDayOfWeek = firstOfMonth.dayOfWeek.value % 7 // Sunday = 0
+            val daysInMonth = currentMonth.lengthOfMonth()
+
+            var dayCounter = 1
+            for (week in 0..5) {
+                if (dayCounter > daysInMonth) break
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    for (col in 0..6) {
+                        val cellIndex = week * 7 + col
+                        if (cellIndex < startDayOfWeek || dayCounter > daysInMonth) {
+                            Spacer(modifier = Modifier.weight(1f).height(48.dp))
+                        } else {
+                            val date = currentMonth.atDay(dayCounter)
+                            val steps = dataMap[date]?.value ?: 0.0
+                            val isSelected = date == selectedDate
+                            val isFuture = date.isAfter(today)
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .then(
+                                        if (!isFuture) Modifier.clickable { onDateSelected(date) }
+                                        else Modifier
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val progress = (steps / goal).toFloat().coerceIn(0f, 1f)
+                                val ringColor = when {
+                                    isFuture -> Color.Transparent
+                                    steps <= 0 -> Color.Gray.copy(alpha = 0.2f)
+                                    steps < 5000 -> Color(0xFFE53935) // Red
+                                    steps < 8000 -> Color(0xFFFFA726) // Orange/Yellow
+                                    else -> Color(0xFF66BB6A) // Green
+                                }
+
+                                // Draw ring
+                                if (!isFuture && steps > 0) {
+                                    androidx.compose.foundation.Canvas(
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        val strokeW = 3.dp.toPx()
+                                        drawArc(
+                                            color = ringColor.copy(alpha = 0.2f),
+                                            startAngle = -90f,
+                                            sweepAngle = 360f,
+                                            useCenter = false,
+                                            style = Stroke(width = strokeW, cap = StrokeCap.Round),
+                                            topLeft = Offset(strokeW / 2, strokeW / 2),
+                                            size = Size(size.width - strokeW, size.height - strokeW)
+                                        )
+                                        drawArc(
+                                            color = ringColor,
+                                            startAngle = -90f,
+                                            sweepAngle = 360f * progress,
+                                            useCenter = false,
+                                            style = Stroke(width = strokeW, cap = StrokeCap.Round),
+                                            topLeft = Offset(strokeW / 2, strokeW / 2),
+                                            size = Size(size.width - strokeW, size.height - strokeW)
+                                        )
+                                    }
+                                }
+
+                                // Day number
+                                Text(
+                                    text = dayCounter.toString(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = when {
+                                        isSelected -> CardSteps
+                                        isFuture -> TextTertiary.copy(alpha = 0.3f)
+                                        else -> TextPrimary
+                                    },
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 12.sp
+                                )
+                            }
+                            dayCounter++
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 private data class MetricInfo(
     val title: String,
     val color: Color,
@@ -1164,5 +1447,6 @@ private fun getMetricInfo(metricType: HealthViewModel.MetricType): MetricInfo {
         HealthViewModel.MetricType.HEART_RATE_VARIABILITY -> MetricInfo("Heart Rate Variability", CardHRV, 0)
         HealthViewModel.MetricType.OXYGEN_SATURATION -> MetricInfo("Oxygen Saturation", CardSpO2, 0)
         HealthViewModel.MetricType.RESPIRATORY_RATE -> MetricInfo("Respiratory Rate", CardRespiratoryRate, 0)
+        HealthViewModel.MetricType.SKIN_TEMPERATURE -> MetricInfo("Skin Temperature", CardSkinTemperature, 1)
     }
 }

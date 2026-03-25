@@ -36,6 +36,7 @@ data class SettingsData(
     val showHRV: Boolean = true,
     val showOxygenSaturation: Boolean = true,
     val showRespiratoryRate: Boolean = true,
+    val showSkinTemperature: Boolean = true,
 
     // Additional metrics
     val showSpeed: Boolean = true,
@@ -84,6 +85,7 @@ fun SettingsData.shouldShowMetric(
         MetricType.HEART_RATE_VARIABILITY -> showHRV
         MetricType.OXYGEN_SATURATION -> showOxygenSaturation
         MetricType.RESPIRATORY_RATE -> showRespiratoryRate
+        MetricType.SKIN_TEMPERATURE -> showSkinTemperature
         MetricType.SPEED -> showSpeed
         MetricType.POWER -> showPower
         MetricType.NUTRITION -> showNutrition
@@ -115,6 +117,7 @@ enum class MetricType {
     HEART_RATE_VARIABILITY,
     OXYGEN_SATURATION,
     RESPIRATORY_RATE,
+    SKIN_TEMPERATURE,
     SPEED,
     POWER,
     NUTRITION,
@@ -145,6 +148,7 @@ fun MetricType.displayName(): String = when (this) {
     MetricType.HEART_RATE_VARIABILITY -> "HRV"
     MetricType.OXYGEN_SATURATION -> "SpO2"
     MetricType.RESPIRATORY_RATE -> "Respiratory Rate"
+    MetricType.SKIN_TEMPERATURE -> "Skin Temperature"
     MetricType.SPEED -> "Speed"
     MetricType.POWER -> "Power"
     MetricType.NUTRITION -> "Nutrition"
@@ -162,7 +166,8 @@ fun MetricType.category(): String = when (this) {
     MetricType.SLEEP -> "Sleep"
     MetricType.VO2_MAX -> "Exercise"
     MetricType.BLOOD_GLUCOSE, MetricType.BLOOD_PRESSURE, MetricType.BODY_TEMPERATURE,
-    MetricType.HEART_RATE_VARIABILITY, MetricType.OXYGEN_SATURATION, MetricType.RESPIRATORY_RATE -> "Vitals"
+    MetricType.HEART_RATE_VARIABILITY, MetricType.OXYGEN_SATURATION, MetricType.RESPIRATORY_RATE,
+    MetricType.SKIN_TEMPERATURE -> "Vitals"
     MetricType.SPEED, MetricType.POWER -> "Performance"
     MetricType.NUTRITION, MetricType.HYDRATION -> "Nutrition"
     MetricType.MINDFULNESS -> "Wellness"

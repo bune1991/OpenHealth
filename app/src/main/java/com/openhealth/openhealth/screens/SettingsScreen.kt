@@ -136,6 +136,7 @@ fun SettingsScreen(
                             MetricType.HEART_RATE_VARIABILITY -> settings.showHRV
                             MetricType.OXYGEN_SATURATION -> settings.showOxygenSaturation
                             MetricType.RESPIRATORY_RATE -> settings.showRespiratoryRate
+                            MetricType.SKIN_TEMPERATURE -> settings.showSkinTemperature
                             MetricType.SPEED -> settings.showSpeed
                             MetricType.POWER -> settings.showPower
                             MetricType.NUTRITION -> settings.showNutrition
@@ -165,6 +166,7 @@ fun SettingsScreen(
                                 MetricType.HEART_RATE_VARIABILITY -> settings.copy(showHRV = enabled)
                                 MetricType.OXYGEN_SATURATION -> settings.copy(showOxygenSaturation = enabled)
                                 MetricType.RESPIRATORY_RATE -> settings.copy(showRespiratoryRate = enabled)
+                                MetricType.SKIN_TEMPERATURE -> settings.copy(showSkinTemperature = enabled)
                                 MetricType.SPEED -> settings.copy(showSpeed = enabled)
                                 MetricType.POWER -> settings.copy(showPower = enabled)
                                 MetricType.NUTRITION -> settings.copy(showNutrition = enabled)
