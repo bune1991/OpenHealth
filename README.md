@@ -1,10 +1,6 @@
 # OpenHealth
 
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" width="120" alt="OpenHealth Logo">
-</p>
-
-<p align="center">
   <b>A beautiful Android health dashboard that reads from Health Connect</b>
 </p>
 
