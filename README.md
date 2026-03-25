@@ -1,7 +1,7 @@
 # OpenHealth
 
 <p align="center">
-  <b>A beautiful Android health dashboard that reads from Health Connect</b>
+  <b>Android health dashboard that reads from Health Connect</b>
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
 
 ## 📱 Overview
 
-OpenHealth is a modern, privacy-focused health dashboard for Android that seamlessly integrates with **Health Connect** to provide you with a beautiful overview of your health and fitness data. Inspired by the clean design of Garmin Connect, OpenHealth puts your health metrics front and center with an intuitive dark-themed interface.
+OpenHealth is a modern, privacy-focused health dashboard for Android that seamlessly integrates with **Health Connect** to provide you with a comprehensive overview of your health and fitness data. Inspired by the clean design of Garmin Connect, OpenHealth puts your health metrics front and center with an intuitive dark-themed interface.
 
 ## ✨ Features
 
@@ -168,7 +168,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)** - see the [LICENSE](LICENSE) file for details.
 
 ```
-OpenHealth - A beautiful Android health dashboard
+OpenHealth - Android health dashboard
 Copyright (C) 2024  Fahad (bune1991)
 
 This program is free software: you can redistribute it and/or modify
