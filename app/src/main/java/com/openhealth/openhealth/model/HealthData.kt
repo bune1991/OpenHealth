@@ -59,6 +59,7 @@ data class MetricHistory(
     val last30Days: List<DailyDataPoint>,
     val monthlyAverage: Double,
     val bestDay: DailyDataPoint?,
+    val bestDayLabel: String = "Best Day",
     val allHistoricalData: List<DailyDataPoint> = emptyList(),
     val sleepStages: SleepStagesData? = null,
     val todaySleepStartTime: Instant? = null,

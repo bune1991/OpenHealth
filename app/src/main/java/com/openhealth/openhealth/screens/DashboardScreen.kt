@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowLeft
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -124,7 +125,9 @@ fun DashboardScreen(
     onNextDay: () -> Unit,
     onToday: () -> Unit,
     onDateSelected: ((LocalDate) -> Unit)? = null,
+    onReportsClick: () -> Unit = {},
     stepsCalendarData: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
+    stepsStreak: Int = 0,
     initialScrollIndex: Int = 0,
     initialScrollOffset: Int = 0,
     onScrollPositionChanged: (Int, Int) -> Unit = { _, _ -> }
@@ -220,6 +223,13 @@ fun DashboardScreen(
                             tint = if (isToday) TextTertiary else TextPrimary
                         )
                     }
+                    IconButton(onClick = onReportsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Assessment,
+                            contentDescription = "Reports",
+                            tint = TextPrimary
+                        )
+                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -269,6 +279,49 @@ fun DashboardScreen(
                     )
                 }
 
+                // Three-Ring Gauge: Activity / Recovery / Sleep (Bevel-style)
+                item {
+                    val activityPct = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
+                    val recoveryPct = (readinessScore.score / 100f).coerceIn(0f, 1f)
+                    val sleepPct = ((healthData.sleep.totalDuration?.toMinutes() ?: 0) / 480f).coerceIn(0f, 1f) // 8h = 100%
+
+                    ThreeRingGauge(
+                        activityPercent = activityPct,
+                        recoveryPercent = recoveryPct,
+                        sleepPercent = sleepPct
+                    )
+                }
+
+                // Stress & Energy (estimated from HRV)
+                if (healthData.heartRateVariability.rmssdMs != null) {
+                    item {
+                        val hrv = healthData.heartRateVariability.rmssdMs!!
+                        // Stress: inverse of HRV. HRV 60+ = low stress, HRV 20- = high stress
+                        val stressLevel = ((60.0 - hrv.coerceIn(10.0, 60.0)) / 50.0 * 100).toInt().coerceIn(0, 100)
+                        val stressLabel = when {
+                            stressLevel < 25 -> "Low"
+                            stressLevel < 50 -> "Moderate"
+                            stressLevel < 75 -> "High"
+                            else -> "Very High"
+                        }
+                        val stressColor = when {
+                            stressLevel < 25 -> Color(0xFF4CD964)
+                            stressLevel < 50 -> Color(0xFFFFCC00)
+                            stressLevel < 75 -> Color(0xFFFF9500)
+                            else -> Color(0xFFFF3B30)
+                        }
+                        // Energy: based on readiness score
+                        val energyPct = readinessScore.score.coerceIn(0, 100)
+
+                        StressEnergyCard(
+                            stressLevel = stressLevel,
+                            stressLabel = stressLabel,
+                            stressColor = stressColor,
+                            energyPercent = energyPct
+                        )
+                    }
+                }
+
                 // Steps Card - Full width with left accent
                 item {
                     MetricCard(
@@ -278,7 +331,8 @@ fun DashboardScreen(
                         icon = Icons.AutoMirrored.Filled.DirectionsWalk,
                         accentColor = StepsCyan,
                         sparklineData = generateSparklineData(healthData.steps.count, 20000),
-                        onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) }
+                        onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) },
+                        subtitle = if (settings.showStepsStreak && stepsStreak > 0) "🔥 $stepsStreak day streak!" else ""
                     )
                 }
 
@@ -333,10 +387,24 @@ fun DashboardScreen(
                 // Activity Section
                 val hasDistance = settings.showDistance && healthData.distance.kilometers > 0
                 val hasFloors = settings.showFloors && healthData.floors.count > 0
+                val hasExercise = settings.showExercise && healthData.exercise.sessions.isNotEmpty()
 
-                if (hasDistance || hasFloors) {
+                if (hasDistance || hasFloors || hasExercise) {
                     item {
                         SectionHeader(title = "Activity")
+                    }
+                }
+
+                if (hasExercise) {
+                    item {
+                        val totalMin = healthData.exercise.totalDuration?.toMinutes() ?: 0
+                        val sessionText = if (healthData.exercise.sessionCount == 1) "1 session" else "${healthData.exercise.sessionCount} sessions"
+                        val durationText = if (totalMin >= 60) "${totalMin / 60}h ${totalMin % 60}m" else "${totalMin}m"
+                        DetailCard(
+                            title = "Exercise",
+                            value = "$durationText ($sessionText)",
+                            onClick = { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                        )
                     }
                 }
 
@@ -358,6 +426,19 @@ fun DashboardScreen(
                             value = "${healthData.floors.count}",
                             progress = (healthData.floors.count.toFloat() / settings.floorsGoal).coerceIn(0f, 1f),
                             onClick = { onMetricClick(HealthViewModel.MetricType.FLOORS) }
+                        )
+                    }
+                }
+
+                // VO2 Max
+                val hasVO2Max = settings.showVO2Max && healthData.vo2Max.value != null && healthData.vo2Max.value > 0
+
+                if (hasVO2Max) {
+                    item {
+                        DetailCard(
+                            title = "VO2 Max",
+                            value = String.format("%.1f ml/kg/min", healthData.vo2Max.value),
+                            onClick = { onMetricClick(HealthViewModel.MetricType.VO2_MAX) }
                         )
                     }
                 }
@@ -462,8 +543,9 @@ fun DashboardScreen(
                 val hasBodyTemp = settings.showBodyTemperature && healthData.bodyTemperature.temperatureCelsius != null
                 val hasRespiratoryRate = settings.showRespiratoryRate && healthData.respiratoryRate.ratePerMinute != null
                 val hasSkinTemp = settings.showSkinTemperature && healthData.skinTemperature.temperatureCelsius != null
+                val hasBloodGlucose = settings.showBloodGlucose && healthData.bloodGlucose.levelMgPerDl != null
 
-                if (hasHRV || hasBloodOxygen || hasBloodPressure || hasBodyTemp || hasRespiratoryRate || hasSkinTemp) {
+                if (hasHRV || hasBloodOxygen || hasBloodPressure || hasBodyTemp || hasRespiratoryRate || hasSkinTemp || hasBloodGlucose) {
                     item {
                         SectionHeader(title = "Vitals")
                     }
@@ -471,19 +553,35 @@ fun DashboardScreen(
 
                 if (hasHRV) {
                     item {
+                        val hrv = healthData.heartRateVariability.rmssdMs!!
                         DetailCard(
                             title = "Heart Rate Variability",
-                            value = String.format("%.0f ms", healthData.heartRateVariability.rmssdMs),
+                            value = String.format("%.0f ms", hrv),
+                            statusColor = when { hrv >= 30 -> Color(0xFF4CD964); hrv >= 20 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
                             onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
+                        )
+                    }
+                }
+
+                if (hasBloodGlucose) {
+                    item {
+                        val bg = healthData.bloodGlucose.levelMgPerDl!!
+                        DetailCard(
+                            title = "Blood Glucose",
+                            value = String.format("%.0f mg/dL", bg),
+                            statusColor = when { bg in 70.0..100.0 -> Color(0xFF4CD964); bg in 60.0..140.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
+                            onClick = { onMetricClick(HealthViewModel.MetricType.BLOOD_GLUCOSE) }
                         )
                     }
                 }
 
                 if (hasBloodOxygen) {
                     item {
+                        val spo2 = healthData.oxygenSaturation.percentage!!
                         DetailCard(
                             title = "Blood Oxygen",
-                            value = String.format("%.0f%%", healthData.oxygenSaturation.percentage),
+                            value = String.format("%.0f%%", spo2),
+                            statusColor = when { spo2 >= 95 -> Color(0xFF4CD964); spo2 >= 90 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
                             onClick = { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
                         )
                     }
@@ -491,9 +589,11 @@ fun DashboardScreen(
 
                 if (hasBloodPressure) {
                     item {
+                        val sys = healthData.bloodPressure.systolicMmHg!!
                         DetailCard(
                             title = "Blood Pressure",
-                            value = String.format("%.0f/%.0f mmHg", healthData.bloodPressure.systolicMmHg, healthData.bloodPressure.diastolicMmHg),
+                            value = String.format("%.0f/%.0f mmHg", sys, healthData.bloodPressure.diastolicMmHg),
+                            statusColor = when { sys in 90.0..120.0 -> Color(0xFF4CD964); sys in 80.0..140.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
                             onClick = { onMetricClick(HealthViewModel.MetricType.BLOOD_PRESSURE) }
                         )
                     }
@@ -501,9 +601,11 @@ fun DashboardScreen(
 
                 if (hasBodyTemp) {
                     item {
+                        val temp = healthData.bodyTemperature.temperatureCelsius!!
                         DetailCard(
                             title = "Body Temperature",
-                            value = String.format("%.1f°C", healthData.bodyTemperature.temperatureCelsius),
+                            value = String.format("%.1f°C", temp),
+                            statusColor = when { temp in 36.1..37.2 -> Color(0xFF4CD964); temp in 35.5..38.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
                             onClick = { onMetricClick(HealthViewModel.MetricType.BODY_TEMPERATURE) }
                         )
                     }
@@ -511,9 +613,11 @@ fun DashboardScreen(
 
                 if (hasRespiratoryRate) {
                     item {
+                        val rr = healthData.respiratoryRate.ratePerMinute!!
                         DetailCard(
                             title = "Respiratory Rate",
-                            value = String.format("%.0f breaths/min", healthData.respiratoryRate.ratePerMinute),
+                            value = String.format("%.0f breaths/min", rr),
+                            statusColor = when { rr in 12.0..20.0 -> Color(0xFF4CD964); rr in 8.0..25.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
                             onClick = { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
                         )
                     }
@@ -525,6 +629,63 @@ fun DashboardScreen(
                             title = "Skin Temp",
                             value = String.format("%.1f°C", healthData.skinTemperature.temperatureCelsius),
                             onClick = { onMetricClick(HealthViewModel.MetricType.SKIN_TEMPERATURE) }
+                        )
+                    }
+                }
+
+                // Health status banner
+                val allNormal = listOf(
+                    hasHRV && healthData.heartRateVariability.rmssdMs!! >= 30,
+                    hasBloodOxygen && healthData.oxygenSaturation.percentage!! >= 95,
+                    hasRespiratoryRate && healthData.respiratoryRate.ratePerMinute!! in 12.0..20.0
+                ).all { it }
+
+                if (hasHRV || hasBloodOxygen || hasRespiratoryRate) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (allNormal) Color(0xFF4CD964).copy(alpha = 0.15f) else Color(0xFFFFCC00).copy(alpha = 0.15f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (allNormal) "✓" else "!",
+                                    color = if (allNormal) Color(0xFF4CD964) else Color(0xFFFFCC00),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (allNormal) "All metrics are within normal range" else "Some metrics need attention",
+                                    color = if (allNormal) Color(0xFF4CD964) else Color(0xFFFFCC00),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Nutrition Section
+                val hasNutrition = settings.showNutrition && healthData.nutrition.calories != null && healthData.nutrition.calories > 0
+
+                if (hasNutrition) {
+                    item {
+                        SectionHeader(title = "Nutrition")
+                    }
+                    item {
+                        val cal = healthData.nutrition.calories?.roundToInt() ?: 0
+                        val protein = healthData.nutrition.proteinGrams?.roundToInt() ?: 0
+                        val carbs = healthData.nutrition.carbsGrams?.roundToInt() ?: 0
+                        val fat = healthData.nutrition.fatGrams?.roundToInt() ?: 0
+                        DetailCard(
+                            title = "Nutrition",
+                            value = "$cal kcal  P:${protein}g  C:${carbs}g  F:${fat}g",
+                            onClick = { onMetricClick(HealthViewModel.MetricType.NUTRITION) }
                         )
                     }
                 }
@@ -881,6 +1042,7 @@ private fun DetailCard(
     title: String,
     value: String,
     progress: Float? = null,
+    statusColor: Color? = null,
     onClick: (() -> Unit)? = null
 ) {
     Card(
@@ -900,12 +1062,22 @@ private fun DetailCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (statusColor != null) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(statusColor, RoundedCornerShape(4.dp))
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = value,
@@ -1124,4 +1296,82 @@ private fun generateSleepSparklineData(totalMinutes: Int): List<Float> {
     }
 
     return previousDays + listOf(todayValue)
+}
+
+@Composable
+private fun ThreeRingGauge(
+    activityPercent: Float,
+    recoveryPercent: Float,
+    sleepPercent: Float
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RingGaugeItem(percent = activityPercent, label = "Activity", color = StepsCyan)
+            RingGaugeItem(percent = recoveryPercent, label = "Recovery", color = Color(0xFF4CD964))
+            RingGaugeItem(percent = sleepPercent, label = "Sleep", color = SleepPurple)
+        }
+    }
+}
+
+@Composable
+private fun RingGaugeItem(percent: Float, label: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(80.dp)) {
+            Canvas(modifier = Modifier.size(80.dp)) {
+                val strokeW = 8.dp.toPx()
+                val arcSize = Size(size.width - strokeW, size.height - strokeW)
+                val topLeft = Offset(strokeW / 2, strokeW / 2)
+                drawArc(color = color.copy(alpha = 0.15f), startAngle = -90f, sweepAngle = 360f, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
+                drawArc(color = color, startAngle = -90f, sweepAngle = 360f * percent, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
+            }
+            Text(text = "${(percent * 100).roundToInt()}%", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(text = label, color = TextSecondary, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun StressEnergyCard(stressLevel: Int, stressLabel: String, stressColor: Color, energyPercent: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "Stress & Energy", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text(text = "Stress", color = TextSecondary, fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(text = "$stressLevel", color = stressColor, fontWeight = FontWeight.Bold, fontSize = 28.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = stressLabel, color = stressColor, fontSize = 14.sp, modifier = Modifier.padding(bottom = 4.dp))
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "⚡", fontSize = 16.sp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(modifier = Modifier.weight(1f).height(8.dp).background(Color(0xFF2A2A2A), RoundedCornerShape(4.dp))) {
+                    Box(modifier = Modifier.fillMaxWidth(energyPercent / 100f).height(8.dp).background(Color(0xFF4CD964), RoundedCornerShape(4.dp)))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "$energyPercent%", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+        }
+    }
 }

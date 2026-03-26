@@ -643,33 +643,60 @@ private fun generateExplanation(
     hoursSinceLastSleep: Long?,
     healthData: HealthData
 ): String {
-    val sleepHours = healthData.sleep.totalDuration?.toHours() ?: 0
+    val sleepHours = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+    val rhr = healthData.restingHeartRate.bpm
+    val hrv = healthData.heartRateVariability.rmssdMs
+    val steps = healthData.steps.count
+    val awakeHours = hoursSinceLastSleep ?: 0
 
-    return when {
-        score >= 81 -> {
-            "Your readiness score is excellent! You've had sufficient rest and your body is well-recovered. " +
-            "This is a great time to tackle challenging tasks or engage in intense physical activity."
+    val parts = mutableListOf<String>()
+
+    // Lead with the most impactful data point
+    when {
+        sleepHours < 4 && score < 40 -> {
+            parts.add("With only ${String.format("%.0f", sleepHours)} hours of sleep, your body hasn't had enough time to recover.")
         }
-        score >= 61 -> {
-            "Your readiness score is good. You're reasonably well-rested and ready for most activities. " +
-            "You can proceed with your normal routine, including moderate to intense exercise."
+        sleepHours >= 7 && score >= 70 -> {
+            parts.add("Great sleep last night (${String.format("%.0f", sleepHours)}h) is powering a strong recovery today.")
         }
-        score >= 41 -> {
-            "Your readiness score is fair. You may be experiencing some fatigue. " +
-            "Consider taking it easy today and prioritize lighter activities. " +
-            "Focus on recovery and getting quality sleep tonight."
+        sleepHours >= 7 && score < 50 -> {
+            parts.add("You got ${String.format("%.0f", sleepHours)} hours of sleep, but other factors are affecting your recovery.")
         }
-        score >= 21 -> {
-            "Your readiness score is poor. You're likely feeling significant fatigue. " +
-            "It's important to rest and avoid strenuous activities. " +
-            "Consider taking a nap or going to bed early to recover."
+        sleepHours < 6 && score >= 60 -> {
+            parts.add("Despite only ${String.format("%.0f", sleepHours)} hours of sleep, your body is recovering well.")
+        }
+        awakeHours >= 16 -> {
+            parts.add("You've been awake for ${awakeHours} hours — your body is running on depleted reserves.")
+        }
+        awakeHours >= 12 && score < 50 -> {
+            parts.add("After ${awakeHours} hours awake, fatigue is setting in and affecting your readiness.")
         }
         else -> {
-            "Your readiness score indicates exhaustion. Your body needs immediate rest. " +
-            "Avoid any demanding physical or mental tasks. " +
-            "Prioritize sleep and recovery above all else."
+            parts.add(when {
+                score >= 80 -> "Your body is well-recovered and performing at its best today."
+                score >= 60 -> "You're in a good state for normal activities and moderate exercise."
+                score >= 40 -> "Your body is showing signs of fatigue — take it easier today."
+                else -> "Your readiness is low. Rest and recovery should be your priority."
+            })
         }
     }
+
+    // Add secondary insight based on HR/HRV
+    if (rhr != null && hrv != null) {
+        when {
+            rhr < 60 && hrv > 40 -> parts.add("Your resting heart rate ($rhr bpm) and HRV (${String.format("%.0f", hrv)} ms) show good autonomic recovery.")
+            rhr > 75 -> parts.add("Your elevated resting heart rate ($rhr bpm) suggests your body is under stress.")
+            hrv < 25 -> parts.add("Low HRV (${String.format("%.0f", hrv)} ms) indicates your nervous system needs more recovery time.")
+        }
+    }
+
+    // Add activity context
+    when {
+        steps > 8000 && score >= 60 -> parts.add("Your activity level (${steps} steps) is contributing positively to your overall health.")
+        steps < 500 && awakeHours > 6 -> parts.add("Very low activity so far — even a short walk could boost your energy.")
+    }
+
+    return parts.joinToString(" ")
 }
 
 private fun generateTips(
@@ -678,56 +705,66 @@ private fun generateTips(
     healthData: HealthData
 ): List<String> {
     val tips = mutableListOf<String>()
-
-    // Sleep-related tips
-    when {
-        hoursSinceLastSleep == null -> {
-            tips.add("No sleep data available. Ensure your sleep tracking is enabled.")
-        }
-        hoursSinceLastSleep >= 14 -> {
-            tips.add("You've been awake for a very long time. Consider taking a nap or going to bed soon.")
-            tips.add("Avoid caffeine and heavy meals to help your body prepare for sleep.")
-        }
-        hoursSinceLastSleep >= 10 -> {
-            tips.add("You've been awake for an extended period. Plan to wind down soon.")
-            tips.add("Take short breaks and stay hydrated to maintain focus.")
-        }
-        hoursSinceLastSleep >= 8 -> {
-            tips.add("Your energy levels may be declining. Consider a light activity or short rest.")
-        }
-    }
-
-    // Sleep duration tips
-    val sleepHours = healthData.sleep.totalDuration?.toHours() ?: 0
-    when {
-        sleepHours < 5 -> {
-            tips.add("You had very little sleep last night. Prioritize getting more rest tonight.")
-        }
-        sleepHours < 7 -> {
-            tips.add("Aim for 7-9 hours of sleep tonight to improve your readiness for tomorrow.")
-        }
-    }
-
-    // RHR tips
+    val sleepHours = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+    val awakeHours = hoursSinceLastSleep ?: 0
     val rhr = healthData.restingHeartRate.bpm ?: healthData.heartRate.restingBpm
+    val hrv = healthData.heartRateVariability.rmssdMs
+    val steps = healthData.steps.count
+
+    // Awake time tips
+    when {
+        awakeHours >= 18 -> tips.add("You've been up for ${awakeHours}h. Go to sleep now — your body needs it.")
+        awakeHours >= 14 -> tips.add("${awakeHours} hours awake. Start winding down — dim lights, avoid screens, and prepare for bed.")
+        awakeHours >= 10 -> tips.add("Consider when you'll sleep tonight. A consistent bedtime improves recovery by up to 20%.")
+    }
+
+    // Sleep quality tips
+    when {
+        sleepHours < 4 -> tips.add("Only ${String.format("%.0f", sleepHours)}h of sleep is critical. A 20-minute nap before 3 PM can help restore focus.")
+        sleepHours in 4.0..5.9 -> tips.add("${String.format("%.0f", sleepHours)}h of sleep is below optimal. Try to sleep 1-2 hours earlier tonight to reach 7+ hours.")
+        sleepHours >= 9 -> tips.add("${String.format("%.0f", sleepHours)}h of sleep is above average. If you feel groggy, you may be oversleeping — try setting an alarm.")
+    }
+
+    // Heart rate tips
     rhr?.let {
-        if (it > 85) {
-            tips.add("Your resting heart rate is elevated. This may indicate stress or insufficient recovery.")
+        when {
+            it > 80 -> tips.add("Resting HR of $it bpm is elevated. Try deep breathing exercises — 5 minutes of box breathing can lower it by 5-10 bpm.")
+            it < 55 && score >= 70 -> tips.add("Resting HR of $it bpm shows excellent cardiovascular fitness. Keep up your training!")
+            else -> {}
+        }
+    }
+
+    // HRV tips
+    hrv?.let {
+        when {
+            it < 20 -> tips.add("HRV of ${String.format("%.0f", it)} ms is very low. Avoid intense exercise today — focus on stretching or yoga instead.")
+            it < 30 && score < 50 -> tips.add("Low HRV (${String.format("%.0f", it)} ms) suggests stress. Try a 10-minute walk outside to reset your nervous system.")
+            it > 60 && score >= 70 -> tips.add("Strong HRV of ${String.format("%.0f", it)} ms — your body is primed for a challenging workout today.")
+            else -> {}
         }
     }
 
     // Activity tips
-    if (healthData.steps.count < 1000) {
-        tips.add("Try to get some light movement today, even a short walk can help.")
+    when {
+        steps < 500 && awakeHours > 4 -> tips.add("Only $steps steps so far. Even 10 minutes of walking boosts mood, energy, and circulation.")
+        steps in 500..2999 -> tips.add("$steps steps is a start. Try to reach ${(steps / 1000 + 1) * 1000} by adding a short walk after your next meal.")
+        steps > 10000 -> tips.add("$steps steps — excellent activity! Make sure to stay hydrated and stretch to prevent muscle tightness.")
     }
 
-    // General tips if list is short
-    if (tips.size < 2) {
-        tips.add("Maintain a consistent sleep schedule to improve your readiness scores.")
-    }
+    // Ensure at least 3 tips
     if (tips.size < 3) {
-        tips.add("Stay hydrated throughout the day to support overall health and recovery.")
+        val fillers = listOf(
+            "Drink water regularly — dehydration reduces HRV and increases heart rate.",
+            "Expose yourself to natural light in the morning to strengthen your circadian rhythm.",
+            "Limit caffeine after 2 PM to protect tonight's sleep quality.",
+            "A 5-minute cold shower can boost alertness and improve circulation.",
+            "Eating protein within 30 minutes of waking supports sustained energy levels."
+        )
+        for (filler in fillers.shuffled()) {
+            if (tips.size >= 3) break
+            tips.add(filler)
+        }
     }
 
-    return tips.take(3)
+    return tips.take(4)
 }

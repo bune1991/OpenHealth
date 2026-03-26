@@ -11,8 +11,8 @@ android {
         applicationId = "com.openhealth.openhealth"
         minSdk = 28
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -92,4 +92,7 @@ dependencies {
 
     // Health Connect dependency
     implementation("androidx.health.connect:connect-client:1.1.0-beta01")
+
+    // WorkManager (for periodic widget updates)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

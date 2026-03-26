@@ -15,6 +15,7 @@ import androidx.health.connect.client.records.Vo2MaxRecord
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.openhealth.openhealth.model.CaloriesData
+import com.openhealth.openhealth.model.DailyDataPoint
 import com.openhealth.openhealth.model.DistanceData
 import com.openhealth.openhealth.model.ExerciseData
 import com.openhealth.openhealth.model.ExerciseSession
@@ -97,6 +98,10 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val _stepsCalendarData = MutableStateFlow<List<com.openhealth.openhealth.model.DailyDataPoint>>(emptyList())
     val stepsCalendarData: StateFlow<List<com.openhealth.openhealth.model.DailyDataPoint>> = _stepsCalendarData.asStateFlow()
 
+    // Steps streak (consecutive days meeting goal)
+    private val _stepsStreak = MutableStateFlow(0)
+    val stepsStreak: StateFlow<Int> = _stepsStreak.asStateFlow()
+
     // Scroll position for dashboard (saved when navigating to detail, restored when returning)
     private val _dashboardScrollIndex = MutableStateFlow(0)
     val dashboardScrollIndex: StateFlow<Int> = _dashboardScrollIndex.asStateFlow()
@@ -107,6 +112,13 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     // Settings
     private val settingsManager = SettingsManager.getInstance(context)
     val settings: StateFlow<SettingsData> = settingsManager.settings
+
+    // Navigation state for reports screen
+    private val _showReports = MutableStateFlow(false)
+    val showReports: StateFlow<Boolean> = _showReports.asStateFlow()
+
+    private val _reportsData = MutableStateFlow(ReportsData())
+    val reportsData: StateFlow<ReportsData> = _reportsData.asStateFlow()
 
     // Navigation state for settings screen
     private val _showSettings = MutableStateFlow(false)
@@ -289,6 +301,9 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 val skinTemperature = HealthConnectManager.getSkinTemperature()
                 Log.d("HealthViewModel", "Skin temperature: ${skinTemperature.temperatureCelsius}°C")
 
+                val nutrition = HealthConnectManager.getTodayNutrition()
+                Log.d("HealthViewModel", "Nutrition: ${nutrition.calories} kcal")
+
                 val newHealthData = HealthData(
                     steps = steps,
                     heartRate = heartRate,
@@ -311,7 +326,8 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     heartRateVariability = heartRateVariability,
                     oxygenSaturation = oxygenSaturation,
                     respiratoryRate = respiratoryRate,
-                    skinTemperature = skinTemperature
+                    skinTemperature = skinTemperature,
+                    nutrition = nutrition
                 )
 
                 _healthData.value = newHealthData
@@ -325,10 +341,70 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
                 Log.d("HealthViewModel", "Data refresh complete, cached for $today")
 
-                // Load steps history for calendar rings (background, non-blocking)
+                // Comprehensive data summary
+                Log.d("OpenHealth_Summary", "=== Dashboard Data Summary ===")
+                Log.d("OpenHealth_Summary", "Steps: ${steps.count} (goal: ${steps.goal})")
+                Log.d("OpenHealth_Summary", "Heart Rate: ${heartRate.currentBpm} bpm (range: ${heartRate.minBpm}-${heartRate.maxBpm}, resting: ${heartRate.restingBpm})")
+                Log.d("OpenHealth_Summary", "Sleep: ${String.format("%.1f", sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0)}h (sessions: ${sleep.sessions.size})")
+                Log.d("OpenHealth_Summary", "Calories: ${String.format("%.0f", calories.totalBurned)} kcal (active: ${String.format("%.0f", calories.activeBurned)})")
+                Log.d("OpenHealth_Summary", "Distance: ${String.format("%.2f", distance.kilometers)} km")
+                Log.d("OpenHealth_Summary", "Floors: ${floors.count}")
+                Log.d("OpenHealth_Summary", "Resting HR: ${restingHeartRate.bpm} bpm")
+                Log.d("OpenHealth_Summary", "Weight: ${weight.kilograms} kg")
+                Log.d("OpenHealth_Summary", "Body Fat: ${bodyFat.percentage}%")
+                Log.d("OpenHealth_Summary", "BMR: ${basalMetabolicRate.caloriesPerDay} kcal/day")
+                Log.d("OpenHealth_Summary", "Body Water: ${bodyWaterMass.kilograms} kg")
+                Log.d("OpenHealth_Summary", "Bone Mass: ${boneMass.kilograms} kg")
+                Log.d("OpenHealth_Summary", "Lean Mass: ${leanBodyMass.kilograms} kg")
+                Log.d("OpenHealth_Summary", "HRV: ${heartRateVariability.rmssdMs} ms")
+                Log.d("OpenHealth_Summary", "SpO2: ${oxygenSaturation.percentage}%")
+                Log.d("OpenHealth_Summary", "Respiratory Rate: ${respiratoryRate.ratePerMinute} breaths/min")
+                Log.d("OpenHealth_Summary", "Skin Temp: ${skinTemperature.temperatureCelsius}°C")
+                Log.d("OpenHealth_Summary", "Nutrition: ${nutrition.calories} kcal (P:${nutrition.proteinGrams}g C:${nutrition.carbsGrams}g F:${nutrition.fatGrams}g)")
+                Log.d("OpenHealth_Summary", "Exercise: ${exercise.sessionCount} sessions, ${exercise.totalDuration?.toMinutes() ?: 0} min")
+                Log.d("OpenHealth_Summary", "=== End Summary ===")
+
+                // Save data for widget and update it
+                val sleepMinutesTotal = sleep.totalDuration?.toMinutes() ?: 0
+                com.openhealth.openhealth.widget.HealthWidgetReceiver.saveWidgetData(
+                    context,
+                    steps = steps.count,
+                    stepsGoal = currentSettings.stepsGoal.toLong(),
+                    heartRate = heartRate.currentBpm ?: 0,
+                    sleepHours = (sleepMinutesTotal / 60).toInt(),
+                    sleepMinutes = (sleepMinutesTotal % 60).toInt()
+                )
+                com.openhealth.openhealth.widget.HealthWidgetReceiver.updateAllWidgets(context)
+
+                // Load steps history for calendar rings and streak
                 try {
                     val stepsHistory = HealthConnectManager.getStepsHistory()
-                    _stepsCalendarData.value = stepsHistory.allHistoricalData ?: emptyList()
+                    val historyData = stepsHistory.allHistoricalData ?: emptyList()
+                    _stepsCalendarData.value = historyData
+
+                    // Log last 7 days steps
+                    val last7 = historyData.takeLast(7)
+                    Log.d("OpenHealth_Summary", "Steps last 7 days: ${last7.joinToString { "${it.date.dayOfMonth}=${it.value.toLong()}" }}")
+                    Log.d("OpenHealth_Summary", "Steps 30-day total: ${historyData.sumOf { it.value }.toLong()}, avg: ${if (historyData.isNotEmpty()) historyData.map { it.value }.average().toLong() else 0}")
+
+                    // Calculate streak: consecutive days ending at today/yesterday where steps >= goal
+                    val goal = currentSettings.stepsGoal
+                    val dataMap = historyData.associateBy { it.date }
+                    var streak = 0
+                    var checkDate = today
+                    // If today's steps haven't met goal yet, start from yesterday
+                    if ((dataMap[today]?.value ?: 0.0) < goal) {
+                        checkDate = today.minusDays(1)
+                    }
+                    while (true) {
+                        val daySteps = dataMap[checkDate]?.value ?: 0.0
+                        if (daySteps >= goal) {
+                            streak++
+                            checkDate = checkDate.minusDays(1)
+                        } else break
+                    }
+                    _stepsStreak.value = streak
+                    Log.d("OpenHealth_Summary", "Steps streak: $streak days (goal: $goal)")
                 } catch (e: Exception) {
                     Log.e("HealthViewModel", "Error loading steps calendar data: ${e.message}")
                 }
@@ -393,6 +469,81 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun hideReadinessDetail() {
         _showReadinessDetail.value = false
+    }
+
+    // Reports navigation
+    fun showReports() {
+        _showReports.value = true
+        loadReportsData()
+    }
+
+    fun hideReports() {
+        _showReports.value = false
+    }
+
+    private fun loadReportsData() {
+        viewModelScope.launch {
+            _reportsData.value = ReportsData(isLoading = true)
+            try {
+                val today = LocalDate.now(kuwaitZone)
+                val startOfThisWeek = today.with(java.time.DayOfWeek.MONDAY)
+                val startOfLastWeek = startOfThisWeek.minusWeeks(1)
+                val endOfLastWeek = startOfThisWeek.minusDays(1)
+
+                // Fetch all histories in parallel
+                // Fetch sequentially (Health Connect doesn't support concurrent reads well)
+                val stepsHistory = HealthConnectManager.getStepsHistory()
+                val heartRateHistory = HealthConnectManager.getHeartRateHistory()
+                val sleepHistory = HealthConnectManager.getSleepHistory()
+                val caloriesHistory = HealthConnectManager.getCaloriesHistory()
+                val exerciseHistory = HealthConnectManager.getExerciseHistory()
+                val distanceHistory = HealthConnectManager.getDistanceHistory()
+
+                fun List<DailyDataPoint>.inRange(from: LocalDate, to: LocalDate) =
+                    filter { it.date in from..to }
+
+                fun List<DailyDataPoint>.total() = sumOf { it.value }
+                fun List<DailyDataPoint>.avg() = if (isNotEmpty()) map { it.value }.average() else 0.0
+
+                val summaries = listOf(
+                    MetricSummary("Steps",
+                        stepsHistory.last30Days.inRange(startOfThisWeek, today).total(),
+                        stepsHistory.last30Days.inRange(startOfLastWeek, endOfLastWeek).total(),
+                        stepsHistory.last30Days.total(), "steps"),
+                    MetricSummary("Sleep",
+                        sleepHistory.last30Days.inRange(startOfThisWeek, today).avg(),
+                        sleepHistory.last30Days.inRange(startOfLastWeek, endOfLastWeek).avg(),
+                        sleepHistory.last30Days.avg(), "hrs", isBetterWhenHigher = true, isAverage = true),
+                    MetricSummary("Calories",
+                        caloriesHistory.last30Days.inRange(startOfThisWeek, today).total(),
+                        caloriesHistory.last30Days.inRange(startOfLastWeek, endOfLastWeek).total(),
+                        caloriesHistory.last30Days.total(), "kcal"),
+                    MetricSummary("Exercise",
+                        exerciseHistory.last30Days.inRange(startOfThisWeek, today).total(),
+                        exerciseHistory.last30Days.inRange(startOfLastWeek, endOfLastWeek).total(),
+                        exerciseHistory.last30Days.total(), "min"),
+                    MetricSummary("Heart Rate",
+                        heartRateHistory.last30Days.inRange(startOfThisWeek, today).avg(),
+                        heartRateHistory.last30Days.inRange(startOfLastWeek, endOfLastWeek).avg(),
+                        heartRateHistory.last30Days.avg(), "bpm", isBetterWhenHigher = false, isAverage = true),
+                    MetricSummary("Distance",
+                        distanceHistory.last30Days.inRange(startOfThisWeek, today).total(),
+                        distanceHistory.last30Days.inRange(startOfLastWeek, endOfLastWeek).total(),
+                        distanceHistory.last30Days.total(), "km")
+                )
+
+                val weeklyStepsChart = stepsHistory.last30Days.inRange(startOfThisWeek, today)
+
+                _reportsData.value = ReportsData(
+                    summaries = summaries,
+                    weeklyStepsChart = weeklyStepsChart,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                Log.e("HealthViewModel", "Error loading reports: ${e.message}", e)
+                _reportsData.value = ReportsData(isLoading = false)
+            }
+        }
     }
 
     fun updateSettings(settings: SettingsData) {
@@ -464,6 +615,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 val oxygenSaturation = HealthConnectManager.getOxygenSaturationForDate(date)
                 val respiratoryRate = HealthConnectManager.getRespiratoryRateForDate(date)
                 val skinTemperature = HealthConnectManager.getSkinTemperatureForDate(date)
+                val nutrition = HealthConnectManager.getNutritionForDate(date)
 
                 val newHealthData = HealthData(
                     steps = steps,
@@ -487,7 +639,8 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     heartRateVariability = heartRateVariability,
                     oxygenSaturation = oxygenSaturation,
                     respiratoryRate = respiratoryRate,
-                    skinTemperature = skinTemperature
+                    skinTemperature = skinTemperature,
+                    nutrition = nutrition
                 )
 
                 // Cache the result
@@ -541,6 +694,8 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     MetricType.OXYGEN_SATURATION -> HealthConnectManager.getOxygenSaturationHistory()
                     MetricType.RESPIRATORY_RATE -> HealthConnectManager.getRespiratoryRateHistory()
                     MetricType.SKIN_TEMPERATURE -> HealthConnectManager.getSkinTemperatureHistory()
+                    MetricType.EXERCISE -> HealthConnectManager.getExerciseHistory()
+                    MetricType.NUTRITION -> HealthConnectManager.getNutritionHistory()
                 }
 
                 // Update UI with fresh data - no caching
@@ -593,6 +748,24 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         HEART_RATE_VARIABILITY,
         OXYGEN_SATURATION,
         RESPIRATORY_RATE,
-        SKIN_TEMPERATURE
+        SKIN_TEMPERATURE,
+        EXERCISE,
+        NUTRITION
     }
 }
+
+data class MetricSummary(
+    val label: String,
+    val thisWeekValue: Double,
+    val lastWeekValue: Double,
+    val monthValue: Double,
+    val unit: String,
+    val isBetterWhenHigher: Boolean = true,
+    val isAverage: Boolean = false
+)
+
+data class ReportsData(
+    val summaries: List<MetricSummary> = emptyList(),
+    val weeklyStepsChart: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
+    val isLoading: Boolean = true
+)

@@ -63,6 +63,9 @@ class SettingsManager private constructor(context: Context) {
         private const val KEY_SHOW_HYDRATION = "show_hydration"
         private const val KEY_SHOW_MINDFULNESS = "show_mindfulness"
 
+        // Features
+        private const val KEY_SHOW_STEPS_STREAK = "show_steps_streak"
+
         // Daily Goals
         private const val KEY_STEPS_GOAL = "steps_goal"
         private const val KEY_FLOORS_GOAL = "floors_goal"
@@ -127,6 +130,7 @@ class SettingsManager private constructor(context: Context) {
             showMindfulness = prefs.getBoolean(KEY_SHOW_MINDFULNESS, true),
 
             // Daily Goals
+            showStepsStreak = prefs.getBoolean(KEY_SHOW_STEPS_STREAK, true),
             stepsGoal = prefs.getInt(KEY_STEPS_GOAL, 10000),
             floorsGoal = prefs.getInt(KEY_FLOORS_GOAL, 10),
             caloriesGoal = prefs.getInt(KEY_CALORIES_GOAL, 500),
@@ -180,6 +184,7 @@ class SettingsManager private constructor(context: Context) {
             putBoolean(KEY_SHOW_MINDFULNESS, settings.showMindfulness)
 
             // Daily Goals
+            putBoolean(KEY_SHOW_STEPS_STREAK, settings.showStepsStreak)
             putInt(KEY_STEPS_GOAL, settings.stepsGoal)
             putInt(KEY_FLOORS_GOAL, settings.floorsGoal)
             putInt(KEY_CALORIES_GOAL, settings.caloriesGoal)

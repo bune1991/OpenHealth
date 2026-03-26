@@ -45,6 +45,9 @@ data class SettingsData(
     val showHydration: Boolean = true,
     val showMindfulness: Boolean = true,
 
+    // Features
+    val showStepsStreak: Boolean = true,
+
     // Daily Goals
     val stepsGoal: Int = 10000,
     val floorsGoal: Int = 10,

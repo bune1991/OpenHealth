@@ -48,6 +48,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openhealth.openhealth.screens.DashboardScreen
 import com.openhealth.openhealth.screens.MetricDetailScreen
 import com.openhealth.openhealth.screens.ReadinessDetailScreen
+import com.openhealth.openhealth.screens.ReportsScreen
+import com.openhealth.openhealth.viewmodel.ReportsData
 import com.openhealth.openhealth.screens.SettingsScreen
 import com.openhealth.openhealth.ui.theme.BackgroundBlack
 import com.openhealth.openhealth.ui.theme.ErrorRed
@@ -80,6 +82,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Schedule periodic widget updates
+        com.openhealth.openhealth.widget.WidgetUpdateWorker.enqueue(this)
+
         // Handle back press to navigate from detail/settings screen to dashboard
         onBackPressedDispatcher.addCallback(this) {
             if (::viewModel.isInitialized) {
@@ -89,6 +94,9 @@ class MainActivity : ComponentActivity() {
                     }
                     viewModel.showReadinessDetail.value -> {
                         viewModel.hideReadinessDetail()
+                    }
+                    viewModel.showReports.value -> {
+                        viewModel.hideReports()
                     }
                     viewModel.selectedMetric.value != null -> {
                         viewModel.clearSelectedMetric()
@@ -116,6 +124,8 @@ class MainActivity : ComponentActivity() {
                 val isMetricDetailLoading by viewModel.isMetricDetailLoading.collectAsState()
                 val showSettings by viewModel.showSettings.collectAsState()
                 val showReadinessDetail by viewModel.showReadinessDetail.collectAsState()
+                val showReports by viewModel.showReports.collectAsState()
+                val reportsData by viewModel.reportsData.collectAsState()
                 val settings by viewModel.settings.collectAsState()
 
                 Scaffold(
@@ -149,6 +159,12 @@ class MainActivity : ComponentActivity() {
                                             onBackClick = { viewModel.hideSettings() }
                                         )
                                     }
+                                    showReports -> {
+                                        ReportsScreen(
+                                            reportsData = reportsData,
+                                            onBackClick = { viewModel.hideReports() }
+                                        )
+                                    }
                                     showReadinessDetail -> {
                                         // Show readiness detail screen
                                         ReadinessDetailScreen(
@@ -173,6 +189,7 @@ class MainActivity : ComponentActivity() {
                                         val (scrollIndex, scrollOffset) = viewModel.getScrollPosition()
                                         val selectedDate by viewModel.selectedDate.collectAsState()
                                         val stepsCalendarData by viewModel.stepsCalendarData.collectAsState()
+                                        val stepsStreak by viewModel.stepsStreak.collectAsState()
                                         DashboardScreen(
                                             healthData = healthData,
                                             isLoading = isLoading,
@@ -190,7 +207,9 @@ class MainActivity : ComponentActivity() {
                                             onNextDay = { viewModel.navigateToNextDay() },
                                             onToday = { viewModel.navigateToToday() },
                                             onDateSelected = { date -> viewModel.navigateToDate(date) },
+                                            onReportsClick = { viewModel.showReports() },
                                             stepsCalendarData = stepsCalendarData,
+                                            stepsStreak = stepsStreak,
                                             initialScrollIndex = scrollIndex,
                                             initialScrollOffset = scrollOffset,
                                             onScrollPositionChanged = { index, offset ->

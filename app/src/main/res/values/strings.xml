@@ -18,4 +18,6 @@
     <string name="permissions_required">Permissions Required</string>
     <string name="permissions_description">OpenHealth needs permission to access your health data (steps, heart rate, sleep, exercise, and VO2 Max) to display your dashboard.</string>
     <string name="grant_permissions">Grant Permissions</string>
+    <string name="widget_name">OpenHealth Summary</string>
+    <string name="widget_description">Shows your steps, heart rate, and sleep at a glance</string>
 </resources>

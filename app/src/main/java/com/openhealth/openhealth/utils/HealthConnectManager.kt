@@ -48,7 +48,8 @@ object HealthConnectManager {
         HealthPermission.getReadPermission(OxygenSaturationRecord::class),
         HealthPermission.getReadPermission(RespiratoryRateRecord::class),
         HealthPermission.getReadPermission(SpeedRecord::class),
-        HealthPermission.getReadPermission(PowerRecord::class)
+        HealthPermission.getReadPermission(PowerRecord::class),
+        HealthPermission.getReadPermission(NutritionRecord::class)
     )
 
     // Optional permissions (newer APIs, may not be available on all devices)
@@ -114,7 +115,6 @@ object HealthConnectManager {
 
             StepsData(
                 count = steps,
-                goal = 10000,
                 lastUpdated = now.toInstant()
             )
         } catch (e: Exception) {
@@ -148,8 +148,25 @@ object HealthConnectManager {
                 )
             )
 
-            val records = response.records
-            Log.d("OpenHealth_HeartRate", "Records: ${records.size}, Latest: ${if (records.isNotEmpty()) records.flatMap { it.samples }.maxByOrNull { it.time }?.beatsPerMinute?.toInt() ?: 0 else 0} bpm")
+            var records = response.records
+            Log.d("OpenHealth_HeartRate", "Records (1h): ${records.size}")
+
+            // Fallback: if no records in last hour, try last 24 hours
+            if (records.isEmpty()) {
+                val startOfDay = now.minusHours(24)
+                Log.d("OpenHealth_HeartRate", "Fallback query: $startOfDay to $now")
+                val fallbackResponse = client.readRecords(
+                    ReadRecordsRequest(
+                        HeartRateRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(
+                            startOfDay.toInstant(),
+                            now.toInstant()
+                        )
+                    )
+                )
+                records = fallbackResponse.records
+                Log.d("OpenHealth_HeartRate", "Records (24h fallback): ${records.size}")
+            }
 
             if (records.isEmpty()) {
                 return HeartRateData(currentBpm = 0)
@@ -707,10 +724,11 @@ object HealthConnectManager {
         recordClass = HeartRateRecord::class,
         unit = "bpm",
         timeExtractor = { it.startTime },
-        valueExtractor = { 
+        valueExtractor = {
             val avg = it.samples.map { sample -> sample.beatsPerMinute }.average()
             if (avg.isNaN()) 0.0 else avg
-        }
+        },
+        lowerIsBetter = true
     )
 
     suspend fun getDistanceHistory() = getMetricHistory(
@@ -798,7 +816,8 @@ object HealthConnectManager {
         recordClass = RestingHeartRateRecord::class,
         unit = "bpm",
         timeExtractor = { it.time },
-        valueExtractor = { it.beatsPerMinute.toDouble() }
+        valueExtractor = { it.beatsPerMinute.toDouble() },
+        lowerIsBetter = true
     )
 
     suspend fun getVo2MaxHistory() = getMetricHistory(
@@ -875,6 +894,7 @@ object HealthConnectManager {
             // "Today" value should be the most recent sleep session (which is likely from last night)
             val todayValue = dailySleep.lastOrNull()?.value ?: 0.0
             val allTimeAverage = if (dailySleep.isNotEmpty()) dailySleep.map { it.value }.average() else 0.0
+            // Longest sleep day
             val bestDay = dailySleep.maxByOrNull { it.value }
 
             // Get today's sleep start and end times from the most recent session
@@ -884,9 +904,10 @@ object HealthConnectManager {
             MetricHistory(
                 todayValue = todayValue,
                 unit = "hours",
-                last30Days = dailySleep, // Now contains ALL data
-                monthlyAverage = allTimeAverage, // Now shows all-time average
+                last30Days = dailySleep,
+                monthlyAverage = allTimeAverage,
                 bestDay = bestDay,
+                bestDayLabel = "Longest",
                 allHistoricalData = dailySleep,
                 sleepStages = sleepStages,
                 todaySleepStartTime = todaySleepStartTime,
@@ -903,7 +924,8 @@ object HealthConnectManager {
         recordClass: KClass<T>,
         unit: String,
         timeExtractor: (T) -> Instant,
-        valueExtractor: (T) -> Double
+        valueExtractor: (T) -> Double,
+        lowerIsBetter: Boolean = false
     ): MetricHistory {
         return try {
             val client = healthConnectClient ?: return MetricHistory(0.0, unit, emptyList(), 0.0, null)
@@ -1001,8 +1023,12 @@ object HealthConnectManager {
                 allHistoricalData.map { it.value }.average()
             } else 0.0
 
-            // Find best day
-            val bestDay = allHistoricalData.maxByOrNull { it.value }
+            // Find best day (lowest for HR/resting HR, highest for everything else)
+            val bestDay = if (lowerIsBetter) {
+                allHistoricalData.filter { it.value > 0 }.minByOrNull { it.value }
+            } else {
+                allHistoricalData.maxByOrNull { it.value }
+            }
 
             MetricHistory(
                 todayValue = todayValue,
@@ -1010,6 +1036,7 @@ object HealthConnectManager {
                 last30Days = allHistoricalData,
                 monthlyAverage = average,
                 bestDay = bestDay,
+                bestDayLabel = if (lowerIsBetter) "Lowest" else "Best Day",
                 allHistoricalData = allHistoricalData
             )
         } catch (e: Exception) {
@@ -1358,6 +1385,152 @@ object HealthConnectManager {
         }
     }
 
+    // Get today's nutrition data
+    suspend fun getTodayNutrition(): NutritionData {
+        return try {
+            val client = healthConnectClient ?: return NutritionData()
+
+            val startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault())
+            val now = ZonedDateTime.now(ZoneId.systemDefault())
+
+            Log.d("OpenHealth_Nutrition", "Query: $startOfDay to $now")
+
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = NutritionRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(
+                        startOfDay.toInstant(),
+                        now.toInstant()
+                    )
+                )
+            )
+
+            val records = response.records
+            if (records.isEmpty()) {
+                Log.d("OpenHealth_Nutrition", "Records: 0")
+                return NutritionData()
+            }
+
+            val totalCalories = records.sumOf { it.energy?.inKilocalories ?: 0.0 }
+            val totalProtein = records.sumOf { it.protein?.inGrams ?: 0.0 }
+            val totalCarbs = records.sumOf { it.totalCarbohydrate?.inGrams ?: 0.0 }
+            val totalFat = records.sumOf { it.totalFat?.inGrams ?: 0.0 }
+
+            Log.d("OpenHealth_Nutrition", "Records: ${records.size}, Calories: ${String.format("%.0f", totalCalories)} kcal, P: ${String.format("%.0f", totalProtein)}g, C: ${String.format("%.0f", totalCarbs)}g, F: ${String.format("%.0f", totalFat)}g")
+
+            NutritionData(
+                calories = totalCalories,
+                proteinGrams = totalProtein,
+                carbsGrams = totalCarbs,
+                fatGrams = totalFat,
+                measurementTime = records.maxByOrNull { it.endTime }?.endTime
+            )
+        } catch (e: Exception) {
+            Log.e("OpenHealth_Nutrition", "Error reading nutrition: ${e.message}", e)
+            NutritionData()
+        }
+    }
+
+    suspend fun getNutritionForDate(date: LocalDate): NutritionData {
+        return try {
+            val client = healthConnectClient ?: return NutritionData()
+            val (start, end) = getDateTimeRange(date)
+
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = NutritionRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(start, end)
+                )
+            )
+
+            val records = response.records
+            if (records.isEmpty()) return NutritionData()
+
+            NutritionData(
+                calories = records.sumOf { it.energy?.inKilocalories ?: 0.0 },
+                proteinGrams = records.sumOf { it.protein?.inGrams ?: 0.0 },
+                carbsGrams = records.sumOf { it.totalCarbohydrate?.inGrams ?: 0.0 },
+                fatGrams = records.sumOf { it.totalFat?.inGrams ?: 0.0 },
+                measurementTime = records.maxByOrNull { it.endTime }?.endTime
+            )
+        } catch (e: Exception) {
+            Log.e("OpenHealth_Nutrition", "Error reading nutrition for date $date: ${e.message}", e)
+            NutritionData()
+        }
+    }
+
+    suspend fun getNutritionHistory() = getMetricHistory(
+        metric = NutritionRecord.ENERGY_TOTAL,
+        recordClass = NutritionRecord::class,
+        unit = "kcal",
+        timeExtractor = { it.startTime },
+        valueExtractor = { it.energy?.inKilocalories ?: 0.0 }
+    )
+
+    suspend fun getExerciseHistory(): MetricHistory {
+        return try {
+            val client = healthConnectClient ?: return MetricHistory(0.0, "min", emptyList(), 0.0, null)
+
+            val today = LocalDate.now(ZoneId.systemDefault())
+            val startDate = today.minusDays(30)
+            val localStart = startDate.atStartOfDay()
+            val localEnd = today.plusDays(1).atStartOfDay()
+
+            Log.d("OpenHealth_History", "[ExerciseSession] Query: $localStart to $localEnd (local time)")
+
+            val allRecords = mutableListOf<ExerciseSessionRecord>()
+            var pageToken: String? = null
+
+            do {
+                val request = ReadRecordsRequest(
+                    recordType = ExerciseSessionRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(localStart, localEnd),
+                    pageToken = pageToken
+                )
+                val response = client.readRecords(request)
+                allRecords.addAll(response.records)
+                pageToken = response.pageToken
+            } while (pageToken != null)
+
+            Log.d("OpenHealth_History", "[ExerciseSession] Total records: ${allRecords.size}")
+
+            // Group by date, sum duration in minutes per day
+            val allHistoricalData = allRecords
+                .groupBy { it.startTime.atZone(ZoneId.systemDefault()).toLocalDate() }
+                .map { (date, records) ->
+                    val totalMinutes = records.sumOf {
+                        Duration.between(it.startTime, it.endTime).toMinutes()
+                    }.toDouble()
+                    DailyDataPoint(date, totalMinutes, "min")
+                }
+                .sortedBy { it.date }
+
+            val todayValue = allHistoricalData.find { it.date == today }?.value
+                ?: allHistoricalData.lastOrNull()?.value
+                ?: 0.0
+
+            val average = if (allHistoricalData.isNotEmpty()) {
+                allHistoricalData.map { it.value }.average()
+            } else 0.0
+
+            val bestDay = allHistoricalData.maxByOrNull { it.value }
+
+            Log.d("OpenHealth_History", "[ExerciseSession] Final: ${allHistoricalData.size} days")
+
+            MetricHistory(
+                todayValue = todayValue,
+                unit = "min",
+                last30Days = allHistoricalData,
+                monthlyAverage = average,
+                bestDay = bestDay,
+                allHistoricalData = allHistoricalData
+            )
+        } catch (e: Exception) {
+            Log.e("OpenHealth_History", "Error reading exercise history: ${e.message}", e)
+            MetricHistory(0.0, "min", emptyList(), 0.0, null)
+        }
+    }
+
     private fun getExerciseTypeName(type: Int): String {
         return when (type) {
             ExerciseSessionRecord.EXERCISE_TYPE_RUNNING -> "Running"
@@ -1392,7 +1565,6 @@ object HealthConnectManager {
 
             StepsData(
                 count = response[StepsRecord.COUNT_TOTAL] ?: 0L,
-                goal = 10000,
                 lastUpdated = end
             )
         } catch (e: Exception) {
@@ -1449,6 +1621,12 @@ object HealthConnectManager {
             val records = response.records
             if (records.isEmpty()) return SleepData()
 
+            // Use the longest session as the main sleep (not sum of all naps)
+            val mainSession = records.maxByOrNull {
+                Duration.between(it.startTime, it.endTime).toMinutes()
+            }
+            val totalDuration = mainSession?.let { Duration.between(it.startTime, it.endTime) }
+
             val sessions = records.map { session ->
                 SleepSession(
                     startTime = session.startTime,
@@ -1456,10 +1634,6 @@ object HealthConnectManager {
                     duration = Duration.between(session.startTime, session.endTime),
                     stage = SleepStage.UNKNOWN
                 )
-            }
-
-            val totalDuration = sessions.fold(Duration.ZERO) { acc, session ->
-                acc.plus(session.duration)
             }
 
             SleepData(totalDuration = totalDuration, sessions = sessions)

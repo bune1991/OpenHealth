@@ -77,6 +77,7 @@ import com.openhealth.openhealth.ui.theme.CardFloors
 import com.openhealth.openhealth.ui.theme.CardHeartRate
 import com.openhealth.openhealth.ui.theme.CardHRV
 import com.openhealth.openhealth.ui.theme.CardLeanBodyMass
+import com.openhealth.openhealth.ui.theme.CardNutrition
 import com.openhealth.openhealth.ui.theme.CardRespiratoryRate
 import com.openhealth.openhealth.ui.theme.CardSkinTemperature
 import com.openhealth.openhealth.ui.theme.CardSleep
@@ -314,7 +315,7 @@ fun MetricDetailScreen(
                                 )
 
                                 StatCard(
-                                    title = "Best Day",
+                                    title = metricHistory?.bestDayLabel ?: "Best Day",
                                     value = metricHistory?.bestDay?.let {
                                         formatValue(it.value, metricInfo.decimalPlaces)
                                     } ?: "--",
@@ -352,7 +353,7 @@ fun MetricDetailScreen(
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Column {
                                             Text(
-                                                text = "Best Day",
+                                                text = metricHistory?.bestDayLabel ?: "Best Day",
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = TextSecondary
                                             )
@@ -1448,5 +1449,7 @@ private fun getMetricInfo(metricType: HealthViewModel.MetricType): MetricInfo {
         HealthViewModel.MetricType.OXYGEN_SATURATION -> MetricInfo("Oxygen Saturation", CardSpO2, 0)
         HealthViewModel.MetricType.RESPIRATORY_RATE -> MetricInfo("Respiratory Rate", CardRespiratoryRate, 0)
         HealthViewModel.MetricType.SKIN_TEMPERATURE -> MetricInfo("Skin Temperature", CardSkinTemperature, 1)
+        HealthViewModel.MetricType.EXERCISE -> MetricInfo("Exercise", CardExercise)
+        HealthViewModel.MetricType.NUTRITION -> MetricInfo("Nutrition", CardNutrition)
     }
 }

@@ -103,8 +103,11 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Group metrics by category
-            val groupedMetrics = MetricType.values().groupBy { it.category() }
+            // Group metrics by category (exclude metrics with no Health Connect data source)
+            val unsupportedMetrics = setOf(MetricType.SPEED, MetricType.POWER, MetricType.HYDRATION, MetricType.MINDFULNESS)
+            val groupedMetrics = MetricType.values()
+                .filter { it !in unsupportedMetrics }
+                .groupBy { it.category() }
 
             groupedMetrics.forEach { (category, metrics) ->
                 item {
@@ -181,6 +184,20 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                 }
+            }
+
+            // Features Section
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                CategoryHeader("Features")
+            }
+            item {
+                MetricToggleItem(
+                    metric = null,
+                    label = "Steps Streak",
+                    isEnabled = settings.showStepsStreak,
+                    onToggle = { onSettingsChanged(settings.copy(showStepsStreak = it)) }
+                )
             }
 
             // Daily Goals Section
@@ -306,7 +323,8 @@ private fun CategoryHeader(category: String) {
 
 @Composable
 private fun MetricToggleItem(
-    metric: MetricType,
+    metric: MetricType?,
+    label: String = metric?.displayName() ?: "",
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
@@ -326,7 +344,7 @@ private fun MetricToggleItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = metric.displayName(),
+                    text = label,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = TextPrimary
