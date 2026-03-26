@@ -294,7 +294,7 @@ fun DashboardScreen(
                     item {
                         val hrv = healthData.heartRateVariability.rmssdMs!!
                         // Stress: inverse of HRV. HRV 60+ = low stress, HRV 20- = high stress
-                        val stressLevel = ((60.0 - hrv.coerceIn(10.0, 60.0)) / 50.0 * 100).toInt().coerceIn(0, 100)
+                        val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
                         val stressLabel = when {
                             stressLevel < 25 -> "Low"
                             stressLevel < 50 -> "Moderate"

@@ -375,6 +375,10 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 Log.d("OpenHealth_Summary", "Skin Temp: ${skinTemperature.temperatureCelsius}°C")
                 Log.d("OpenHealth_Summary", "Nutrition: ${nutrition.calories} kcal (P:${nutrition.proteinGrams}g C:${nutrition.carbsGrams}g F:${nutrition.fatGrams}g)")
                 Log.d("OpenHealth_Summary", "Exercise: ${exercise.sessionCount} sessions, ${exercise.totalDuration?.toMinutes() ?: 0} min")
+                val hrvVal = heartRateVariability.rmssdMs ?: 0.0
+                val stressLevel = ((80.0 - hrvVal.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
+                val stressLabel = when { stressLevel < 25 -> "Low"; stressLevel < 50 -> "Moderate"; stressLevel < 75 -> "High"; else -> "Very High" }
+                Log.d("OpenHealth_Summary", "Stress: $stressLevel ($stressLabel) [HRV: ${String.format("%.0f", hrvVal)} ms]")
                 Log.d("OpenHealth_Summary", "=== End Summary ===")
 
                 // Save data for widget and update it

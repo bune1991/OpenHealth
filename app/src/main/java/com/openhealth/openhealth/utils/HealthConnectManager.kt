@@ -208,18 +208,18 @@ object HealthConnectManager {
                 return SleepData()
             }
 
-            // Look for sleep from yesterday evening to today afternoon
+            // Look for sleep from yesterday evening to today evening (covers late sleepers)
             val yesterday = LocalDate.now(ZoneId.systemDefault()).minusDays(1).atStartOfDay(ZoneId.systemDefault())
-            val todayAfternoon = LocalDate.now(ZoneId.systemDefault()).atTime(LocalTime.NOON).atZone(ZoneId.systemDefault())
+            val todayEvening = LocalDate.now(ZoneId.systemDefault()).atTime(LocalTime.of(20, 0)).atZone(ZoneId.systemDefault())
 
-            Log.d("OpenHealth_Sleep", "Query: $yesterday to $todayAfternoon")
+            Log.d("OpenHealth_Sleep", "Query: $yesterday to $todayEvening")
 
             val response = client.readRecords(
                 ReadRecordsRequest(
                     SleepSessionRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(
                         yesterday.toInstant(),
-                        todayAfternoon.toInstant()
+                        todayEvening.toInstant()
                     )
                 )
             )
@@ -1211,19 +1211,40 @@ object HealthConnectManager {
                 return RespiratoryRateData()
             }
 
-            val startTime = LocalDate.now(ZoneId.systemDefault()).minusDays(7).atStartOfDay(ZoneId.systemDefault())
+            // Query last 1 day with pagination (Health Sync generates 1000+ records/day)
             val endTime = ZonedDateTime.now(ZoneId.systemDefault())
+            var startTime = endTime.minusDays(1)
 
             Log.d("OpenHealth_RespiratoryRate", "Query: $startTime to $endTime")
 
-            val response = client.readRecords(
-                ReadRecordsRequest(
-                    recordType = RespiratoryRateRecord::class,
-                    timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant())
+            val allRecords = mutableListOf<RespiratoryRateRecord>()
+            var pageToken: String? = null
+            do {
+                val response = client.readRecords(
+                    ReadRecordsRequest(
+                        recordType = RespiratoryRateRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant()),
+                        pageToken = pageToken
+                    )
                 )
-            )
+                allRecords.addAll(response.records)
+                pageToken = response.pageToken
+            } while (pageToken != null)
 
-            val records = response.records
+            // If no records in last day, try last 7 days
+            if (allRecords.isEmpty()) {
+                startTime = endTime.minusDays(7)
+                Log.d("OpenHealth_RespiratoryRate", "Fallback query: $startTime to $endTime")
+                val response = client.readRecords(
+                    ReadRecordsRequest(
+                        recordType = RespiratoryRateRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(startTime.toInstant(), endTime.toInstant())
+                    )
+                )
+                allRecords.addAll(response.records)
+            }
+
+            val records = allRecords.toList()
             val latestRecord = records.maxByOrNull { it.time }
             val todayValue = latestRecord?.rate?.toDouble() ?: 0.0
 
