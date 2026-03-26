@@ -1,6 +1,7 @@
 package com.openhealth.openhealth.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -33,6 +34,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NightsStay
@@ -451,76 +454,26 @@ fun DashboardScreen(
                     }
                 }
 
-                // Body Section
+                // Body Composition (collapsible card)
                 val hasWeight = settings.showWeight && healthData.weight.kilograms != null
                 val hasBodyFat = settings.showBodyFat && healthData.bodyFat.percentage != null
                 val hasBMR = settings.showBMR && healthData.basalMetabolicRate.caloriesPerDay != null
                 val hasBodyWater = settings.showBodyWater && healthData.bodyWaterMass.kilograms != null
                 val hasBoneMass = settings.showBoneMass && healthData.boneMass.kilograms != null
                 val hasLeanMass = settings.showLeanBodyMass && healthData.leanBodyMass.kilograms != null
+                val hasAnyBody = hasWeight || hasBodyFat || hasBMR || hasBodyWater || hasBoneMass || hasLeanMass
 
-                if (hasWeight || hasBodyFat || hasBMR || hasBodyWater || hasBoneMass || hasLeanMass) {
+                if (hasAnyBody) {
                     item {
-                        SectionHeader(title = "Body")
-                    }
-                }
-
-                if (hasWeight) {
-                    item {
-                        DetailCard(
-                            title = "Weight",
-                            value = String.format("%.1f kg", healthData.weight.kilograms),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.WEIGHT) }
-                        )
-                    }
-                }
-
-                if (hasBodyFat) {
-                    item {
-                        DetailCard(
-                            title = "Body Fat",
-                            value = String.format("%.1f%%", healthData.bodyFat.percentage),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.BODY_FAT) }
-                        )
-                    }
-                }
-
-                if (hasBMR) {
-                    item {
-                        DetailCard(
-                            title = "BMR",
-                            value = String.format("%.0f kcal", healthData.basalMetabolicRate.caloriesPerDay),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.BASAL_METABOLIC_RATE) }
-                        )
-                    }
-                }
-
-                if (hasBodyWater) {
-                    item {
-                        DetailCard(
-                            title = "Body Water",
-                            value = String.format("%.1f kg", healthData.bodyWaterMass.kilograms),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.BODY_WATER_MASS) }
-                        )
-                    }
-                }
-
-                if (hasBoneMass) {
-                    item {
-                        DetailCard(
-                            title = "Bone Mass",
-                            value = String.format("%.1f kg", healthData.boneMass.kilograms),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.BONE_MASS) }
-                        )
-                    }
-                }
-
-                if (hasLeanMass) {
-                    item {
-                        DetailCard(
-                            title = "Lean Mass",
-                            value = String.format("%.1f kg", healthData.leanBodyMass.kilograms),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.LEAN_BODY_MASS) }
+                        BodyCompositionCard(
+                            healthData = healthData,
+                            hasWeight = hasWeight,
+                            hasBodyFat = hasBodyFat,
+                            hasBMR = hasBMR,
+                            hasBodyWater = hasBodyWater,
+                            hasBoneMass = hasBoneMass,
+                            hasLeanMass = hasLeanMass,
+                            onMetricClick = onMetricClick
                         )
                     }
                 }
@@ -1469,6 +1422,135 @@ private fun StressEnergyCard(stressLevel: Int, stressLabel: String, stressColor:
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = "$energyPercent%", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
+        }
+    }
+}
+
+@Composable
+private fun BodyCompositionCard(
+    healthData: HealthData,
+    hasWeight: Boolean,
+    hasBodyFat: Boolean,
+    hasBMR: Boolean,
+    hasBodyWater: Boolean,
+    hasBoneMass: Boolean,
+    hasLeanMass: Boolean,
+    onMetricClick: (HealthViewModel.MetricType) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header — always visible
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Body Composition",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    tint = TextTertiary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Summary row — always visible (Weight + Body Fat)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                if (hasWeight) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = String.format("%.1f", healthData.weight.kilograms), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "kg", color = TextTertiary, fontSize = 12.sp)
+                    }
+                }
+                if (hasBodyFat) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = String.format("%.1f", healthData.bodyFat.percentage), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "% fat", color = TextTertiary, fontSize = 12.sp)
+                    }
+                }
+                if (hasLeanMass) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = String.format("%.1f", healthData.leanBodyMass.kilograms), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "kg lean", color = TextTertiary, fontSize = 12.sp)
+                    }
+                }
+            }
+
+            // Expanded details
+            if (expanded) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = Color(0xFF2A2A2A))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (hasWeight) {
+                    BodyMetricRow("Weight", String.format("%.1f kg", healthData.weight.kilograms)) {
+                        onMetricClick(HealthViewModel.MetricType.WEIGHT)
+                    }
+                }
+                if (hasBodyFat) {
+                    BodyMetricRow("Body Fat", String.format("%.1f%%", healthData.bodyFat.percentage)) {
+                        onMetricClick(HealthViewModel.MetricType.BODY_FAT)
+                    }
+                }
+                if (hasBMR) {
+                    BodyMetricRow("BMR", String.format("%.0f kcal", healthData.basalMetabolicRate.caloriesPerDay)) {
+                        onMetricClick(HealthViewModel.MetricType.BASAL_METABOLIC_RATE)
+                    }
+                }
+                if (hasBodyWater) {
+                    BodyMetricRow("Body Water", String.format("%.1f kg", healthData.bodyWaterMass.kilograms)) {
+                        onMetricClick(HealthViewModel.MetricType.BODY_WATER_MASS)
+                    }
+                }
+                if (hasBoneMass) {
+                    BodyMetricRow("Bone Mass", String.format("%.1f kg", healthData.boneMass.kilograms)) {
+                        onMetricClick(HealthViewModel.MetricType.BONE_MASS)
+                    }
+                }
+                if (hasLeanMass) {
+                    BodyMetricRow("Lean Mass", String.format("%.1f kg", healthData.leanBodyMass.kilograms)) {
+                        onMetricClick(HealthViewModel.MetricType.LEAN_BODY_MASS)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BodyMetricRow(label: String, value: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = label, color = TextSecondary, style = MaterialTheme.typography.bodyLarge)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = value, color = TextPrimary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(18.dp))
         }
     }
 }
