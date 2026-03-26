@@ -113,7 +113,8 @@ fun MetricDetailScreen(
     onHomeClick: (() -> Unit)? = null,
     onDateChange: ((LocalDate) -> Unit)? = null,
     stepsGoal: Int = 10000,
-    exerciseSessions: List<com.openhealth.openhealth.model.ExerciseSession> = emptyList()
+    exerciseSessions: List<com.openhealth.openhealth.model.ExerciseSession> = emptyList(),
+    healthData: com.openhealth.openhealth.model.HealthData? = null
 ) {
     val metricInfo = getMetricInfo(metricType)
 
@@ -271,6 +272,79 @@ fun MetricDetailScreen(
                                 sleepStartTime = sleepStartTime,
                                 sleepEndTime = sleepEndTime
                             )
+                        }
+
+                        // Daily Stats Summary for HR, HRV, SpO2, RR
+                        if (healthData != null) {
+                            data class StatItem(val label: String, val value: String)
+                            val statsItems: List<StatItem>? = when (metricType) {
+                                HealthViewModel.MetricType.HEART_RATE -> {
+                                    val hr = healthData.heartRate
+                                    val rhr = healthData.restingHeartRate.bpm
+                                    if (hr.currentBpm != null && hr.minBpm != null && hr.maxBpm != null) {
+                                        listOfNotNull(
+                                            StatItem("Latest", "${hr.currentBpm} bpm"),
+                                            StatItem("Range", "${hr.minBpm}-${hr.maxBpm} bpm"),
+                                            rhr?.let { StatItem("Resting", "$it bpm") }
+                                        )
+                                    } else null
+                                }
+                                HealthViewModel.MetricType.HEART_RATE_VARIABILITY -> {
+                                    val hrv = healthData.heartRateVariability
+                                    if (hrv.avgMs != null && hrv.minMs != null && hrv.maxMs != null) {
+                                        listOf(
+                                            StatItem("Average", "${String.format("%.0f", hrv.avgMs)} ms"),
+                                            StatItem("Range", "${String.format("%.0f", hrv.minMs)}-${String.format("%.0f", hrv.maxMs)} ms"),
+                                            StatItem("Readings", "${hrv.readingCount}")
+                                        )
+                                    } else null
+                                }
+                                HealthViewModel.MetricType.OXYGEN_SATURATION -> {
+                                    val spo2 = healthData.oxygenSaturation
+                                    if (spo2.avgPercentage != null && spo2.minPercentage != null && spo2.maxPercentage != null) {
+                                        listOf(
+                                            StatItem("Average", "${String.format("%.0f", spo2.avgPercentage)}%"),
+                                            StatItem("Range", "${String.format("%.0f", spo2.minPercentage)}-${String.format("%.0f", spo2.maxPercentage)}%"),
+                                            StatItem("Readings", "${spo2.readingCount}")
+                                        )
+                                    } else null
+                                }
+                                HealthViewModel.MetricType.RESPIRATORY_RATE -> {
+                                    val rr = healthData.respiratoryRate
+                                    if (rr.avgRate != null && rr.minRate != null && rr.maxRate != null) {
+                                        listOf(
+                                            StatItem("Average", "${String.format("%.0f", rr.avgRate)} rpm"),
+                                            StatItem("Range", "${String.format("%.0f", rr.minRate)}-${String.format("%.0f", rr.maxRate)} rpm"),
+                                            StatItem("Readings", "${rr.readingCount}")
+                                        )
+                                    } else null
+                                }
+                                else -> null
+                            }
+
+                            if (statsItems != null) {
+                                item {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                        ) {
+                                            statsItems.forEach { stat ->
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text(text = stat.label, color = TextTertiary, fontSize = 12.sp)
+                                                    Text(text = stat.value, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         // Insights Card

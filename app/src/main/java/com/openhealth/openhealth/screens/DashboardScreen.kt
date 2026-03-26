@@ -1528,21 +1528,23 @@ private fun VitalsCard(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 if (hasHRV) {
-                    val hrv = healthData.heartRateVariability.rmssdMs!!
+                    val hrvDisplay = healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f", hrv), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = String.format("%.0f", hrvDisplay), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         Text(text = "ms HRV", color = TextTertiary, fontSize = 12.sp)
                     }
                 }
                 if (hasBloodOxygen) {
+                    val spo2Display = healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f%%", healthData.oxygenSaturation.percentage), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = String.format("%.0f%%", spo2Display), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         Text(text = "SpO2", color = TextTertiary, fontSize = 12.sp)
                     }
                 }
                 if (hasRespiratoryRate) {
+                    val rrDisplay = healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f", healthData.respiratoryRate.ratePerMinute), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = String.format("%.0f", rrDisplay), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         Text(text = "breaths", color = TextTertiary, fontSize = 12.sp)
                     }
                 }
@@ -1555,14 +1557,14 @@ private fun VitalsCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (hasHRV) {
-                    val hrv = healthData.heartRateVariability.rmssdMs!!
-                    val dot = when { hrv >= 30 -> Color(0xFF4CD964); hrv >= 20 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
-                    VitalMetricRow("Heart Rate Variability", String.format("%.0f ms", hrv), dot) { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
+                    val hrvAvg = healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!
+                    val dot = when { hrvAvg >= 30 -> Color(0xFF4CD964); hrvAvg >= 20 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Heart Rate Variability", String.format("%.0f ms", hrvAvg), dot) { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
                 }
                 if (hasBloodOxygen) {
-                    val spo2 = healthData.oxygenSaturation.percentage!!
-                    val dot = when { spo2 >= 95 -> Color(0xFF4CD964); spo2 >= 90 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
-                    VitalMetricRow("Blood Oxygen", String.format("%.0f%%", spo2), dot) { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
+                    val spo2Avg = healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!
+                    val dot = when { spo2Avg >= 95 -> Color(0xFF4CD964); spo2Avg >= 90 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Blood Oxygen", String.format("%.0f%%", spo2Avg), dot) { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
                 }
                 if (hasBloodGlucose) {
                     val bg = healthData.bloodGlucose.levelMgPerDl!!
@@ -1580,9 +1582,9 @@ private fun VitalsCard(
                     VitalMetricRow("Body Temperature", String.format("%.1f°C", temp), dot) { onMetricClick(HealthViewModel.MetricType.BODY_TEMPERATURE) }
                 }
                 if (hasRespiratoryRate) {
-                    val rr = healthData.respiratoryRate.ratePerMinute!!
-                    val dot = when { rr in 12.0..20.0 -> Color(0xFF4CD964); rr in 8.0..25.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
-                    VitalMetricRow("Respiratory Rate", String.format("%.0f breaths/min", rr), dot) { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
+                    val rrAvg = healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!
+                    val dot = when { rrAvg in 12.0..20.0 -> Color(0xFF4CD964); rrAvg in 8.0..25.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Respiratory Rate", String.format("%.0f breaths/min", rrAvg), dot) { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
                 }
                 if (hasSkinTemp) {
                     VitalMetricRow("Skin Temp", String.format("%.1f°C", healthData.skinTemperature.temperatureCelsius), null) { onMetricClick(HealthViewModel.MetricType.SKIN_TEMPERATURE) }

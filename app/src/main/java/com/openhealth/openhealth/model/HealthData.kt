@@ -265,18 +265,30 @@ data class BodyTemperatureData(
 // Heart Rate Variability (HRV) Data
 data class HeartRateVariabilityData(
     val rmssdMs: Double? = null,
+    val avgMs: Double? = null,
+    val minMs: Double? = null,
+    val maxMs: Double? = null,
+    val readingCount: Int = 0,
     val measurementTime: Instant? = null
 )
 
 // Oxygen Saturation (SpO2) Data
 data class OxygenSaturationData(
     val percentage: Double? = null,
+    val avgPercentage: Double? = null,
+    val minPercentage: Double? = null,
+    val maxPercentage: Double? = null,
+    val readingCount: Int = 0,
     val measurementTime: Instant? = null
 )
 
 // Respiratory Rate Data
 data class RespiratoryRateData(
     val ratePerMinute: Double? = null,
+    val avgRate: Double? = null,
+    val minRate: Double? = null,
+    val maxRate: Double? = null,
+    val readingCount: Int = 0,
     val measurementTime: Instant? = null
 )
 

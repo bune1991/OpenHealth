@@ -194,7 +194,8 @@ class MainActivity : ComponentActivity() {
                                             onHomeClick = { viewModel.clearSelectedMetric() },
                                             onDateChange = { _ -> },
                                             stepsGoal = settings.stepsGoal,
-                                            exerciseSessions = healthData.exercise.sessions
+                                            exerciseSessions = healthData.exercise.sessions,
+                                            healthData = healthData
                                         )
                                     }
                                     else -> {

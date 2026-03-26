@@ -174,8 +174,14 @@ object HealthConnectManager {
 
             // Extract all BPM samples and sort by timestamp to get the most recent
             val allSamples = records.flatMap { it.samples }
-                .sortedBy { it.time }  // Sort by timestamp to ensure correct ordering
-            val bpmValues = allSamples.map { it.beatsPerMinute }
+                .sortedBy { it.time }
+
+            // Filter to today only for min/max/range stats
+            val todayStartHR = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant()
+            val todaySamples = allSamples.filter { it.time >= todayStartHR }
+            val samplesToUse = if (todaySamples.isNotEmpty()) todaySamples else allSamples
+
+            val bpmValues = samplesToUse.map { it.beatsPerMinute }
 
             // Get the most recent reading (last in sorted list), not max
             val currentBpm = allSamples.lastOrNull()?.beatsPerMinute?.toInt() ?: 0
@@ -185,7 +191,7 @@ object HealthConnectManager {
             // Estimate resting heart rate (minimum during non-active periods)
             val restingBpm = minBpm
 
-            Log.d("OpenHealth_HeartRate", "Today: $currentBpm bpm (latest), Range: $minBpm-$maxBpm, Records: ${records.size}")
+            Log.d("OpenHealth_HeartRate", "Today: $currentBpm bpm (latest), Range: $minBpm-$maxBpm, Samples: ${allSamples.size} (today: ${todaySamples.size})")
 
             HeartRateData(
                 currentBpm = currentBpm,
@@ -1149,14 +1155,26 @@ object HealthConnectManager {
 
             val records = response.records
             val latestRecord = records.maxByOrNull { it.time }
-            val todayValue = latestRecord?.heartRateVariabilityMillis ?: 0.0
+            val latestValue = latestRecord?.heartRateVariabilityMillis ?: 0.0
 
-            Log.d("OpenHealth_HRV", "Records: ${records.size}, Today: ${String.format("%.1f", todayValue)} ms, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+            // Stats for today only
+            val todayStart = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant()
+            val todayRecords = records.filter { it.time >= todayStart }
+            val todayValues = todayRecords.map { it.heartRateVariabilityMillis }
+            val avg = if (todayValues.isNotEmpty()) todayValues.average() else 0.0
+            val min = todayValues.minOrNull() ?: 0.0
+            val max = todayValues.maxOrNull() ?: 0.0
+
+            Log.d("OpenHealth_HRV", "Records: ${records.size} (today: ${todayRecords.size}), Latest: ${String.format("%.1f", latestValue)}, Avg: ${String.format("%.1f", avg)}, Range: ${String.format("%.0f", min)}-${String.format("%.0f", max)} ms")
 
             if (latestRecord == null) return HeartRateVariabilityData()
 
             HeartRateVariabilityData(
-                rmssdMs = todayValue,
+                rmssdMs = latestValue,
+                avgMs = avg,
+                minMs = min,
+                maxMs = max,
+                readingCount = todayRecords.size,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
@@ -1187,14 +1205,26 @@ object HealthConnectManager {
 
             val records = response.records
             val latestRecord = records.maxByOrNull { it.time }
-            val todayValue = latestRecord?.percentage?.value ?: 0.0
+            val latestValue = latestRecord?.percentage?.value ?: 0.0
 
-            Log.d("OpenHealth_SpO2", "Records: ${records.size}, Today: ${String.format("%.1f", todayValue)}%, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+            // Stats for today only
+            val todayStartSpo2 = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant()
+            val todayRecords = records.filter { it.time >= todayStartSpo2 }
+            val todayValues = todayRecords.map { it.percentage.value }
+            val avg = if (todayValues.isNotEmpty()) todayValues.average() else latestValue
+            val min = todayValues.minOrNull() ?: latestValue
+            val max = todayValues.maxOrNull() ?: latestValue
+
+            Log.d("OpenHealth_SpO2", "Records: ${records.size} (today: ${todayRecords.size}), Latest: ${String.format("%.1f", latestValue)}%, Avg: ${String.format("%.1f", avg)}%")
 
             if (latestRecord == null) return OxygenSaturationData()
 
             OxygenSaturationData(
-                percentage = todayValue,
+                percentage = latestValue,
+                avgPercentage = avg,
+                minPercentage = min,
+                maxPercentage = max,
+                readingCount = todayRecords.size,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
@@ -1246,14 +1276,26 @@ object HealthConnectManager {
 
             val records = allRecords.toList()
             val latestRecord = records.maxByOrNull { it.time }
-            val todayValue = latestRecord?.rate?.toDouble() ?: 0.0
+            val latestValue = latestRecord?.rate?.toDouble() ?: 0.0
 
-            Log.d("OpenHealth_RespiratoryRate", "Records: ${records.size}, Today: $todayValue breaths/min, First: ${records.minByOrNull { it.time }?.time}, Last: ${latestRecord?.time}")
+            // Stats for today only
+            val todayStartRR = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant()
+            val todayRecords = records.filter { it.time >= todayStartRR }
+            val todayRates = todayRecords.map { it.rate }
+            val avgRate = if (todayRates.isNotEmpty()) todayRates.average() else 0.0
+            val minRate = todayRates.minOrNull() ?: 0.0
+            val maxRate = todayRates.maxOrNull() ?: 0.0
+
+            Log.d("OpenHealth_RespiratoryRate", "Records: ${records.size} (today: ${todayRecords.size}), Latest: $latestValue, Avg: ${String.format("%.1f", avgRate)}, Range: ${String.format("%.0f", minRate)}-${String.format("%.0f", maxRate)} breaths/min")
 
             if (latestRecord == null) return RespiratoryRateData()
 
             RespiratoryRateData(
-                ratePerMinute = todayValue,
+                ratePerMinute = latestValue,
+                avgRate = avgRate,
+                minRate = minRate,
+                maxRate = maxRate,
+                readingCount = todayRecords.size,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {
