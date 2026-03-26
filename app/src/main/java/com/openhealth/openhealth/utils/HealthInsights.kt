@@ -245,6 +245,54 @@ object HealthInsights {
         )
     }
 
+    fun getNutritionInsight(calories: Double, protein: Double, carbs: Double, fat: Double): MetricInsight {
+        val totalMacros = protein + carbs + fat
+        val proteinPct = if (totalMacros > 0) (protein / totalMacros * 100).toInt() else 0
+        val carbsPct = if (totalMacros > 0) (carbs / totalMacros * 100).toInt() else 0
+        val fatPct = if (totalMacros > 0) (fat / totalMacros * 100).toInt() else 0
+
+        val (status, color) = when {
+            calories >= 1800 && calories <= 2500 -> "On Track" to "green"
+            calories > 0 -> "Tracking" to "yellow"
+            else -> "No Data" to "yellow"
+        }
+
+        val macroAnalysis = mutableListOf<String>()
+        if (protein > 0) {
+            when {
+                proteinPct > 50 -> macroAnalysis.add("Protein is very high ($proteinPct%). Consider balancing with more carbs and fats.")
+                proteinPct in 25..35 -> macroAnalysis.add("Protein ratio ($proteinPct%) is in the ideal range for active individuals.")
+                proteinPct < 15 && totalMacros > 0 -> macroAnalysis.add("Protein is low ($proteinPct%). Aim for at least 20-30% of calories from protein.")
+            }
+        }
+        if (carbs <= 0 && totalMacros > 0) {
+            macroAnalysis.add("No carbs logged. Carbohydrates are your body's primary energy source — include whole grains, fruits, or vegetables.")
+        }
+        if (fatPct > 45) {
+            macroAnalysis.add("Fat ratio ($fatPct%) is high. Aim for 20-35% of calories from healthy fats.")
+        }
+
+        val meaningParts = mutableListOf<String>()
+        meaningParts.add("You've logged ${String.format("%.0f", calories)} kcal today with ${String.format("%.0f", protein)}g protein, ${String.format("%.0f", carbs)}g carbs, and ${String.format("%.0f", fat)}g fat.")
+        if (macroAnalysis.isNotEmpty()) {
+            meaningParts.add(macroAnalysis.first())
+        }
+
+        return MetricInsight(
+            status = status,
+            statusColor = color,
+            description = "Nutrition tracks your daily food intake including calories and macronutrients. A balanced diet supports energy, recovery, and overall health.",
+            meaning = meaningParts.joinToString(" "),
+            normalRange = "2,000-2,500 kcal/day, Macros: 30% protein, 40% carbs, 30% fat",
+            tips = listOf(
+                "Track every meal for accuracy — small snacks add up quickly",
+                "Aim for 1.6-2.2g protein per kg body weight for muscle maintenance",
+                "Complex carbs (oats, rice, sweet potato) provide sustained energy",
+                "Include healthy fats from nuts, olive oil, and avocado"
+            )
+        )
+    }
+
     fun getDistanceInsight(km: Double): MetricInsight {
         return MetricInsight(
             status = if (km >= 5) "Active" else "Tracked",

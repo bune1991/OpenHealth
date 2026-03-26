@@ -412,7 +412,7 @@ fun MetricDetailScreen(
 
                         // Insights Card
                         item {
-                            val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal)
+                            val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
                             if (insight != null) {
                                 InsightCard(insight = insight)
                             }
@@ -1568,7 +1568,7 @@ private fun formatValue(value: Double, decimalPlaces: Int): String {
     }
 }
 
-private fun getInsightForMetric(metricType: HealthViewModel.MetricType, value: Double, stepsGoal: Int): com.openhealth.openhealth.utils.MetricInsight? {
+private fun getInsightForMetric(metricType: HealthViewModel.MetricType, value: Double, stepsGoal: Int, healthData: com.openhealth.openhealth.model.HealthData? = null): com.openhealth.openhealth.utils.MetricInsight? {
     return when (metricType) {
         HealthViewModel.MetricType.HEART_RATE -> com.openhealth.openhealth.utils.HealthInsights.getHeartRateInsight(value.toInt())
         HealthViewModel.MetricType.RESTING_HEART_RATE -> com.openhealth.openhealth.utils.HealthInsights.getRestingHeartRateInsight(value.toInt())
@@ -1583,6 +1583,15 @@ private fun getInsightForMetric(metricType: HealthViewModel.MetricType, value: D
         HealthViewModel.MetricType.SKIN_TEMPERATURE -> com.openhealth.openhealth.utils.HealthInsights.getSkinTempInsight(value)
         HealthViewModel.MetricType.CALORIES -> com.openhealth.openhealth.utils.HealthInsights.getCaloriesInsight(value)
         HealthViewModel.MetricType.DISTANCE -> com.openhealth.openhealth.utils.HealthInsights.getDistanceInsight(value)
+        HealthViewModel.MetricType.NUTRITION -> {
+            val n = healthData?.nutrition
+            com.openhealth.openhealth.utils.HealthInsights.getNutritionInsight(
+                n?.calories ?: value,
+                n?.proteinGrams ?: 0.0,
+                n?.carbsGrams ?: 0.0,
+                n?.fatGrams ?: 0.0
+            )
+        }
         else -> null
     }
 }
