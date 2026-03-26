@@ -47,6 +47,7 @@ data class SettingsData(
 
     // Features
     val showStepsStreak: Boolean = true,
+    val dailySummaryNotification: Boolean = true,
 
     // Daily Goals
     val stepsGoal: Int = 10000,

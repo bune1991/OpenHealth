@@ -2,6 +2,7 @@ package com.openhealth.openhealth.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -62,6 +63,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.Alignment
@@ -132,6 +134,10 @@ fun DashboardScreen(
     onStressClick: () -> Unit = {},
     stepsCalendarData: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
     stepsStreak: Int = 0,
+    bodyExpanded: Boolean = false,
+    vitalsExpanded: Boolean = false,
+    onBodyExpandedChange: (Boolean) -> Unit = {},
+    onVitalsExpandedChange: (Boolean) -> Unit = {},
     initialScrollIndex: Int = 0,
     initialScrollOffset: Int = 0,
     onScrollPositionChanged: (Int, Int) -> Unit = { _, _ -> }
@@ -251,7 +257,7 @@ fun DashboardScreen(
             FloatingActionButton(
                 onClick = onRefresh,
                 containerColor = FabColor,
-                contentColor = PureBlack,
+                contentColor = StepsCyan,
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(
@@ -473,6 +479,8 @@ fun DashboardScreen(
                             hasBodyWater = hasBodyWater,
                             hasBoneMass = hasBoneMass,
                             hasLeanMass = hasLeanMass,
+                            expanded = bodyExpanded,
+                            onExpandedChange = onBodyExpandedChange,
                             onMetricClick = onMetricClick
                         )
                     }
@@ -487,128 +495,23 @@ fun DashboardScreen(
                 val hasSkinTemp = settings.showSkinTemperature && healthData.skinTemperature.temperatureCelsius != null
                 val hasBloodGlucose = settings.showBloodGlucose && healthData.bloodGlucose.levelMgPerDl != null
 
-                if (hasHRV || hasBloodOxygen || hasBloodPressure || hasBodyTemp || hasRespiratoryRate || hasSkinTemp || hasBloodGlucose) {
-                    item {
-                        SectionHeader(title = "Vitals")
-                    }
-                }
+                val hasAnyVitals = hasHRV || hasBloodOxygen || hasBloodPressure || hasBodyTemp || hasRespiratoryRate || hasSkinTemp || hasBloodGlucose
 
-                if (hasHRV) {
+                if (hasAnyVitals) {
                     item {
-                        val hrv = healthData.heartRateVariability.rmssdMs!!
-                        DetailCard(
-                            title = "Heart Rate Variability",
-                            value = String.format("%.0f ms", hrv),
-                            statusColor = when { hrv >= 30 -> Color(0xFF4CD964); hrv >= 20 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
-                            onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
+                        VitalsCard(
+                            healthData = healthData,
+                            hasHRV = hasHRV,
+                            hasBloodOxygen = hasBloodOxygen,
+                            hasBloodPressure = hasBloodPressure,
+                            hasBodyTemp = hasBodyTemp,
+                            hasRespiratoryRate = hasRespiratoryRate,
+                            hasSkinTemp = hasSkinTemp,
+                            hasBloodGlucose = hasBloodGlucose,
+                            expanded = vitalsExpanded,
+                            onExpandedChange = onVitalsExpandedChange,
+                            onMetricClick = onMetricClick
                         )
-                    }
-                }
-
-                if (hasBloodGlucose) {
-                    item {
-                        val bg = healthData.bloodGlucose.levelMgPerDl!!
-                        DetailCard(
-                            title = "Blood Glucose",
-                            value = String.format("%.0f mg/dL", bg),
-                            statusColor = when { bg in 70.0..100.0 -> Color(0xFF4CD964); bg in 60.0..140.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
-                            onClick = { onMetricClick(HealthViewModel.MetricType.BLOOD_GLUCOSE) }
-                        )
-                    }
-                }
-
-                if (hasBloodOxygen) {
-                    item {
-                        val spo2 = healthData.oxygenSaturation.percentage!!
-                        DetailCard(
-                            title = "Blood Oxygen",
-                            value = String.format("%.0f%%", spo2),
-                            statusColor = when { spo2 >= 95 -> Color(0xFF4CD964); spo2 >= 90 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
-                            onClick = { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
-                        )
-                    }
-                }
-
-                if (hasBloodPressure) {
-                    item {
-                        val sys = healthData.bloodPressure.systolicMmHg!!
-                        DetailCard(
-                            title = "Blood Pressure",
-                            value = String.format("%.0f/%.0f mmHg", sys, healthData.bloodPressure.diastolicMmHg),
-                            statusColor = when { sys in 90.0..120.0 -> Color(0xFF4CD964); sys in 80.0..140.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
-                            onClick = { onMetricClick(HealthViewModel.MetricType.BLOOD_PRESSURE) }
-                        )
-                    }
-                }
-
-                if (hasBodyTemp) {
-                    item {
-                        val temp = healthData.bodyTemperature.temperatureCelsius!!
-                        DetailCard(
-                            title = "Body Temperature",
-                            value = String.format("%.1f°C", temp),
-                            statusColor = when { temp in 36.1..37.2 -> Color(0xFF4CD964); temp in 35.5..38.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
-                            onClick = { onMetricClick(HealthViewModel.MetricType.BODY_TEMPERATURE) }
-                        )
-                    }
-                }
-
-                if (hasRespiratoryRate) {
-                    item {
-                        val rr = healthData.respiratoryRate.ratePerMinute!!
-                        DetailCard(
-                            title = "Respiratory Rate",
-                            value = String.format("%.0f breaths/min", rr),
-                            statusColor = when { rr in 12.0..20.0 -> Color(0xFF4CD964); rr in 8.0..25.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) },
-                            onClick = { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
-                        )
-                    }
-                }
-
-                if (hasSkinTemp) {
-                    item {
-                        DetailCard(
-                            title = "Skin Temp",
-                            value = String.format("%.1f°C", healthData.skinTemperature.temperatureCelsius),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.SKIN_TEMPERATURE) }
-                        )
-                    }
-                }
-
-                // Health status banner
-                val allNormal = listOf(
-                    hasHRV && healthData.heartRateVariability.rmssdMs!! >= 30,
-                    hasBloodOxygen && healthData.oxygenSaturation.percentage!! >= 95,
-                    hasRespiratoryRate && healthData.respiratoryRate.ratePerMinute!! in 12.0..20.0
-                ).all { it }
-
-                if (hasHRV || hasBloodOxygen || hasRespiratoryRate) {
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (allNormal) Color(0xFF4CD964).copy(alpha = 0.15f) else Color(0xFFFFCC00).copy(alpha = 0.15f)
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = if (allNormal) "✓" else "!",
-                                    color = if (allNormal) Color(0xFF4CD964) else Color(0xFFFFCC00),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (allNormal) "All metrics are within normal range" else "Some metrics need attention",
-                                    color = if (allNormal) Color(0xFF4CD964) else Color(0xFFFFCC00),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        }
                     }
                 }
 
@@ -1435,9 +1338,10 @@ private fun BodyCompositionCard(
     hasBodyWater: Boolean,
     hasBoneMass: Boolean,
     hasLeanMass: Boolean,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
     onMetricClick: (HealthViewModel.MetricType) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
@@ -1451,7 +1355,7 @@ private fun BodyCompositionCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded },
+                    .clickable { onExpandedChange(!expanded) },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1547,6 +1451,166 @@ private fun BodyMetricRow(label: String, value: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = label, color = TextSecondary, style = MaterialTheme.typography.bodyLarge)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = value, color = TextPrimary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+@Composable
+private fun VitalsCard(
+    healthData: HealthData,
+    hasHRV: Boolean,
+    hasBloodOxygen: Boolean,
+    hasBloodPressure: Boolean,
+    hasBodyTemp: Boolean,
+    hasRespiratoryRate: Boolean,
+    hasSkinTemp: Boolean,
+    hasBloodGlucose: Boolean,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onMetricClick: (HealthViewModel.MetricType) -> Unit
+) {
+
+    // Check if all vitals are normal
+    val allNormal = listOf(
+        !hasHRV || healthData.heartRateVariability.rmssdMs!! >= 30,
+        !hasBloodOxygen || healthData.oxygenSaturation.percentage!! >= 95,
+        !hasRespiratoryRate || healthData.respiratoryRate.ratePerMinute!! in 12.0..20.0
+    ).all { it }
+    val statusColor = if (allNormal) Color(0xFF4CD964) else Color(0xFFFFCC00)
+    val statusText = if (allNormal) "All normal" else "Needs attention"
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onExpandedChange(!expanded) },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Vitals",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(statusColor.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(text = statusText, color = statusColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = TextTertiary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Summary row — always visible (top 3 vitals)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                if (hasHRV) {
+                    val hrv = healthData.heartRateVariability.rmssdMs!!
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = String.format("%.0f", hrv), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "ms HRV", color = TextTertiary, fontSize = 12.sp)
+                    }
+                }
+                if (hasBloodOxygen) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = String.format("%.0f%%", healthData.oxygenSaturation.percentage), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "SpO2", color = TextTertiary, fontSize = 12.sp)
+                    }
+                }
+                if (hasRespiratoryRate) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = String.format("%.0f", healthData.respiratoryRate.ratePerMinute), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "breaths", color = TextTertiary, fontSize = 12.sp)
+                    }
+                }
+            }
+
+            // Expanded details
+            if (expanded) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = Color(0xFF2A2A2A))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (hasHRV) {
+                    val hrv = healthData.heartRateVariability.rmssdMs!!
+                    val dot = when { hrv >= 30 -> Color(0xFF4CD964); hrv >= 20 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Heart Rate Variability", String.format("%.0f ms", hrv), dot) { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
+                }
+                if (hasBloodOxygen) {
+                    val spo2 = healthData.oxygenSaturation.percentage!!
+                    val dot = when { spo2 >= 95 -> Color(0xFF4CD964); spo2 >= 90 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Blood Oxygen", String.format("%.0f%%", spo2), dot) { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
+                }
+                if (hasBloodGlucose) {
+                    val bg = healthData.bloodGlucose.levelMgPerDl!!
+                    val dot = when { bg in 70.0..100.0 -> Color(0xFF4CD964); bg in 60.0..140.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Blood Glucose", String.format("%.0f mg/dL", bg), dot) { onMetricClick(HealthViewModel.MetricType.BLOOD_GLUCOSE) }
+                }
+                if (hasBloodPressure) {
+                    val sys = healthData.bloodPressure.systolicMmHg!!
+                    val dot = when { sys in 90.0..120.0 -> Color(0xFF4CD964); sys in 80.0..140.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Blood Pressure", String.format("%.0f/%.0f mmHg", sys, healthData.bloodPressure.diastolicMmHg), dot) { onMetricClick(HealthViewModel.MetricType.BLOOD_PRESSURE) }
+                }
+                if (hasBodyTemp) {
+                    val temp = healthData.bodyTemperature.temperatureCelsius!!
+                    val dot = when { temp in 36.1..37.2 -> Color(0xFF4CD964); temp in 35.5..38.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Body Temperature", String.format("%.1f°C", temp), dot) { onMetricClick(HealthViewModel.MetricType.BODY_TEMPERATURE) }
+                }
+                if (hasRespiratoryRate) {
+                    val rr = healthData.respiratoryRate.ratePerMinute!!
+                    val dot = when { rr in 12.0..20.0 -> Color(0xFF4CD964); rr in 8.0..25.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    VitalMetricRow("Respiratory Rate", String.format("%.0f breaths/min", rr), dot) { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
+                }
+                if (hasSkinTemp) {
+                    VitalMetricRow("Skin Temp", String.format("%.1f°C", healthData.skinTemperature.temperatureCelsius), null) { onMetricClick(HealthViewModel.MetricType.SKIN_TEMPERATURE) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VitalMetricRow(label: String, value: String, statusDot: Color?, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = label, color = TextSecondary, style = MaterialTheme.typography.bodyLarge)
+            if (statusDot != null) {
+                Spacer(modifier = Modifier.width(6.dp))
+                Box(modifier = Modifier.size(8.dp).background(statusDot, RoundedCornerShape(4.dp)))
+            }
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = value, color = TextPrimary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.width(4.dp))

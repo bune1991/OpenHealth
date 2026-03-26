@@ -112,7 +112,8 @@ fun MetricDetailScreen(
     onBackClick: () -> Unit,
     onHomeClick: (() -> Unit)? = null,
     onDateChange: ((LocalDate) -> Unit)? = null,
-    stepsGoal: Int = 10000
+    stepsGoal: Int = 10000,
+    exerciseSessions: List<com.openhealth.openhealth.model.ExerciseSession> = emptyList()
 ) {
     val metricInfo = getMetricInfo(metricType)
 
@@ -270,6 +271,70 @@ fun MetricDetailScreen(
                                 sleepStartTime = sleepStartTime,
                                 sleepEndTime = sleepEndTime
                             )
+                        }
+
+                        // Exercise Sessions List (only for Exercise metric)
+                        if (metricType == HealthViewModel.MetricType.EXERCISE && exerciseSessions.isNotEmpty()) {
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Text(
+                                            text = "Today's Sessions",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = TextPrimary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        exerciseSessions.forEach { session ->
+                                            val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+                                            val startStr = session.startTime.atZone(ZoneId.systemDefault()).format(timeFormatter)
+                                            val endStr = session.endTime.atZone(ZoneId.systemDefault()).format(timeFormatter)
+                                            val durMin = session.duration.toMinutes()
+                                            val icon = when (session.exerciseType) {
+                                                "Running" -> "🏃"
+                                                "Walking" -> "🚶"
+                                                "Cycling" -> "🚴"
+                                                "Swimming" -> "🏊"
+                                                "Yoga" -> "🧘"
+                                                "Hiking" -> "🥾"
+                                                else -> "💪"
+                                            }
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(text = icon, fontSize = 24.sp)
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = session.exerciseType,
+                                                        color = TextPrimary,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        style = MaterialTheme.typography.bodyLarge
+                                                    )
+                                                    Text(
+                                                        text = "$startStr → $endStr",
+                                                        color = TextTertiary,
+                                                        style = MaterialTheme.typography.bodySmall
+                                                    )
+                                                }
+                                                Text(
+                                                    text = "${durMin}m",
+                                                    color = metricInfo.color,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 18.sp
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         // Sleep Clock Visualization (only for Sleep metric)

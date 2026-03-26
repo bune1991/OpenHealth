@@ -199,6 +199,14 @@ fun SettingsScreen(
                     onToggle = { onSettingsChanged(settings.copy(showStepsStreak = it)) }
                 )
             }
+            item {
+                MetricToggleItem(
+                    metric = null,
+                    label = "Daily Summary Notification",
+                    isEnabled = settings.dailySummaryNotification,
+                    onToggle = { onSettingsChanged(settings.copy(dailySummaryNotification = it)) }
+                )
+            }
 
             // Daily Goals Section
             item {

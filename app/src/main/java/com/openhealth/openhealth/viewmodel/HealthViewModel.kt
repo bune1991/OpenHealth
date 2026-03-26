@@ -109,6 +109,15 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val _dashboardScrollOffset = MutableStateFlow(0)
     val dashboardScrollOffset: StateFlow<Int> = _dashboardScrollOffset.asStateFlow()
 
+    // Dashboard card expanded states (persist across navigation)
+    private val _bodyExpanded = MutableStateFlow(false)
+    val bodyExpanded: StateFlow<Boolean> = _bodyExpanded.asStateFlow()
+    private val _vitalsExpanded = MutableStateFlow(false)
+    val vitalsExpanded: StateFlow<Boolean> = _vitalsExpanded.asStateFlow()
+
+    fun setBodyExpanded(expanded: Boolean) { _bodyExpanded.value = expanded }
+    fun setVitalsExpanded(expanded: Boolean) { _vitalsExpanded.value = expanded }
+
     // Settings
     private val settingsManager = SettingsManager.getInstance(context)
     val settings: StateFlow<SettingsData> = settingsManager.settings

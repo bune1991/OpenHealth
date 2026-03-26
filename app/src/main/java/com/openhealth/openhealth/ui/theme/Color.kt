@@ -84,4 +84,4 @@ val CaloriesAccent = CardCalories
 val DistanceAccent = CardDistance
 val GradientStart = BackgroundBlack
 val GradientEnd = SurfaceDark
-val FabColor = PrimaryBlue
+val FabColor = Color(0xFF2A2A2A)  // Dark subtle FAB

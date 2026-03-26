@@ -83,8 +83,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Schedule periodic widget updates
+        // Schedule periodic widget updates and daily summary notification
         com.openhealth.openhealth.widget.WidgetUpdateWorker.enqueue(this)
+        com.openhealth.openhealth.widget.DailySummaryWorker.enqueue(this)
 
         // Handle back press to navigate from detail/settings screen to dashboard
         onBackPressedDispatcher.addCallback(this) {
@@ -192,7 +193,8 @@ class MainActivity : ComponentActivity() {
                                             onBackClick = { viewModel.clearSelectedMetric() },
                                             onHomeClick = { viewModel.clearSelectedMetric() },
                                             onDateChange = { _ -> },
-                                            stepsGoal = settings.stepsGoal
+                                            stepsGoal = settings.stepsGoal,
+                                            exerciseSessions = healthData.exercise.sessions
                                         )
                                     }
                                     else -> {
@@ -201,6 +203,8 @@ class MainActivity : ComponentActivity() {
                                         val selectedDate by viewModel.selectedDate.collectAsState()
                                         val stepsCalendarData by viewModel.stepsCalendarData.collectAsState()
                                         val stepsStreak by viewModel.stepsStreak.collectAsState()
+                                        val bodyExpanded by viewModel.bodyExpanded.collectAsState()
+                                        val vitalsExpanded by viewModel.vitalsExpanded.collectAsState()
                                         DashboardScreen(
                                             healthData = healthData,
                                             isLoading = isLoading,
@@ -222,6 +226,10 @@ class MainActivity : ComponentActivity() {
                                             onStressClick = { viewModel.showStressDetail() },
                                             stepsCalendarData = stepsCalendarData,
                                             stepsStreak = stepsStreak,
+                                            bodyExpanded = bodyExpanded,
+                                            vitalsExpanded = vitalsExpanded,
+                                            onBodyExpandedChange = { viewModel.setBodyExpanded(it) },
+                                            onVitalsExpandedChange = { viewModel.setVitalsExpanded(it) },
                                             initialScrollIndex = scrollIndex,
                                             initialScrollOffset = scrollOffset,
                                             onScrollPositionChanged = { index, offset ->
