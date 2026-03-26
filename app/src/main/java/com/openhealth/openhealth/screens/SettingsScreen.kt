@@ -104,7 +104,7 @@ fun SettingsScreen(
             }
 
             // Group metrics by category (exclude metrics with no Health Connect data source)
-            val unsupportedMetrics = setOf(MetricType.SPEED, MetricType.POWER, MetricType.HYDRATION, MetricType.MINDFULNESS)
+            val unsupportedMetrics = setOf(MetricType.SPEED, MetricType.POWER, MetricType.HYDRATION)
             val groupedMetrics = MetricType.values()
                 .filter { it !in unsupportedMetrics }
                 .groupBy { it.category() }

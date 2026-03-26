@@ -53,8 +53,10 @@ object HealthConnectManager {
     )
 
     // Optional permissions (newer APIs, may not be available on all devices)
+    @OptIn(androidx.health.connect.client.feature.ExperimentalMindfulnessSessionApi::class)
     private val OPTIONAL_PERMISSIONS = setOf(
-        HealthPermission.getReadPermission(SkinTemperatureRecord::class)
+        HealthPermission.getReadPermission(SkinTemperatureRecord::class),
+        HealthPermission.getReadPermission(MindfulnessSessionRecord::class)
     )
 
     // All permissions to request from user
@@ -1161,9 +1163,9 @@ object HealthConnectManager {
             val todayStart = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant()
             val todayRecords = records.filter { it.time >= todayStart }
             val todayValues = todayRecords.map { it.heartRateVariabilityMillis }
-            val avg = if (todayValues.isNotEmpty()) todayValues.average() else 0.0
-            val min = todayValues.minOrNull() ?: 0.0
-            val max = todayValues.maxOrNull() ?: 0.0
+            val avg = if (todayValues.isNotEmpty()) todayValues.average() else latestValue
+            val min = todayValues.minOrNull() ?: latestValue
+            val max = todayValues.maxOrNull() ?: latestValue
 
             Log.d("OpenHealth_HRV", "Records: ${records.size} (today: ${todayRecords.size}), Latest: ${String.format("%.1f", latestValue)}, Avg: ${String.format("%.1f", avg)}, Range: ${String.format("%.0f", min)}-${String.format("%.0f", max)} ms")
 
@@ -1282,9 +1284,9 @@ object HealthConnectManager {
             val todayStartRR = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant()
             val todayRecords = records.filter { it.time >= todayStartRR }
             val todayRates = todayRecords.map { it.rate }
-            val avgRate = if (todayRates.isNotEmpty()) todayRates.average() else 0.0
-            val minRate = todayRates.minOrNull() ?: 0.0
-            val maxRate = todayRates.maxOrNull() ?: 0.0
+            val avgRate = if (todayRates.isNotEmpty()) todayRates.average() else latestValue
+            val minRate = todayRates.minOrNull() ?: latestValue
+            val maxRate = todayRates.maxOrNull() ?: latestValue
 
             Log.d("OpenHealth_RespiratoryRate", "Records: ${records.size} (today: ${todayRecords.size}), Latest: $latestValue, Avg: ${String.format("%.1f", avgRate)}, Range: ${String.format("%.0f", minRate)}-${String.format("%.0f", maxRate)} breaths/min")
 
@@ -1529,6 +1531,57 @@ object HealthConnectManager {
         timeExtractor = { it.startTime },
         valueExtractor = { it.energy?.inKilocalories ?: 0.0 }
     )
+
+    // Get today's mindfulness data
+    @OptIn(androidx.health.connect.client.feature.ExperimentalMindfulnessSessionApi::class)
+    suspend fun getTodayMindfulness(): MindfulnessSessionData {
+        return try {
+            val client = healthConnectClient ?: return MindfulnessSessionData()
+
+            val startOfDay = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault())
+            val now = ZonedDateTime.now(ZoneId.systemDefault())
+
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    recordType = MindfulnessSessionRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(startOfDay.toInstant(), now.toInstant())
+                )
+            )
+
+            val records = response.records
+            if (records.isEmpty()) return MindfulnessSessionData()
+
+            val totalDuration = records.fold(Duration.ZERO) { acc, r ->
+                acc.plus(Duration.between(r.startTime, r.endTime))
+            }
+            val latest = records.maxByOrNull { it.endTime }
+            val sessionType = latest?.let { getMindfulnessTypeName(it.mindfulnessSessionType) }
+
+            Log.d("OpenHealth_Mindfulness", "Records: ${records.size}, Total: ${totalDuration.toMinutes()}m, Type: $sessionType")
+
+            MindfulnessSessionData(
+                duration = totalDuration,
+                startTime = latest?.startTime,
+                endTime = latest?.endTime,
+                sessionType = sessionType
+            )
+        } catch (e: Exception) {
+            Log.e("OpenHealth_Mindfulness", "Error: ${e.message}", e)
+            MindfulnessSessionData()
+        }
+    }
+
+    @OptIn(androidx.health.connect.client.feature.ExperimentalMindfulnessSessionApi::class)
+    private fun getMindfulnessTypeName(type: Int): String {
+        return when (type) {
+            MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MEDITATION -> "Meditation"
+            MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_BREATHING -> "Breathing"
+            MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MUSIC -> "Music"
+            MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_MOVEMENT -> "Movement"
+            MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_UNGUIDED -> "Unguided"
+            else -> "Mindfulness"
+        }
+    }
 
     suspend fun getExerciseHistory(): MetricHistory {
         return try {

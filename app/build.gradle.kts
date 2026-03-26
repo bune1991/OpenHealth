@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.openhealth.openhealth"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.openhealth.openhealth"
@@ -91,7 +91,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     // Health Connect dependency
-    implementation("androidx.health.connect:connect-client:1.1.0-beta01")
+    implementation("androidx.health.connect:connect-client:1.1.0")
 
     // WorkManager (for periodic widget updates)
     implementation("androidx.work:work-runtime-ktx:2.9.0")

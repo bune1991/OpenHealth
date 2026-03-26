@@ -441,25 +441,6 @@ fun DashboardScreen(
                     }
                 }
 
-                // Heart Section
-                val hasRestingHR = settings.showRestingHeartRate && healthData.restingHeartRate.bpm != null
-
-                if (hasRestingHR) {
-                    item {
-                        SectionHeader(title = "Heart")
-                    }
-                }
-
-                if (hasRestingHR) {
-                    item {
-                        DetailCard(
-                            title = "Resting Heart Rate",
-                            value = "${healthData.restingHeartRate.bpm} bpm",
-                            onClick = { onMetricClick(HealthViewModel.MetricType.RESTING_HEART_RATE) }
-                        )
-                    }
-                }
-
                 // Body Composition (collapsible card)
                 val hasWeight = settings.showWeight && healthData.weight.kilograms != null
                 val hasBodyFat = settings.showBodyFat && healthData.bodyFat.percentage != null
@@ -531,6 +512,23 @@ fun DashboardScreen(
                             title = "Nutrition",
                             value = "$cal kcal  P:${protein}g  C:${carbs}g  F:${fat}g",
                             onClick = { onMetricClick(HealthViewModel.MetricType.NUTRITION) }
+                        )
+                    }
+                }
+
+                // Wellness Section (Mindfulness)
+                val hasMindfulness = settings.showMindfulness && healthData.mindfulness.duration != null
+
+                if (hasMindfulness) {
+                    item {
+                        SectionHeader(title = "Wellness")
+                    }
+                    item {
+                        val typeText = healthData.mindfulness.sessionType ?: "Session"
+                        DetailCard(
+                            title = "Mindfulness",
+                            value = "${healthData.mindfulness.minutes}m ($typeText)",
+                            onClick = { }
                         )
                     }
                 }

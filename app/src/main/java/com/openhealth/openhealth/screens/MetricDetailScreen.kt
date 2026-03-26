@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -261,9 +262,17 @@ fun MetricDetailScreen(
                                 DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
                             )
 
+                            // Blood pressure: show systolic/diastolic format
+                            val displayValue = if (metricType == HealthViewModel.MetricType.BLOOD_PRESSURE && healthData != null) {
+                                val bp = healthData.bloodPressure
+                                if (bp.systolicMmHg != null && bp.diastolicMmHg != null) {
+                                    "${String.format("%.0f", bp.systolicMmHg)}/${String.format("%.0f", bp.diastolicMmHg)}"
+                                } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
+                            } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
+
                             TodayValueCard(
                                 value = selectedDateValue,
-                                valueFormatted = formatValue(selectedDateValue, metricInfo.decimalPlaces),
+                                valueFormatted = displayValue,
                                 unit = metricHistory?.unit ?: "",
                                 color = metricInfo.color,
                                 dateLabel = dateLabel,
@@ -341,6 +350,60 @@ fun MetricDetailScreen(
                                                     Text(text = stat.value, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                                 }
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Nutrition Macros Breakdown (only for Nutrition metric)
+                        if (metricType == HealthViewModel.MetricType.NUTRITION && healthData != null) {
+                            val n = healthData.nutrition
+                            val protein = n.proteinGrams ?: 0.0
+                            val carbs = n.carbsGrams ?: 0.0
+                            val fat = n.fatGrams ?: 0.0
+                            val totalMacros = protein + carbs + fat
+
+                            if (totalMacros > 0) {
+                                item {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                                    ) {
+                                        Column(modifier = Modifier.padding(16.dp)) {
+                                            Text(
+                                                text = "Macros Breakdown",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = TextPrimary,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(16.dp))
+
+                                            // Stacked bar
+                                            val pPct = (protein / totalMacros).toFloat()
+                                            val cPct = (carbs / totalMacros).toFloat()
+                                            val fPct = (fat / totalMacros).toFloat()
+
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(24.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                            ) {
+                                                if (pPct > 0f) Box(modifier = Modifier.weight(pPct).fillMaxHeight().background(Color(0xFF4CAF50)))
+                                                if (cPct > 0f) Box(modifier = Modifier.weight(cPct).fillMaxHeight().background(Color(0xFFFF9800)))
+                                                if (fPct > 0f) Box(modifier = Modifier.weight(fPct).fillMaxHeight().background(Color(0xFFF44336)))
+                                            }
+
+                                            Spacer(modifier = Modifier.height(16.dp))
+
+                                            // Legend rows
+                                            MacroRow("Protein", protein, (pPct * 100).roundToInt(), Color(0xFF4CAF50))
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            MacroRow("Carbs", carbs, (cPct * 100).roundToInt(), Color(0xFFFF9800))
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            MacroRow("Fat", fat, (fPct * 100).roundToInt(), Color(0xFFF44336))
                                         }
                                     }
                                 }
@@ -1622,6 +1685,26 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                 color = TextTertiary,
                 lineHeight = 18.sp
             )
+        }
+    }
+}
+
+@Composable
+private fun MacroRow(label: String, grams: Double, percent: Int, color: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(12.dp).background(color, RoundedCornerShape(2.dp)))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = label, color = TextPrimary, style = MaterialTheme.typography.bodyMedium)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "${grams.roundToInt()}g", color = TextPrimary, fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "$percent%", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

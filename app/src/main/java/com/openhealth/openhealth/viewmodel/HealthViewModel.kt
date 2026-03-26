@@ -317,6 +317,13 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 val nutrition = HealthConnectManager.getTodayNutrition()
                 Log.d("HealthViewModel", "Nutrition: ${nutrition.calories} kcal")
 
+                val mindfulness = try {
+                    HealthConnectManager.getTodayMindfulness()
+                } catch (e: Exception) {
+                    Log.e("HealthViewModel", "Mindfulness not supported: ${e.message}")
+                    com.openhealth.openhealth.model.MindfulnessSessionData()
+                }
+
                 val newHealthData = HealthData(
                     steps = steps,
                     heartRate = heartRate,
@@ -340,7 +347,8 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     oxygenSaturation = oxygenSaturation,
                     respiratoryRate = respiratoryRate,
                     skinTemperature = skinTemperature,
-                    nutrition = nutrition
+                    nutrition = nutrition,
+                    mindfulness = mindfulness
                 )
 
                 _healthData.value = newHealthData
