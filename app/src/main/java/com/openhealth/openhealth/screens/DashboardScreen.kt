@@ -126,6 +126,7 @@ fun DashboardScreen(
     onToday: () -> Unit,
     onDateSelected: ((LocalDate) -> Unit)? = null,
     onReportsClick: () -> Unit = {},
+    onStressClick: () -> Unit = {},
     stepsCalendarData: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
     stepsStreak: Int = 0,
     initialScrollIndex: Int = 0,
@@ -270,25 +271,12 @@ fun DashboardScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Readiness Score Section - Large gradient hero card
+                // Readiness Score Card
                 item {
                     ReadinessScoreCard(
                         readinessScore = readinessScore,
                         onClick = onReadinessClick,
                         modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // Three-Ring Gauge: Activity / Recovery / Sleep (Bevel-style)
-                item {
-                    val activityPct = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
-                    val recoveryPct = (readinessScore.score / 100f).coerceIn(0f, 1f)
-                    val sleepPct = ((healthData.sleep.totalDuration?.toMinutes() ?: 0) / 480f).coerceIn(0f, 1f) // 8h = 100%
-
-                    ThreeRingGauge(
-                        activityPercent = activityPct,
-                        recoveryPercent = recoveryPct,
-                        sleepPercent = sleepPct
                     )
                 }
 
@@ -317,7 +305,8 @@ fun DashboardScreen(
                             stressLevel = stressLevel,
                             stressLabel = stressLabel,
                             stressColor = stressColor,
-                            energyPercent = energyPct
+                            energyPercent = energyPct,
+                            onClick = onStressClick
                         )
                     }
                 }
@@ -921,6 +910,85 @@ private fun ReadinessScoreCard(
 }
 
 @Composable
+private fun ReadinessWithRingsCard(
+    readinessScore: ReadinessScore,
+    activityPercent: Float,
+    recoveryPercent: Float,
+    sleepPercent: Float,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(readinessScore.gradient)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Readiness score
+            Text(
+                text = readinessScore.score.toString(),
+                style = MaterialTheme.typography.displayLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 56.sp
+            )
+            Text(
+                text = readinessScore.label,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Readiness Score",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Three rings
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                MiniRingItem(percent = activityPercent, label = "Activity", color = StepsCyan)
+                MiniRingItem(percent = recoveryPercent, label = "Recovery", color = Color(0xFF4CD964))
+                MiniRingItem(percent = sleepPercent, label = "Sleep", color = SleepPurple)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiniRingItem(percent: Float, label: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
+            Canvas(modifier = Modifier.size(56.dp)) {
+                val strokeW = 5.dp.toPx()
+                val arcSize = Size(size.width - strokeW, size.height - strokeW)
+                val topLeft = Offset(strokeW / 2, strokeW / 2)
+                drawArc(color = Color.White.copy(alpha = 0.2f), startAngle = -90f, sweepAngle = 360f, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
+                drawArc(color = color, startAngle = -90f, sweepAngle = 360f * percent, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
+            }
+            Text(
+                text = "${(percent * 100).roundToInt()}%",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = label, color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+    }
+}
+
+@Composable
 private fun MetricCard(
     title: String,
     value: String,
@@ -1043,6 +1111,8 @@ private fun DetailCard(
     value: String,
     progress: Float? = null,
     statusColor: Color? = null,
+    sparklineData: List<Float>? = null,
+    sparklineColor: Color = StepsCyan,
     onClick: (() -> Unit)? = null
 ) {
     Card(
@@ -1095,6 +1165,33 @@ private fun DetailCard(
                             .clip(RoundedCornerShape(2.dp)),
                         color = StepsCyan,
                         trackColor = Color(0xFF2A2A2A)
+                    )
+                }
+            }
+            // Mini sparkline
+            if (sparklineData != null && sparklineData.size >= 2) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Canvas(
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(30.dp)
+                ) {
+                    val maxVal = sparklineData.max()
+                    val minVal = sparklineData.min()
+                    val range = (maxVal - minVal).coerceAtLeast(0.01f)
+                    val stepX = size.width / (sparklineData.size - 1)
+                    val path = Path()
+
+                    sparklineData.forEachIndexed { i, v ->
+                        val x = i * stepX
+                        val y = size.height - ((v - minVal) / range * size.height)
+                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                    }
+
+                    drawPath(
+                        path = path,
+                        color = sparklineColor,
+                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
                     )
                 }
             }
@@ -1342,9 +1439,9 @@ private fun RingGaugeItem(percent: Float, label: String, color: Color) {
 }
 
 @Composable
-private fun StressEnergyCard(stressLevel: Int, stressLabel: String, stressColor: Color, energyPercent: Int) {
+private fun StressEnergyCard(stressLevel: Int, stressLabel: String, stressColor: Color, energyPercent: Int, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardBackground)
     ) {
@@ -1373,5 +1470,13 @@ private fun StressEnergyCard(stressLevel: Int, stressLabel: String, stressColor:
                 Text(text = "$energyPercent%", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
+    }
+}
+
+private fun generateVariationSparkline(baseValue: Float, points: Int, variance: Float): List<Float> {
+    val random = java.util.Random(baseValue.toLong())
+    return (0 until points).map { i ->
+        val variation = 1f + (random.nextFloat() * 2 - 1) * variance
+        baseValue * variation
     }
 }

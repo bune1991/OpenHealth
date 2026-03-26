@@ -49,6 +49,7 @@ import com.openhealth.openhealth.screens.DashboardScreen
 import com.openhealth.openhealth.screens.MetricDetailScreen
 import com.openhealth.openhealth.screens.ReadinessDetailScreen
 import com.openhealth.openhealth.screens.ReportsScreen
+import com.openhealth.openhealth.screens.StressDetailScreen
 import com.openhealth.openhealth.viewmodel.ReportsData
 import com.openhealth.openhealth.screens.SettingsScreen
 import com.openhealth.openhealth.ui.theme.BackgroundBlack
@@ -95,6 +96,9 @@ class MainActivity : ComponentActivity() {
                     viewModel.showReadinessDetail.value -> {
                         viewModel.hideReadinessDetail()
                     }
+                    viewModel.showStressDetail.value -> {
+                        viewModel.hideStressDetail()
+                    }
                     viewModel.showReports.value -> {
                         viewModel.hideReports()
                     }
@@ -125,6 +129,7 @@ class MainActivity : ComponentActivity() {
                 val showSettings by viewModel.showSettings.collectAsState()
                 val showReadinessDetail by viewModel.showReadinessDetail.collectAsState()
                 val showReports by viewModel.showReports.collectAsState()
+                val showStressDetail by viewModel.showStressDetail.collectAsState()
                 val reportsData by viewModel.reportsData.collectAsState()
                 val settings by viewModel.settings.collectAsState()
 
@@ -157,6 +162,12 @@ class MainActivity : ComponentActivity() {
                                             settings = settings,
                                             onSettingsChanged = { viewModel.updateSettings(it) },
                                             onBackClick = { viewModel.hideSettings() }
+                                        )
+                                    }
+                                    showStressDetail -> {
+                                        StressDetailScreen(
+                                            healthData = healthData,
+                                            onBackClick = { viewModel.hideStressDetail() }
                                         )
                                     }
                                     showReports -> {
@@ -208,6 +219,7 @@ class MainActivity : ComponentActivity() {
                                             onToday = { viewModel.navigateToToday() },
                                             onDateSelected = { date -> viewModel.navigateToDate(date) },
                                             onReportsClick = { viewModel.showReports() },
+                                            onStressClick = { viewModel.showStressDetail() },
                                             stepsCalendarData = stepsCalendarData,
                                             stepsStreak = stepsStreak,
                                             initialScrollIndex = scrollIndex,

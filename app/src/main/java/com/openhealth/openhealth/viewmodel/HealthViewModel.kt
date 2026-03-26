@@ -113,6 +113,10 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val settingsManager = SettingsManager.getInstance(context)
     val settings: StateFlow<SettingsData> = settingsManager.settings
 
+    // Navigation state for stress detail screen
+    private val _showStressDetail = MutableStateFlow(false)
+    val showStressDetail: StateFlow<Boolean> = _showStressDetail.asStateFlow()
+
     // Navigation state for reports screen
     private val _showReports = MutableStateFlow(false)
     val showReports: StateFlow<Boolean> = _showReports.asStateFlow()
@@ -469,6 +473,15 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun hideReadinessDetail() {
         _showReadinessDetail.value = false
+    }
+
+    // Stress detail navigation
+    fun showStressDetail() {
+        _showStressDetail.value = true
+    }
+
+    fun hideStressDetail() {
+        _showStressDetail.value = false
     }
 
     // Reports navigation

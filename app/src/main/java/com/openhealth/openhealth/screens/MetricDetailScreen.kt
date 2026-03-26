@@ -2,6 +2,7 @@ package com.openhealth.openhealth.screens
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -240,25 +241,23 @@ fun MetricDetailScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        // Sleep time range (extracted outside item for reuse)
+                        val (sleepStartTime, sleepEndTime) = if (metricType == HealthViewModel.MetricType.SLEEP) {
+                            if (isToday) {
+                                Pair(metricHistory?.todaySleepStartTime, metricHistory?.todaySleepEndTime)
+                            } else {
+                                val dayData = metricHistory?.allHistoricalData?.find { it.date == selectedDate }
+                                Pair(dayData?.sleepStartTime, dayData?.sleepEndTime)
+                            }
+                        } else {
+                            Pair(null, null)
+                        }
+
                         // Today's Value Card
                         item {
                             val dateLabel = if (isToday) "Today" else selectedDate.format(
                                 DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
                             )
-
-                            // For sleep metric, get the selected date's sleep time range
-                            val (sleepStartTime, sleepEndTime) = if (metricType == HealthViewModel.MetricType.SLEEP) {
-                                if (isToday) {
-                                    // For today, use the dedicated today fields
-                                    Pair(metricHistory?.todaySleepStartTime, metricHistory?.todaySleepEndTime)
-                                } else {
-                                    // For historical dates, find in allHistoricalData
-                                    val dayData = metricHistory?.allHistoricalData?.find { it.date == selectedDate }
-                                    Pair(dayData?.sleepStartTime, dayData?.sleepEndTime)
-                                }
-                            } else {
-                                Pair(null, null)
-                            }
 
                             TodayValueCard(
                                 value = selectedDateValue,
@@ -271,6 +270,16 @@ fun MetricDetailScreen(
                                 sleepStartTime = sleepStartTime,
                                 sleepEndTime = sleepEndTime
                             )
+                        }
+
+                        // Sleep Clock Visualization (only for Sleep metric)
+                        if (metricType == HealthViewModel.MetricType.SLEEP && sleepStartTime != null && sleepEndTime != null) {
+                            item {
+                                SleepClockCard(
+                                    sleepStart = sleepStartTime,
+                                    sleepEnd = sleepEndTime
+                                )
+                            }
                         }
 
                         // Line Chart - 30 Day Trend
@@ -377,6 +386,62 @@ fun MetricDetailScreen(
                                 SleepStagesChart(
                                     sleepStages = metricHistory.sleepStages
                                 )
+                            }
+                        }
+
+                        // Sleep Bank (only for Sleep metric)
+                        if (metricType == HealthViewModel.MetricType.SLEEP && metricHistory?.allHistoricalData?.isNotEmpty() == true) {
+                            item {
+                                val last7 = metricHistory.allHistoricalData.takeLast(7)
+                                // Sleep bank: sum of (actual - 8h target) for last 7 days
+                                val bankHours = last7.sumOf { it.value - 8.0 }
+                                val isDebt = bankHours < 0
+                                val absHours = kotlin.math.abs(bankHours)
+                                val h = absHours.toInt()
+                                val m = ((absHours - h) * 60).toInt()
+
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Text(
+                                            text = "Sleep Bank",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = TextPrimary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "Last 7 days vs 8h target",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = TextTertiary
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            Text(
+                                                text = "${if (isDebt) "-" else "+"}${h}h ${m}m",
+                                                color = if (isDebt) Color(0xFFFF9500) else Color(0xFF4CD964),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 32.sp
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = if (isDebt) "Debt" else "Surplus",
+                                                color = if (isDebt) Color(0xFFFF9500) else Color(0xFF4CD964),
+                                                fontSize = 16.sp,
+                                                modifier = Modifier.padding(bottom = 4.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = if (isDebt) "You're behind on sleep. Try to get extra rest this week."
+                                                   else "Great job! You're meeting or exceeding your sleep target.",
+                                            color = TextSecondary,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -1290,6 +1355,177 @@ private fun formatValue(value: Double, decimalPlaces: Int): String {
         value.roundToInt().toString()
     } else {
         String.format("%.${decimalPlaces}f", value)
+    }
+}
+
+@Composable
+private fun SleepClockCard(
+    sleepStart: java.time.Instant,
+    sleepEnd: java.time.Instant
+) {
+    val zone = ZoneId.systemDefault()
+    val startZoned = sleepStart.atZone(zone)
+    val endZoned = sleepEnd.atZone(zone)
+
+    val startHour = startZoned.hour + startZoned.minute / 60f
+    val endHour = endZoned.hour + endZoned.minute / 60f
+
+    // Format times
+    val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+    val startTimeStr = startZoned.format(timeFormatter)
+    val endTimeStr = endZoned.format(timeFormatter)
+
+    val sleepColor = Color(0xFF9B59B6)
+    val clockBg = Color(0xFF1A1A2E)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Sleep Schedule",
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Clock face
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(220.dp)
+            ) {
+                Canvas(modifier = Modifier.size(220.dp)) {
+                    val cx = size.width / 2
+                    val cy = size.height / 2
+                    val radius = size.width / 2 - 20.dp.toPx()
+                    val strokeW = 20.dp.toPx()
+
+                    // Clock background circle
+                    drawCircle(
+                        color = clockBg,
+                        radius = radius + strokeW / 2,
+                        center = Offset(cx, cy)
+                    )
+
+                    // Outer ring background
+                    drawArc(
+                        color = Color(0xFF2A2A3A),
+                        startAngle = 0f,
+                        sweepAngle = 360f,
+                        useCenter = false,
+                        style = Stroke(width = strokeW, cap = StrokeCap.Round),
+                        topLeft = Offset(cx - radius, cy - radius),
+                        size = Size(radius * 2, radius * 2)
+                    )
+
+                    // Convert hours to angles (12h clock, 0h = top = -90 degrees)
+                    // On a 12h clock: 12AM/12PM = top, 6AM/6PM = bottom
+                    val startAngle = (startHour % 12) * 30f - 90f
+                    var endAngle = (endHour % 12) * 30f - 90f
+
+                    // Calculate sweep (sleep arc)
+                    var sweep = endAngle - startAngle
+                    if (sweep <= 0) sweep += 360f // crosses midnight or noon
+
+                    // Sleep arc
+                    drawArc(
+                        color = sleepColor,
+                        startAngle = startAngle,
+                        sweepAngle = sweep,
+                        useCenter = false,
+                        style = Stroke(width = strokeW, cap = StrokeCap.Round),
+                        topLeft = Offset(cx - radius, cy - radius),
+                        size = Size(radius * 2, radius * 2)
+                    )
+
+                    // Hour markers
+                    for (h in 0..11) {
+                        val angle = Math.toRadians((h * 30.0 - 90.0))
+                        val isMain = h % 3 == 0
+                        val outerR = radius - strokeW / 2 - 8.dp.toPx()
+                        val innerR = outerR - if (isMain) 10.dp.toPx() else 5.dp.toPx()
+
+                        drawLine(
+                            color = Color(0xFF555566),
+                            start = Offset(
+                                cx + (outerR * kotlin.math.cos(angle)).toFloat(),
+                                cy + (outerR * kotlin.math.sin(angle)).toFloat()
+                            ),
+                            end = Offset(
+                                cx + (innerR * kotlin.math.cos(angle)).toFloat(),
+                                cy + (innerR * kotlin.math.sin(angle)).toFloat()
+                            ),
+                            strokeWidth = if (isMain) 2.5f else 1.5f
+                        )
+                    }
+
+                    // Sleep start dot
+                    val startRad = Math.toRadians((startAngle + 90).toDouble())
+                    drawCircle(
+                        color = Color.White,
+                        radius = 5.dp.toPx(),
+                        center = Offset(
+                            cx + (radius * kotlin.math.cos(Math.toRadians(startAngle.toDouble()))).toFloat(),
+                            cy + (radius * kotlin.math.sin(Math.toRadians(startAngle.toDouble()))).toFloat()
+                        )
+                    )
+
+                    // Sleep end dot
+                    drawCircle(
+                        color = Color.White,
+                        radius = 5.dp.toPx(),
+                        center = Offset(
+                            cx + (radius * kotlin.math.cos(Math.toRadians((startAngle + sweep).toDouble()))).toFloat(),
+                            cy + (radius * kotlin.math.sin(Math.toRadians((startAngle + sweep).toDouble()))).toFloat()
+                        )
+                    )
+                }
+
+                // Center text
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "12AM", color = TextTertiary, fontSize = 10.sp)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(text = "🌙", fontSize = 24.sp)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(text = "12PM", color = TextTertiary, fontSize = 10.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Time labels
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Fell asleep", color = TextTertiary, fontSize = 12.sp)
+                    Text(
+                        text = startTimeStr,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Woke up", color = TextTertiary, fontSize = 12.sp)
+                    Text(
+                        text = endTimeStr,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                }
+            }
+        }
     }
 }
 
