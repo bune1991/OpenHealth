@@ -273,6 +273,14 @@ fun MetricDetailScreen(
                             )
                         }
 
+                        // Insights Card
+                        item {
+                            val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal)
+                            if (insight != null) {
+                                InsightCard(insight = insight)
+                            }
+                        }
+
                         // Exercise Sessions List (only for Exercise metric)
                         if (metricType == HealthViewModel.MetricType.EXERCISE && exerciseSessions.isNotEmpty()) {
                             item {
@@ -1420,6 +1428,127 @@ private fun formatValue(value: Double, decimalPlaces: Int): String {
         value.roundToInt().toString()
     } else {
         String.format("%.${decimalPlaces}f", value)
+    }
+}
+
+private fun getInsightForMetric(metricType: HealthViewModel.MetricType, value: Double, stepsGoal: Int): com.openhealth.openhealth.utils.MetricInsight? {
+    return when (metricType) {
+        HealthViewModel.MetricType.HEART_RATE -> com.openhealth.openhealth.utils.HealthInsights.getHeartRateInsight(value.toInt())
+        HealthViewModel.MetricType.RESTING_HEART_RATE -> com.openhealth.openhealth.utils.HealthInsights.getRestingHeartRateInsight(value.toInt())
+        HealthViewModel.MetricType.HEART_RATE_VARIABILITY -> com.openhealth.openhealth.utils.HealthInsights.getHrvInsight(value)
+        HealthViewModel.MetricType.SLEEP -> com.openhealth.openhealth.utils.HealthInsights.getSleepInsight(value)
+        HealthViewModel.MetricType.OXYGEN_SATURATION -> com.openhealth.openhealth.utils.HealthInsights.getSpO2Insight(value)
+        HealthViewModel.MetricType.RESPIRATORY_RATE -> com.openhealth.openhealth.utils.HealthInsights.getRespiratoryRateInsight(value)
+        HealthViewModel.MetricType.WEIGHT -> com.openhealth.openhealth.utils.HealthInsights.getWeightInsight(value)
+        HealthViewModel.MetricType.BODY_FAT -> com.openhealth.openhealth.utils.HealthInsights.getBodyFatInsight(value)
+        HealthViewModel.MetricType.BASAL_METABOLIC_RATE -> com.openhealth.openhealth.utils.HealthInsights.getBmrInsight(value)
+        HealthViewModel.MetricType.STEPS -> com.openhealth.openhealth.utils.HealthInsights.getStepsInsight(value.toLong(), stepsGoal.toLong())
+        HealthViewModel.MetricType.SKIN_TEMPERATURE -> com.openhealth.openhealth.utils.HealthInsights.getSkinTempInsight(value)
+        HealthViewModel.MetricType.CALORIES -> com.openhealth.openhealth.utils.HealthInsights.getCaloriesInsight(value)
+        HealthViewModel.MetricType.DISTANCE -> com.openhealth.openhealth.utils.HealthInsights.getDistanceInsight(value)
+        else -> null
+    }
+}
+
+@Composable
+private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) {
+    val dotColor = when (insight.statusColor) {
+        "green" -> Color(0xFF4CD964)
+        "yellow" -> Color(0xFFFFCC00)
+        "red" -> Color(0xFFFF3B30)
+        else -> Color(0xFF4CD964)
+    }
+
+    var showTips by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header with status
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Insights",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .background(dotColor.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(text = insight.status, color = dotColor, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // What it means
+            Text(
+                text = insight.meaning,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary,
+                lineHeight = 22.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Normal range
+            Text(
+                text = "Normal range: ${insight.normalRange}",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextTertiary
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Tips toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showTips = !showTips },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (showTips) "Hide Tips" else "Show Tips",
+                    color = Color(0xFF00B4D8),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+            }
+
+            if (showTips) {
+                Spacer(modifier = Modifier.height(8.dp))
+                insight.tips.forEach { tip ->
+                    Row(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(text = "•", color = Color(0xFF00B4D8), fontSize = 14.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = tip,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary,
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
+            }
+
+            // Learn more
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = insight.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextTertiary,
+                lineHeight = 18.sp
+            )
+        }
     }
 }
 
