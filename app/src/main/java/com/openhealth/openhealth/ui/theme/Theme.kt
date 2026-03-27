@@ -66,7 +66,13 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = TextSecondary,
     error = ErrorRed,
     onError = TextPrimary,
-    outline = SurfaceVariant
+    outline = TextTertiary,
+    outlineVariant = SurfaceVariant,
+    surfaceContainer = SurfaceDark,
+    surfaceContainerHigh = SurfaceDark,
+    surfaceContainerHighest = SurfaceVariant,
+    surfaceContainerLow = BackgroundBlack,
+    surfaceContainerLowest = BackgroundBlack
 )
 
 private val LightColorScheme = lightColorScheme(
