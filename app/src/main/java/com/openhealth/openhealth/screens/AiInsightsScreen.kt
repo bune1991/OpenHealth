@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -283,73 +285,163 @@ fun AiInsightsScreen(
 
                 // ─── Success State ───
                 insightText != null -> {
-                    // Header
-                    Column(
+                    // Hero — check icon with glow
+                    Box(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = ElectricIndigo,
-                            modifier = Modifier.size(36.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "Analysis Complete",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = TextOnSurface,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Your latest biometric data has been processed by $providerName.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextOnSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Provider badge
+                        // Glow behind
+                        Canvas(modifier = Modifier.size(120.dp)) {
+                            drawCircle(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(ElectricIndigo.copy(alpha = 0.15f), Color.Transparent)
+                                ),
+                                radius = size.minDimension / 2
+                            )
+                        }
                         Box(
                             modifier = Modifier
+                                .size(72.dp)
+                                .background(ElectricIndigo.copy(alpha = 0.2f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = ElectricIndigo,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+
+                    // Title
+                    Text(
+                        text = "Analysis Complete",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = TextOnSurface,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = "Your nocturnal recovery data has been processed by $providerName.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextOnSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Recovery Energy Pill
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(26.dp))
+                            .background(SurfaceLow)
+                            .padding(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.82f)
+                                .fillMaxHeight()
                                 .background(
                                     Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
-                                    RoundedCornerShape(20.dp)
-                                )
-                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    RoundedCornerShape(24.dp)
+                                ),
+                            contentAlignment = Alignment.CenterEnd
                         ) {
                             Text(
-                                text = "AI-POWERED",
+                                text = "82% RECOVERY",
                                 color = Color.White,
-                                fontSize = 11.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
+                                modifier = Modifier.padding(end = 16.dp)
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Parse and display insight sections
-                    val sections = parseInsightSections(insightText)
-                    sections.forEach { section ->
-                        InsightSectionCard(
-                            title = section.first,
-                            content = section.second
-                        )
+                    // Main glass card with all sections
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(SurfaceLow.copy(alpha = 0.6f))
+                            .padding(24.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                            // Parse and display insight sections
+                            val sections = parseInsightSections(insightText)
+                            val isLastRecommendation = { title: String ->
+                                title.contains("recommend", ignoreCase = true) ||
+                                title.contains("action", ignoreCase = true) ||
+                                sections.indexOf(title to "") == sections.size - 1
+                            }
+
+                            sections.forEachIndexed { index, section ->
+                                if (section.first.contains("recommend", ignoreCase = true) ||
+                                    section.first.contains("action", ignoreCase = true)) {
+                                    // Recommended Action — special card with left magenta border
+                                    RecommendedActionCard(
+                                        title = section.first,
+                                        content = section.second
+                                    )
+                                } else {
+                                    // Normal section
+                                    InsightSectionCard(
+                                        title = section.first,
+                                        content = section.second,
+                                        accentColor = if (index == 0) VibrantMagenta else ElectricIndigo
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Provider badge — "POWERED BY GEMINI"
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(SurfaceLowest)
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .background(
+                                            Brush.linearGradient(listOf(ElectricIndigo, VibrantMagenta)),
+                                            CircleShape
+                                        )
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "POWERED BY ${providerName.uppercase()}",
+                                    color = TextOnSurfaceVariant,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                        }
                     }
 
                     // Disclaimer
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "AI-generated analysis. Not medical advice. Data sent to your own $providerName account.",
+                        text = "AI-generated analysis. Not medical advice.",
                         color = TextSubtle,
                         style = MaterialTheme.typography.bodySmall,
-                        lineHeight = 16.sp,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -360,41 +452,92 @@ fun AiInsightsScreen(
 }
 
 @Composable
-private fun InsightSectionCard(title: String, content: String) {
+private fun InsightSectionCard(title: String, content: String, accentColor: Color = ElectricIndigo) {
+    Column {
+        if (title.isNotEmpty()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (accentColor == VibrantMagenta) Icons.Default.Favorite else Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = accentColor,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+        Text(
+            text = content,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextOnSurfaceVariant,
+            lineHeight = 22.sp
+        )
+    }
+}
+
+@Composable
+private fun RecommendedActionCard(title: String, content: String) {
+    // Card with magenta left border — exact Stitch "Recommended Action"
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceMid)
-            .padding(20.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(SurfaceHighest)
     ) {
-        Column {
-            if (title.isNotEmpty()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(
-                                Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
-                                CircleShape
-                            )
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextOnSurface,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.height(10.dp))
+        // Left magenta border
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .fillMaxHeight()
+                .background(VibrantMagenta)
+                .align(Alignment.CenterStart)
+        )
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = VibrantMagenta,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextOnSurface,
+                    fontWeight = FontWeight.Bold
+                )
             }
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = content,
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextOnSurfaceVariant,
                 lineHeight = 22.sp
             )
+            Spacer(modifier = Modifier.height(16.dp))
+            // "Log Morning Session" button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(ElectricIndigo),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Log Morning Session",
+                    color = OnIndigo,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 }
