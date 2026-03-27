@@ -21,16 +21,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.*
-import com.openhealth.openhealth.ui.theme.BackgroundBlack
 import com.openhealth.openhealth.ui.theme.CardCalories
 import com.openhealth.openhealth.ui.theme.CardDistance
 import com.openhealth.openhealth.ui.theme.CardFloors
 import com.openhealth.openhealth.ui.theme.CardSteps
-import com.openhealth.openhealth.ui.theme.SurfaceDark
 import com.openhealth.openhealth.ui.theme.SurfaceVariant
-import com.openhealth.openhealth.ui.theme.TextPrimary
-import com.openhealth.openhealth.ui.theme.TextSecondary
-import com.openhealth.openhealth.ui.theme.TextTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -279,7 +274,7 @@ fun SettingsScreen(
                                 ) {
                                     Text(
                                         text = label,
-                                        color = if (isSelected) Color(0xFF00B4D8) else TextSecondary,
+                                        color = if (isSelected) Color(0xFF00B4D8) else MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 13.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     )
@@ -317,8 +312,8 @@ fun SettingsScreen(
                                 visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                 singleLine = true,
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = TextPrimary,
-                                    unfocusedTextColor = TextPrimary,
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                                     focusedBorderColor = Color(0xFF00B4D8),
                                     unfocusedBorderColor = Color(0xFF444444),
                                     cursorColor = Color(0xFF00B4D8)
@@ -337,8 +332,8 @@ fun SettingsScreen(
                                     placeholder = { Text("e.g. http://192.168.1.100:11434/v1", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = TextPrimary,
-                                        unfocusedTextColor = TextPrimary,
+                                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                                         focusedBorderColor = Color(0xFF00B4D8),
                                         unfocusedBorderColor = Color(0xFF444444),
                                         cursorColor = Color(0xFF00B4D8)
@@ -354,8 +349,8 @@ fun SettingsScreen(
                                     placeholder = { Text("e.g. llama3, mistral, gemma2", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = TextPrimary,
-                                        unfocusedTextColor = TextPrimary,
+                                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                                         focusedBorderColor = Color(0xFF00B4D8),
                                         unfocusedBorderColor = Color(0xFF444444),
                                         cursorColor = Color(0xFF00B4D8)
@@ -415,7 +410,7 @@ fun SettingsScreen(
                                     modifier = Modifier.weight(1f),
                                     placeholder = { Text("Lat", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
+                                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onBackground, unfocusedTextColor = MaterialTheme.colorScheme.onBackground, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
                                 )
                                 OutlinedTextField(
                                     value = if (settings.weatherLon != 0.0) settings.weatherLon.toString() else "",
@@ -423,7 +418,7 @@ fun SettingsScreen(
                                     modifier = Modifier.weight(1f),
                                     placeholder = { Text("Lon", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
+                                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onBackground, unfocusedTextColor = MaterialTheme.colorScheme.onBackground, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
                                 )
                             }
                         }
@@ -526,7 +521,7 @@ fun SettingsScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = TextPrimary
+                        contentColor = MaterialTheme.colorScheme.onBackground
                     )
                 ) {
                     Text(
@@ -677,10 +672,10 @@ private fun GoalInputItem(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = color,
                         unfocusedBorderColor = SurfaceVariant,
-                        focusedContainerColor = BackgroundBlack,
-                        unfocusedContainerColor = BackgroundBlack,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
+                        focusedContainerColor = MaterialTheme.colorScheme.background,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                     )
                 )
                 Spacer(modifier = Modifier.width(8.dp))

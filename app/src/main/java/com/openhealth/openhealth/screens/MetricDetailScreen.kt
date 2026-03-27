@@ -64,7 +64,6 @@ import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.DailyDataPoint
 import com.openhealth.openhealth.model.MetricHistory
 import com.openhealth.openhealth.model.SleepStagesData
-import com.openhealth.openhealth.ui.theme.BackgroundBlack
 import com.openhealth.openhealth.ui.theme.CardBloodGlucose
 import com.openhealth.openhealth.ui.theme.CardBloodPressure
 import com.openhealth.openhealth.ui.theme.CardBodyFat
@@ -87,11 +86,7 @@ import com.openhealth.openhealth.ui.theme.CardSpO2
 import com.openhealth.openhealth.ui.theme.CardSteps
 import com.openhealth.openhealth.ui.theme.CardVo2Max
 import com.openhealth.openhealth.ui.theme.CardWeight
-import com.openhealth.openhealth.ui.theme.SurfaceDark
 import com.openhealth.openhealth.ui.theme.SurfaceVariant
-import com.openhealth.openhealth.ui.theme.TextPrimary
-import com.openhealth.openhealth.ui.theme.TextSecondary
-import com.openhealth.openhealth.ui.theme.TextTertiary
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 import java.time.LocalDate
 import java.time.ZoneId
@@ -177,7 +172,7 @@ fun MetricDetailScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = TextPrimary
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                         if (onHomeClick != null) {
@@ -185,7 +180,7 @@ fun MetricDetailScreen(
                                 Icon(
                                     imageVector = Icons.Default.Home,
                                     contentDescription = "Home",
-                                    tint = TextPrimary
+                                    tint = MaterialTheme.colorScheme.onBackground
                                 )
                             }
                         }
@@ -201,7 +196,7 @@ fun MetricDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
                             contentDescription = "Previous Day",
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     IconButton(
@@ -216,7 +211,7 @@ fun MetricDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                             contentDescription = "Next Day",
-                            tint = if (selectedDate.isBefore(LocalDate.now(ZoneId.systemDefault()))) TextPrimary else TextTertiary
+                            tint = if (selectedDate.isBefore(LocalDate.now(ZoneId.systemDefault()))) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.outline
                         )
                     }
                 },
@@ -806,6 +801,7 @@ private fun LineChart(
     val maxValue = values.maxOrNull() ?: 1.0
     val minValue = values.minOrNull() ?: 0.0
     val range = maxValue - minValue
+    val backgroundColor = MaterialTheme.colorScheme.background
 
     Box(
         modifier = modifier
@@ -895,7 +891,7 @@ private fun LineChart(
                             center = Offset(x, y)
                         )
                         drawCircle(
-                            color = BackgroundBlack,
+                            color = backgroundColor,
                             radius = 2.dp.toPx(),
                             center = Offset(x, y)
                         )
@@ -1427,7 +1423,7 @@ private fun SleepStagesChart(
                     .fillMaxWidth()
                     .height(32.dp)
                     .background(
-                        color = BackgroundBlack,
+                        color = MaterialTheme.colorScheme.background,
                         shape = RoundedCornerShape(8.dp)
                     )
             ) {
@@ -1999,8 +1995,8 @@ private fun StepRingsCalendar(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = when {
                                         isSelected -> CardSteps
-                                        isFuture -> TextTertiary.copy(alpha = 0.3f)
-                                        else -> TextPrimary
+                                        isFuture -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                        else -> MaterialTheme.colorScheme.onBackground
                                     },
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 12.sp

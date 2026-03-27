@@ -39,8 +39,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.openhealth.openhealth.model.DailyDataPoint
 import com.openhealth.openhealth.ui.theme.CardSteps
-import com.openhealth.openhealth.ui.theme.TextPrimary
-import com.openhealth.openhealth.ui.theme.TextTertiary
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -102,7 +100,7 @@ fun CustomCalendarDialog(
                             imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                             contentDescription = "Next Month",
                             tint = if (displayedMonth.isBefore(YearMonth.from(today)))
-                                TextPrimary else TextTertiary.copy(alpha = 0.3f)
+                                MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                         )
                     }
                 }
@@ -211,8 +209,8 @@ fun CustomCalendarDialog(
                                         style = MaterialTheme.typography.bodySmall,
                                         color = when {
                                             isSelected -> CardSteps
-                                            isFuture -> TextTertiary.copy(alpha = 0.3f)
-                                            else -> TextPrimary
+                                            isFuture -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                            else -> MaterialTheme.colorScheme.onBackground
                                         },
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         fontSize = 12.sp

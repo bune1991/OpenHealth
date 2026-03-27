@@ -41,11 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.openhealth.openhealth.ui.theme.BackgroundBlack
-import com.openhealth.openhealth.ui.theme.SurfaceDark
-import com.openhealth.openhealth.ui.theme.TextPrimary
-import com.openhealth.openhealth.ui.theme.TextSecondary
-import com.openhealth.openhealth.ui.theme.TextTertiary
 import com.openhealth.openhealth.viewmodel.MetricSummary
 import com.openhealth.openhealth.viewmodel.ReportsData
 import java.time.LocalDate
@@ -253,7 +248,7 @@ private fun SummaryRow(
                     },
                     contentDescription = null,
                     tint = when {
-                        change == 0 -> TextTertiary
+                        change == 0 -> MaterialTheme.colorScheme.outline
                         isBetter -> TrendUp
                         else -> TrendDown
                     },
@@ -264,7 +259,7 @@ private fun SummaryRow(
                     text = "${if (change > 0) "+" else ""}$change%",
                     style = MaterialTheme.typography.bodySmall,
                     color = when {
-                        change == 0 -> TextTertiary
+                        change == 0 -> MaterialTheme.colorScheme.outline
                         isBetter -> TrendUp
                         else -> TrendDown
                     },
@@ -317,7 +312,7 @@ private fun WeeklyStepsChart(data: List<com.openhealth.openhealth.model.DailyDat
                             text = if (point.value >= 1000) "${(point.value / 1000).roundToInt()}k"
                             else point.value.roundToInt().toString(),
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (isToday) Accent else TextSecondary,
+                            color = if (isToday) Accent else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -342,7 +337,7 @@ private fun WeeklyStepsChart(data: List<com.openhealth.openhealth.model.DailyDat
                         Text(
                             text = point.date.format(dayFormatter),
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (isToday) Accent else TextTertiary,
+                            color = if (isToday) Accent else MaterialTheme.colorScheme.outline,
                             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 10.sp
                         )

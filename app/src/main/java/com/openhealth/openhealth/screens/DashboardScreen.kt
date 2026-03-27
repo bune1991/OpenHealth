@@ -88,11 +88,6 @@ import java.time.ZoneId
 import com.openhealth.openhealth.model.CaloriesData
 import com.openhealth.openhealth.model.HealthData
 import com.openhealth.openhealth.model.SettingsData
-import com.openhealth.openhealth.ui.theme.BackgroundBlack
-import com.openhealth.openhealth.ui.theme.FabColor
-import com.openhealth.openhealth.ui.theme.TextPrimary
-import com.openhealth.openhealth.ui.theme.TextSecondary
-import com.openhealth.openhealth.ui.theme.TextTertiary
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -233,7 +228,7 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                             contentDescription = "Next Day",
-                            tint = if (isToday) TextTertiary else TextPrimary
+                            tint = if (isToday) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onBackground
                         )
                     }
                     IconButton(onClick = onReportsClick) {
@@ -259,7 +254,7 @@ fun DashboardScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onRefresh,
-                containerColor = FabColor,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 contentColor = StepsCyan,
                 shape = RoundedCornerShape(16.dp)
             ) {
