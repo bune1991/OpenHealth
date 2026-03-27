@@ -49,7 +49,8 @@ data class DailyDataPoint(
     val value: Double,
     val unit: String,
     val sleepStartTime: Instant? = null,
-    val sleepEndTime: Instant? = null
+    val sleepEndTime: Instant? = null,
+    val sleepStages: SleepStagesData? = null
 )
 
 // Metric history for detail screen

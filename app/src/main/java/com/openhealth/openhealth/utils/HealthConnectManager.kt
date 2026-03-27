@@ -882,19 +882,37 @@ object HealthConnectManager {
                 .groupBy { it.endTime.atZone(ZoneId.systemDefault()).toLocalDate() }
                 .map { (date, records) ->
                     // Find the longest sleep session for this day (main sleep)
-                    val mainSession = records.maxByOrNull { 
-                        Duration.between(it.startTime, it.endTime).toMinutes() 
+                    val mainSession = records.maxByOrNull {
+                        Duration.between(it.startTime, it.endTime).toMinutes()
                     }
                     // Calculate duration from the main session only
                     val durationMinutes = if (mainSession != null) {
                         Duration.between(mainSession.startTime, mainSession.endTime).toMinutes()
                     } else 0L
+
+                    // Calculate sleep stages for this day's main session
+                    var dayDeep = 0L; var dayLight = 0L; var dayRem = 0L; var dayAwake = 0L
+                    mainSession?.stages?.forEach { stage ->
+                        val mins = Duration.between(stage.startTime, stage.endTime).toMinutes()
+                        when (stage.stage) {
+                            SleepSessionRecord.STAGE_TYPE_DEEP -> dayDeep += mins
+                            SleepSessionRecord.STAGE_TYPE_LIGHT -> dayLight += mins
+                            SleepSessionRecord.STAGE_TYPE_REM -> dayRem += mins
+                            SleepSessionRecord.STAGE_TYPE_AWAKE,
+                            SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED -> dayAwake += mins
+                        }
+                    }
+                    val dayStages = if (dayDeep + dayLight + dayRem + dayAwake > 0) {
+                        SleepStagesData(dayDeep, dayLight, dayRem, dayAwake)
+                    } else null
+
                     DailyDataPoint(
                         date = date,
                         value = durationMinutes.toDouble() / 60.0,
                         unit = "hours",
                         sleepStartTime = mainSession?.startTime,
-                        sleepEndTime = mainSession?.endTime
+                        sleepEndTime = mainSession?.endTime,
+                        sleepStages = dayStages
                     )
                 }
                 .sortedBy { it.date }

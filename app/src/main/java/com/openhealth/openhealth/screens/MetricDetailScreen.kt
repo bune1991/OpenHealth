@@ -585,12 +585,16 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Sleep Stages Chart (only for Sleep metric)
-                        if (metricType == HealthViewModel.MetricType.SLEEP && metricHistory?.sleepStages != null) {
-                            item {
-                                SleepStagesChart(
-                                    sleepStages = metricHistory.sleepStages
-                                )
+                        // Sleep Stages Chart (only for Sleep metric — per selected day)
+                        if (metricType == HealthViewModel.MetricType.SLEEP) {
+                            val dayStages = metricHistory?.allHistoricalData
+                                ?.find { it.date == selectedDate }?.sleepStages
+                                ?: if (isToday) metricHistory?.sleepStages else null
+
+                            if (dayStages != null) {
+                                item {
+                                    SleepStagesChart(sleepStages = dayStages)
+                                }
                             }
                         }
 
