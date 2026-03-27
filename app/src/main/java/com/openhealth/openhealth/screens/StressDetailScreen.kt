@@ -94,11 +94,11 @@ fun StressDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Stress", color = TextOnSurface, style = MaterialTheme.typography.titleLarge)
+                    Text("Stress & Energy", color = ElectricIndigo, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TextOnSurfaceVariant)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = ElectricIndigo)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceLowest)
@@ -131,7 +131,7 @@ fun StressDetailScreen(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.size(180.dp)
                         ) {
-                            val arcBgColor = MaterialTheme.colorScheme.outlineVariant
+                            val arcBgColor = SurfaceHighest
                             Canvas(modifier = Modifier.size(180.dp)) {
                                 val strokeW = 14.dp.toPx()
                                 val arcSize = Size(size.width - strokeW, size.height - strokeW)
@@ -399,7 +399,7 @@ private fun BreakdownRow(label: String, percent: Int, color: Color) {
             modifier = Modifier
                 .weight(1f)
                 .height(8.dp)
-                .background(MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))
+                .background(SurfaceHighest, RoundedCornerShape(4.dp))
         ) {
             Box(
                 modifier = Modifier
