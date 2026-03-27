@@ -54,7 +54,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 
     // Compose BOM
-    val composeBom = platform("androidx.compose:compose-bom:2025.03.00")
+    val composeBom = platform("androidx.compose:compose-bom:2026.03.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 

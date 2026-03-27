@@ -25,6 +25,7 @@ import com.openhealth.openhealth.ui.theme.CardCalories
 import com.openhealth.openhealth.ui.theme.CardDistance
 import com.openhealth.openhealth.ui.theme.CardFloors
 import com.openhealth.openhealth.ui.theme.CardSteps
+import com.openhealth.openhealth.ui.theme.LightBackground
 import com.openhealth.openhealth.ui.theme.SurfaceVariant
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -265,7 +266,7 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .background(
-                                            if (isSelected) Color(0xFF00B4D8).copy(alpha = 0.2f) else Color(0xFF2A2A2A),
+                                            if (isSelected) Color(0xFF00B4D8).copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant,
                                             RoundedCornerShape(8.dp)
                                         )
                                         .clickable { onSettingsChanged(settings.copy(aiProvider = provider)) }
@@ -304,6 +305,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(text = "API Key", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(4.dp))
+                            val fieldTextColor = if (MaterialTheme.colorScheme.background == LightBackground) Color.Black else Color.White
                             androidx.compose.material3.OutlinedTextField(
                                 value = currentKey,
                                 onValueChange = onKeyChange,
@@ -311,13 +313,7 @@ fun SettingsScreen(
                                 placeholder = { Text("Paste your API key here", color = MaterialTheme.colorScheme.outline) },
                                 visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                 singleLine = true,
-                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = Color(0xFF00B4D8),
-                                    unfocusedBorderColor = Color(0xFF444444),
-                                    cursorColor = Color(0xFF00B4D8)
-                                )
+                                textStyle = androidx.compose.ui.text.TextStyle(color = fieldTextColor)
                             )
 
                             // Custom provider: URL + Model fields
@@ -331,13 +327,7 @@ fun SettingsScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     placeholder = { Text("e.g. http://192.168.1.100:11434/v1", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
-                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                        focusedBorderColor = Color(0xFF00B4D8),
-                                        unfocusedBorderColor = Color(0xFF444444),
-                                        cursorColor = Color(0xFF00B4D8)
-                                    )
+                                    textStyle = androidx.compose.ui.text.TextStyle(color = fieldTextColor)
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(text = "Model Name", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -348,13 +338,7 @@ fun SettingsScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     placeholder = { Text("e.g. llama3, mistral, gemma2", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
-                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                        focusedBorderColor = Color(0xFF00B4D8),
-                                        unfocusedBorderColor = Color(0xFF444444),
-                                        cursorColor = Color(0xFF00B4D8)
-                                    )
+                                    textStyle = androidx.compose.ui.text.TextStyle(color = fieldTextColor)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
@@ -403,6 +387,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(text = "Coordinates", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(4.dp))
+                            val coordTextColor = if (MaterialTheme.colorScheme.background == LightBackground) Color.Black else Color.White
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedTextField(
                                     value = if (settings.weatherLat != 0.0) settings.weatherLat.toString() else "",
@@ -410,7 +395,7 @@ fun SettingsScreen(
                                     modifier = Modifier.weight(1f),
                                     placeholder = { Text("Lat", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onBackground, unfocusedTextColor = MaterialTheme.colorScheme.onBackground, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
+                                    textStyle = androidx.compose.ui.text.TextStyle(color = coordTextColor)
                                 )
                                 OutlinedTextField(
                                     value = if (settings.weatherLon != 0.0) settings.weatherLon.toString() else "",
@@ -418,7 +403,7 @@ fun SettingsScreen(
                                     modifier = Modifier.weight(1f),
                                     placeholder = { Text("Lon", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onBackground, unfocusedTextColor = MaterialTheme.colorScheme.onBackground, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
+                                    textStyle = androidx.compose.ui.text.TextStyle(color = coordTextColor)
                                 )
                             }
                         }
@@ -662,21 +647,14 @@ private fun GoalInputItem(
                     },
                     modifier = Modifier.width(100.dp),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = if (MaterialTheme.colorScheme.background == LightBackground) Color.Black else Color.White,
                         fontWeight = FontWeight.SemiBold
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = if (unit == "km") KeyboardType.Decimal else KeyboardType.Number
                     ),
                     singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = color,
-                        unfocusedBorderColor = SurfaceVariant,
-                        focusedContainerColor = MaterialTheme.colorScheme.background,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground
-                    )
+                    // Default Material3 colors for theme support
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(

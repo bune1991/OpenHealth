@@ -84,7 +84,8 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = LightTextSecondary,
     error = ErrorRed,
     onError = Color.White,
-    outline = LightSurfaceVariant
+    outline = LightTextTertiary,
+    outlineVariant = LightSurfaceVariant
 )
 
 @Composable
