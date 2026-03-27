@@ -2,6 +2,7 @@ package com.openhealth.openhealth.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
@@ -30,6 +31,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowLeft
@@ -83,6 +85,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.time.LocalDate
@@ -90,27 +93,23 @@ import java.time.ZoneId
 import com.openhealth.openhealth.model.CaloriesData
 import com.openhealth.openhealth.model.HealthData
 import com.openhealth.openhealth.model.SettingsData
+import com.openhealth.openhealth.ui.theme.*
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
-// Fitbit Premium Colors (dark defaults, overridden in composable)
-private val PureBlack = Color(0xFF000000)
-private val CardBackground = Color(0xFF1A1A1A)
-private val StepsCyan = Color(0xFF00BCD4)
-private val HeartRed = Color(0xFFF44336)
-private val SleepPurple = Color(0xFF9C27B0)
-private val CaloriesOrange = Color(0xFFFF9800)
-private val ReadinessRed = Color(0xFFE53935)
-private val ReadinessYellow = Color(0xFFFFB300)
-private val ReadinessGreen = Color(0xFF43A047)
+// ═══════════════════════════════════════════════════════════
+// Electric Nocturne Design System — Dashboard v2.0
+// ═══════════════════════════════════════════════════════════
 
 // Readiness Score Data Class
 private data class ReadinessScore(
     val score: Int,
     val label: String,
-    val gradient: Brush
+    val color: Color
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -178,156 +177,64 @@ fun DashboardScreen(
     val readinessScore = calculateReadinessScore(healthData)
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column(
-                        modifier = Modifier.clickable { showDatePicker = true }
-                    ) {
-                        Text(
-                            text = "OpenHealth",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = dateText,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onPreviousDay) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
-                            contentDescription = "Previous Day",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                },
-                actions = {
-                    if (!isToday) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFF00BCD4).copy(alpha = 0.15f))
-                                .clickable { onToday() }
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "Today",
-                                color = Color(0xFF00BCD4),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                    IconButton(
-                        onClick = onNextDay,
-                        enabled = !isToday
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowRight,
-                            contentDescription = "Next Day",
-                            tint = if (isToday) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    IconButton(onClick = onReportsClick) {
-                        Icon(
-                            imageVector = Icons.Default.Assessment,
-                            contentDescription = "Reports",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onRefresh,
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = StepsCyan,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Refresh"
-                )
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = SurfaceLowest
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = isLoading,
             onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(SurfaceLowest)
                 .padding(paddingValues)
         ) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Readiness Score Card
+                // ─── Header ───
                 item {
-                    ReadinessScoreCard(
-                        readinessScore = readinessScore,
-                        onClick = onReadinessClick,
-                        modifier = Modifier.fillMaxWidth()
+                    DashboardHeader(
+                        dateText = dateText,
+                        isToday = isToday,
+                        onPreviousDay = onPreviousDay,
+                        onNextDay = onNextDay,
+                        onToday = onToday,
+                        onDateClick = { showDatePicker = true },
+                        onSettingsClick = onSettingsClick,
+                        onReportsClick = onReportsClick
                     )
                 }
 
-                // Weather Health Advisory
+                // ─── Readiness Score — Hero Card ───
+                item {
+                    ReadinessHeroCard(
+                        readinessScore = readinessScore,
+                        healthData = healthData,
+                        onClick = onReadinessClick
+                    )
+                }
+
+                // ─── Recovery Status Pill ───
+                item {
+                    RecoveryStatusCard(
+                        readinessScore = readinessScore,
+                        healthData = healthData
+                    )
+                }
+
+                // ─── Weather Health Advisory ───
                 if (weatherData.isAvailable) {
                     item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(text = "${String.format("%.0f", weatherData.temperature)}°", color = MaterialTheme.colorScheme.onBackground, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Column {
-                                            Text(text = "UV ${String.format("%.0f", weatherData.uvIndex)} (${weatherData.uvLabel})", color = when(weatherData.uvLabel) { "Low" -> Color(0xFF4CD964); "Moderate" -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }, fontSize = 13.sp)
-                                            Text(text = "Air: ${weatherData.aqiLabel}", color = when(weatherData.aqi) { 1 -> Color(0xFF4CD964); 2 -> Color(0xFF4CD964); 3 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }, fontSize = 13.sp)
-                                        }
-                                    }
-                                }
-                                if (weatherData.healthAdvisory != "Good conditions for outdoor activity") {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(text = weatherData.healthAdvisory, color = Color(0xFFFFCC00), fontSize = 12.sp, lineHeight = 16.sp)
-                                }
-                            }
-                        }
+                        WeatherCard(weatherData = weatherData)
                     }
                 }
 
-                // Stress & Energy (estimated from HRV)
+                // ─── Stress & Energy ───
                 if (healthData.heartRateVariability.rmssdMs != null) {
                     item {
                         val hrv = healthData.heartRateVariability.rmssdMs!!
-                        // Stress: inverse of HRV. HRV 60+ = low stress, HRV 20- = high stress
                         val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
                         val stressLabel = when {
                             stressLevel < 25 -> "Low"
@@ -336,12 +243,11 @@ fun DashboardScreen(
                             else -> "Very High"
                         }
                         val stressColor = when {
-                            stressLevel < 25 -> Color(0xFF4CD964)
+                            stressLevel < 25 -> SuccessGreen
                             stressLevel < 50 -> Color(0xFFFFCC00)
-                            stressLevel < 75 -> Color(0xFFFF9500)
-                            else -> Color(0xFFFF3B30)
+                            stressLevel < 75 -> WarningOrange
+                            else -> ErrorRed
                         }
-                        // Energy: based on readiness score
                         val energyPct = readinessScore.score.coerceIn(0, 100)
 
                         StressEnergyCard(
@@ -354,45 +260,75 @@ fun DashboardScreen(
                     }
                 }
 
-                // AI Insights Card (only if provider is configured)
+                // ─── AI Insights ───
                 if (settings.aiProvider != com.openhealth.openhealth.model.AiProvider.NONE) {
                     item {
-                        DetailCard(
-                            title = "✨ AI Health Analysis",
-                            value = "Get personalized insights from ${settings.aiProvider.name}",
-                            onClick = onAiInsightsClick
-                        )
+                        NocturneCard(onClick = onAiInsightsClick) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "AI Health Analysis",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = TextOnSurface,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Get insights from ${settings.aiProvider.name}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = TextOnSurfaceVariant
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
+                                            RoundedCornerShape(20.dp)
+                                        )
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                ) {
+                                    Text(
+                                        text = "Analyze",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
-                // Steps Card - Full width with left accent
+                // ─── Core Metrics ───
                 item {
                     MetricCard(
                         title = "Steps",
                         value = healthData.steps.count.toString(),
                         unit = "steps",
                         icon = Icons.AutoMirrored.Filled.DirectionsWalk,
-                        accentColor = StepsCyan,
+                        accentColor = CardSteps,
                         sparklineData = generateSparklineData(healthData.steps.count, 20000),
                         onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) },
-                        subtitle = if (settings.showStepsStreak && stepsStreak > 0) "🔥 $stepsStreak day streak!" else ""
+                        subtitle = if (settings.showStepsStreak && stepsStreak > 0) "$stepsStreak day streak" else ""
                     )
                 }
 
-                // Heart Rate Card - Full width with left accent
                 item {
                     MetricCard(
                         title = "Heart Rate",
                         value = healthData.heartRate.currentBpm?.toString() ?: "--",
                         unit = "bpm",
                         icon = Icons.Default.Favorite,
-                        accentColor = HeartRed,
+                        accentColor = CardHeartRate,
                         sparklineData = generateHeartRateSparklineData(healthData.heartRate.currentBpm ?: 70),
                         onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE) }
                     )
                 }
 
-                // Sleep Card - Full width with left accent
                 item {
                     val sleepHours = healthData.sleep.totalDuration?.toHours()?.toInt() ?: 0
                     val sleepMinutes = healthData.sleep.totalDuration?.let { ((it.toMinutes() % 60).toInt()) } ?: 0
@@ -400,7 +336,7 @@ fun DashboardScreen(
                         val formatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
                         val startTime = session.startTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
                         val endTime = session.endTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
-                        "$startTime → $endTime"
+                        "$startTime - $endTime"
                     } ?: ""
                     MetricCard(
                         title = "Sleep",
@@ -408,35 +344,28 @@ fun DashboardScreen(
                         unit = "",
                         subtitle = sleepTimeRange,
                         icon = Icons.Default.NightsStay,
-                        accentColor = SleepPurple,
+                        accentColor = CardSleep,
                         sparklineData = generateSleepSparklineData(sleepHours * 60 + sleepMinutes),
                         onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) }
                     )
                 }
 
-                // Calories Card - Full width with left accent
                 item {
                     MetricCard(
                         title = "Calories",
                         value = healthData.calories.totalBurned.roundToInt().toString(),
                         unit = "kcal",
                         icon = Icons.Default.LocalFireDepartment,
-                        accentColor = CaloriesOrange,
+                        accentColor = CardCalories,
                         sparklineData = generateSparklineData(healthData.calories.totalBurned.toLong(), 3000),
                         onClick = { onMetricClick(HealthViewModel.MetricType.CALORIES) }
                     )
                 }
 
-                // Activity Section
+                // ─── Activity Section ───
                 val hasDistance = settings.showDistance && healthData.distance.kilometers > 0
                 val hasFloors = settings.showFloors && healthData.floors.count > 0
                 val hasExercise = settings.showExercise && healthData.exercise.sessions.isNotEmpty()
-
-                if (hasDistance || hasFloors || hasExercise) {
-                    item {
-                        SectionHeader(title = "Activity")
-                    }
-                }
 
                 if (hasExercise) {
                     item {
@@ -475,7 +404,6 @@ fun DashboardScreen(
 
                 // VO2 Max
                 val hasVO2Max = settings.showVO2Max && healthData.vo2Max.value != null && healthData.vo2Max.value > 0
-
                 if (hasVO2Max) {
                     item {
                         DetailCard(
@@ -486,7 +414,7 @@ fun DashboardScreen(
                     }
                 }
 
-                // Body Composition (collapsible card)
+                // ─── Body Composition ───
                 val hasWeight = settings.showWeight && healthData.weight.kilograms != null
                 val hasBodyFat = settings.showBodyFat && healthData.bodyFat.percentage != null
                 val hasBMR = settings.showBMR && healthData.basalMetabolicRate.caloriesPerDay != null
@@ -512,7 +440,7 @@ fun DashboardScreen(
                     }
                 }
 
-                // Vitals Section
+                // ─── Vitals ───
                 val hasHRV = settings.showHRV && healthData.heartRateVariability.rmssdMs != null
                 val hasBloodOxygen = settings.showOxygenSaturation && healthData.oxygenSaturation.percentage != null
                 val hasBloodPressure = settings.showBloodPressure && healthData.bloodPressure.systolicMmHg != null
@@ -520,7 +448,6 @@ fun DashboardScreen(
                 val hasRespiratoryRate = settings.showRespiratoryRate && healthData.respiratoryRate.ratePerMinute != null
                 val hasSkinTemp = settings.showSkinTemperature && healthData.skinTemperature.temperatureCelsius != null
                 val hasBloodGlucose = settings.showBloodGlucose && healthData.bloodGlucose.levelMgPerDl != null
-
                 val hasAnyVitals = hasHRV || hasBloodOxygen || hasBloodPressure || hasBodyTemp || hasRespiratoryRate || hasSkinTemp || hasBloodGlucose
 
                 if (hasAnyVitals) {
@@ -541,13 +468,9 @@ fun DashboardScreen(
                     }
                 }
 
-                // Nutrition Section
+                // ─── Nutrition ───
                 val hasNutrition = settings.showNutrition && healthData.nutrition.calories != null && healthData.nutrition.calories > 0
-
                 if (hasNutrition) {
-                    item {
-                        SectionHeader(title = "Nutrition")
-                    }
                     item {
                         val cal = healthData.nutrition.calories?.roundToInt() ?: 0
                         val protein = healthData.nutrition.proteinGrams?.roundToInt() ?: 0
@@ -561,13 +484,9 @@ fun DashboardScreen(
                     }
                 }
 
-                // Wellness Section (Mindfulness)
+                // ─── Mindfulness ───
                 val hasMindfulness = settings.showMindfulness && healthData.mindfulness.duration != null
-
                 if (hasMindfulness) {
-                    item {
-                        SectionHeader(title = "Wellness")
-                    }
                     item {
                         val typeText = healthData.mindfulness.sessionType ?: "Session"
                         DetailCard(
@@ -580,296 +499,369 @@ fun DashboardScreen(
 
                 // Bottom spacing
                 item {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
-
         }
     }
 }
 
-// Calculate Readiness Score based on recovery state
-// Score starts at 100, only penalties apply (no bonuses)
-// Final score = 100 - all penalties
-// Minimum score = 5 (never show 0)
-private fun calculateReadinessScore(healthData: HealthData): ReadinessScore {
-    var score = 100
-    val factors = mutableListOf<String>()
-    val now = java.time.Instant.now()
-
-    val hoursSinceLastSleep = healthData.sleep.sessions.maxByOrNull { it.endTime }?.endTime?.let { lastWakeTime ->
-        java.time.Duration.between(lastWakeTime, now).toHours()
-    }
-
-    // Awake time penalties - hard caps on maximum score
-    val awakePenalty = when {
-        hoursSinceLastSleep == null -> {
-            factors.add("No sleep data")
-            50
-        }
-        hoursSinceLastSleep >= 16 -> {
-            factors.add("Awake ${hoursSinceLastSleep}h - exhausted")
-            90  // Score max 10
-        }
-        hoursSinceLastSleep >= 14 -> {
-            factors.add("Awake ${hoursSinceLastSleep}h - very tired")
-            85  // Score max 15
-        }
-        hoursSinceLastSleep >= 12 -> {
-            factors.add("Awake ${hoursSinceLastSleep}h - tired")
-            75  // Score max 25
-        }
-        hoursSinceLastSleep >= 10 -> {
-            factors.add("Awake ${hoursSinceLastSleep}h - fatigued")
-            65  // Score max 35
-        }
-        hoursSinceLastSleep >= 8 -> {
-            factors.add("Awake ${hoursSinceLastSleep}h - declining")
-            25
-        }
-        hoursSinceLastSleep >= 2 -> {
-            factors.add("Awake ${hoursSinceLastSleep}h")
-            5
-        }
-        else -> {
-            factors.add("Just woke up")
-            0
-        }
-    }
-    score -= awakePenalty
-
-    // Sleep duration - only penalties
-    healthData.sleep.totalDuration?.let { sleepDuration ->
-        val sleepHours = sleepDuration.toHours()
-        when {
-            sleepHours >= 7 -> {
-                // Good sleep - no penalty
-            }
-            sleepHours >= 5 -> {
-                factors.add("Short sleep ${sleepHours}h")
-                score -= 10
-            }
-            else -> {
-                factors.add("Poor sleep ${sleepHours}h")
-                score -= 20
-            }
-        }
-    } ?: run {
-        factors.add("No sleep data")
-        score -= 15
-    }
-
-    // Resting Heart Rate - only penalties for elevated RHR
-    healthData.restingHeartRate.bpm?.let { rhr ->
-        when {
-            rhr <= 75 -> {
-                // Normal RHR - no penalty
-            }
-            rhr <= 85 -> {
-                factors.add("Elevated RHR $rhr")
-                score -= 5
-            }
-            else -> {
-                factors.add("High RHR $rhr")
-                score -= 10
-            }
-        }
-    } ?: healthData.heartRate.restingBpm?.let { rhr ->
-        when {
-            rhr <= 75 -> {
-                // Normal RHR - no penalty
-            }
-            rhr <= 85 -> {
-                factors.add("Elevated RHR $rhr")
-                score -= 5
-            }
-            else -> {
-                factors.add("High RHR $rhr")
-                score -= 10
-            }
-        }
-    } ?: run {
-        factors.add("No RHR data")
-    }
-
-    // HRV - only penalties for low values
-    healthData.heartRateVariability.rmssdMs?.let { hrv ->
-        when {
-            hrv >= 40 -> {
-                // Normal HRV - no penalty
-            }
-            hrv >= 30 -> {
-                factors.add("Low HRV ${hrv.toInt()}ms")
-                score -= 3
-            }
-            else -> {
-                factors.add("Very low HRV ${hrv.toInt()}ms")
-                score -= 8
-            }
-        }
-    } ?: run {
-        factors.add("No HRV data")
-    }
-
-    // Activity - only penalty for very low activity
-    val steps = healthData.steps.count
-    when {
-        steps >= 1000 -> {
-            // Sufficient activity - no penalty
-        }
-        else -> {
-            factors.add("Low activity")
-            score -= 2
-        }
-    }
-
-    // Apply minimum score of 5 (never show 0)
-    score = score.coerceIn(5, 100)
-
-    // Updated score labels
-    val (label, gradient) = when {
-        score >= 81 ->
-            "Excellent" to Brush.verticalGradient(listOf(ReadinessGreen, ReadinessGreen.copy(alpha = 0.7f)))
-        score >= 61 ->
-            "Good" to Brush.verticalGradient(listOf(ReadinessGreen, ReadinessGreen.copy(alpha = 0.7f)))
-        score >= 41 ->
-            "Fair" to Brush.verticalGradient(listOf(ReadinessYellow, ReadinessYellow.copy(alpha = 0.7f)))
-        score >= 21 ->
-            "Poor" to Brush.verticalGradient(listOf(ReadinessRed, ReadinessRed.copy(alpha = 0.7f)))
-        else ->
-            "Exhausted" to Brush.verticalGradient(listOf(ReadinessRed, ReadinessRed.copy(alpha = 0.7f)))
-    }
-
-    return ReadinessScore(score, label, gradient)
-}
+// ═══════════════════════════════════════════════════════════
+// Header
+// ═══════════════════════════════════════════════════════════
 
 @Composable
-private fun ReadinessScoreCard(
-    readinessScore: ReadinessScore,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+private fun DashboardHeader(
+    dateText: String,
+    isToday: Boolean,
+    onPreviousDay: () -> Unit,
+    onNextDay: () -> Unit,
+    onToday: () -> Unit,
+    onDateClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onReportsClick: () -> Unit
 ) {
-    Card(
-        modifier = modifier
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(readinessScore.gradient)
-                .padding(vertical = 32.dp, horizontal = 24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+        // Left: Navigation arrow + App title
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onPreviousDay, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
+                    contentDescription = "Previous Day",
+                    tint = TextOnSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+            Column(modifier = Modifier.clickable(onClick = onDateClick)) {
+                Text(
+                    text = "OpenHealth",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = TextOnSurface,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = dateText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextOnSurfaceVariant
+                )
+            }
+        }
+
+        // Right: Actions
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!isToday) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(ElectricIndigo.copy(alpha = 0.15f))
+                        .clickable { onToday() }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "Today",
+                        color = ElectricIndigo,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            IconButton(
+                onClick = onNextDay,
+                enabled = !isToday,
+                modifier = Modifier.size(36.dp)
             ) {
-                Text(
-                    text = readinessScore.score.toString(),
-                    style = MaterialTheme.typography.displayLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 72.sp
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowRight,
+                    contentDescription = "Next Day",
+                    tint = if (isToday) TextSubtle else TextOnSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = readinessScore.label,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
+            }
+            IconButton(onClick = onReportsClick, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Assessment,
+                    contentDescription = "Reports",
+                    tint = TextOnSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Readiness Score",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.7f)
+            }
+            IconButton(onClick = onSettingsClick, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = TextOnSurfaceVariant
                 )
             }
         }
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// Readiness Hero Card — Arc gauge with hero number
+// ═══════════════════════════════════════════════════════════
+
 @Composable
-private fun ReadinessWithRingsCard(
+private fun ReadinessHeroCard(
     readinessScore: ReadinessScore,
-    activityPercent: Float,
-    recoveryPercent: Float,
-    sleepPercent: Float,
+    healthData: HealthData,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(readinessScore.gradient)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Readiness score
-            Text(
-                text = readinessScore.score.toString(),
-                style = MaterialTheme.typography.displayLarge,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 56.sp
-            )
-            Text(
-                text = readinessScore.label,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "Readiness Score",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.7f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
 
-            // Three rings
-            Row(
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 4 }
+    ) {
+        NocturneCard(
+            onClick = onClick,
+            surfaceColor = SurfaceLow
+        ) {
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MiniRingItem(percent = activityPercent, label = "Activity", color = StepsCyan)
-                MiniRingItem(percent = recoveryPercent, label = "Recovery", color = Color(0xFF4CD964))
-                MiniRingItem(percent = sleepPercent, label = "Sleep", color = SleepPurple)
+                // Label above gauge
+                Text(
+                    text = "READINESS",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextSubtle,
+                    letterSpacing = 2.sp,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Arc Gauge with hero number
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(200.dp)
+                ) {
+                    val animatedScore by animateFloatAsState(
+                        targetValue = readinessScore.score / 100f,
+                        animationSpec = tween(1200),
+                        label = "readiness_arc"
+                    )
+                    val animatedNumber by animateIntAsState(
+                        targetValue = readinessScore.score,
+                        animationSpec = tween(1000),
+                        label = "readiness_number"
+                    )
+
+                    Canvas(modifier = Modifier.size(200.dp)) {
+                        val strokeWidth = 12.dp.toPx()
+                        val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
+                        val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
+
+                        // Background arc (270 degrees, starting from bottom-left)
+                        drawArc(
+                            color = SurfaceHigh,
+                            startAngle = 135f,
+                            sweepAngle = 270f,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                            topLeft = topLeft,
+                            size = arcSize
+                        )
+
+                        // Gradient progress arc
+                        drawArc(
+                            brush = Brush.sweepGradient(
+                                colors = listOf(
+                                    ElectricIndigo.copy(alpha = 0.4f),
+                                    readinessScore.color,
+                                    readinessScore.color
+                                )
+                            ),
+                            startAngle = 135f,
+                            sweepAngle = 270f * animatedScore,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                            topLeft = topLeft,
+                            size = arcSize
+                        )
+                    }
+
+                    // Hero number in center
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = animatedNumber.toString(),
+                            style = MaterialTheme.typography.displayLarge,
+                            color = TextOnSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = readinessScore.label,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = readinessScore.color,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Quick stats row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    QuickStat(
+                        value = healthData.heartRate.currentBpm?.toString() ?: "--",
+                        unit = "bpm",
+                        color = CardHeartRate
+                    )
+                    QuickStat(
+                        value = healthData.heartRateVariability.rmssdMs?.let { String.format("%.0f", it) } ?: "--",
+                        unit = "ms HRV",
+                        color = ElectricIndigo
+                    )
+                    QuickStat(
+                        value = healthData.sleep.totalDuration?.let { "${it.toHours()}h ${it.toMinutes() % 60}m" } ?: "--",
+                        unit = "sleep",
+                        color = CardSleep
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun MiniRingItem(percent: Float, label: String, color: Color) {
+private fun QuickStat(value: String, unit: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
-            Canvas(modifier = Modifier.size(56.dp)) {
-                val strokeW = 5.dp.toPx()
-                val arcSize = Size(size.width - strokeW, size.height - strokeW)
-                val topLeft = Offset(strokeW / 2, strokeW / 2)
-                drawArc(color = Color.White.copy(alpha = 0.2f), startAngle = -90f, sweepAngle = 360f, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
-                drawArc(color = color, startAngle = -90f, sweepAngle = 360f * percent, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
-            }
-            Text(
-                text = "${(percent * 100).roundToInt()}%",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(text = label, color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            color = TextOnSurface,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = unit,
+            style = MaterialTheme.typography.labelSmall,
+            color = color
+        )
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Recovery Status Card
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun RecoveryStatusCard(
+    readinessScore: ReadinessScore,
+    healthData: HealthData
+) {
+    val recoveryLabel = when {
+        readinessScore.score >= 80 -> "Peak"
+        readinessScore.score >= 60 -> "Good"
+        readinessScore.score >= 40 -> "Moderate"
+        else -> "Low"
+    }
+
+    val recoveryDescription = when {
+        readinessScore.score >= 80 -> "Your nervous system is primed for high-intensity training today."
+        readinessScore.score >= 60 -> "Recovery is progressing well. Moderate activity recommended."
+        readinessScore.score >= 40 -> "Your body is still recovering. Light activity is best today."
+        else -> "Focus on rest and recovery today. Your body needs time to restore."
+    }
+
+    NocturneCard {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Recovery Status",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextOnSurface,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = recoveryDescription,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextOnSurfaceVariant,
+                lineHeight = 22.sp
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Recovery pill
+            Box(
+                modifier = Modifier
+                    .background(
+                        readinessScore.color.copy(alpha = 0.15f),
+                        RoundedCornerShape(24.dp)
+                    )
+                    .padding(horizontal = 20.dp, vertical = 10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = recoveryLabel,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = readinessScore.color,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "${readinessScore.score}% RESTORED",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = readinessScore.color.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Weather Card
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun WeatherCard(weatherData: com.openhealth.openhealth.utils.WeatherData) {
+    NocturneCard {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "${String.format("%.0f", weatherData.temperature)}°",
+                    color = TextOnSurface,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    val uvColor = when(weatherData.uvLabel) { "Low" -> SuccessGreen; "Moderate" -> Color(0xFFFFCC00); else -> ErrorRed }
+                    val aqiColor = when(weatherData.aqi) { 1, 2 -> SuccessGreen; 3 -> Color(0xFFFFCC00); else -> ErrorRed }
+                    Text(text = "UV ${String.format("%.0f", weatherData.uvIndex)} (${weatherData.uvLabel})", color = uvColor, fontSize = 13.sp)
+                    Text(text = "Air: ${weatherData.aqiLabel}", color = aqiColor, fontSize = 13.sp)
+                }
+            }
+        }
+        if (weatherData.healthAdvisory != "Good conditions for outdoor activity") {
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = weatherData.healthAdvisory,
+                color = WarningOrange,
+                fontSize = 12.sp,
+                lineHeight = 18.sp
+            )
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Metric Card — Core metrics (Steps, HR, Sleep, Calories)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun MetricCard(
@@ -889,55 +881,39 @@ private fun MetricCard(
         visible = visible,
         enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { it / 3 }
     ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // Left accent border
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(100.dp)
-                    .background(accentColor)
-                    .align(Alignment.CenterStart)
-            )
-
+        NocturneCard(onClick = onClick) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left side: Icon, title, and large value
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = accentColor,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    // Icon + title row
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(accentColor.copy(alpha = 0.12f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = accentColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp
+                            color = TextOnSurfaceVariant
                         )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    // Animate number counting up
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Animated number
                     val targetNumber = value.filter { it.isDigit() }.toIntOrNull() ?: 0
                     val animatedNumber by animateIntAsState(
                         targetValue = targetNumber,
@@ -946,64 +922,115 @@ private fun MetricCard(
                     )
                     val displayValue = if (targetNumber > 0) value.replace(targetNumber.toString(), animatedNumber.toString()) else value
 
-                    Row(
-                        verticalAlignment = Alignment.Bottom
-                    ) {
+                    Row(verticalAlignment = Alignment.Bottom) {
                         Text(
                             text = displayValue,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 48.sp
+                            style = MaterialTheme.typography.displaySmall,
+                            color = TextOnSurface,
+                            fontWeight = FontWeight.Bold
                         )
                         if (unit.isNotEmpty()) {
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = unit,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(bottom = 6.dp)
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSubtle,
+                                modifier = Modifier.padding(bottom = 4.dp)
                             )
                         }
                     }
+
                     if (subtitle.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
+                            color = accentColor.copy(alpha = 0.8f)
                         )
                     }
                 }
 
-                // Right side: Mini bar chart
+                // Mini bar chart
                 MiniBarChart(
                     data = sparklineData,
                     barColor = accentColor,
                     modifier = Modifier
                         .width(80.dp)
-                        .height(40.dp)
+                        .height(44.dp)
                 )
             }
         }
     }
-    } // AnimatedVisibility
 }
 
+// ═══════════════════════════════════════════════════════════
+// Stress & Energy Card
+// ═══════════════════════════════════════════════════════════
+
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp)
-    )
+private fun StressEnergyCard(
+    stressLevel: Int,
+    stressLabel: String,
+    stressColor: Color,
+    energyPercent: Int,
+    onClick: () -> Unit = {}
+) {
+    NocturneCard(onClick = onClick) {
+        Text(
+            text = "Stress & Energy",
+            style = MaterialTheme.typography.titleMedium,
+            color = TextOnSurface,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Column {
+                Text(text = "Stress", color = TextOnSurfaceVariant, fontSize = 13.sp)
+                Spacer(modifier = Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(text = "$stressLevel", color = stressColor, fontWeight = FontWeight.Bold, fontSize = 28.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = stressLabel, color = stressColor, fontSize = 14.sp, modifier = Modifier.padding(bottom = 4.dp))
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Energy bar
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "Energy", color = TextOnSurfaceVariant, fontSize = 13.sp)
+            Spacer(modifier = Modifier.width(12.dp))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(8.dp)
+                    .background(SurfaceHigh, RoundedCornerShape(4.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(energyPercent / 100f)
+                        .height(8.dp)
+                        .background(
+                            Brush.horizontalGradient(listOf(ElectricIndigo, SuccessGreen)),
+                            RoundedCornerShape(4.dp)
+                        )
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "$energyPercent%", color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        }
+    }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Detail Card (Exercise, Distance, Floors, Nutrition, etc.)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun DetailCard(
@@ -1012,22 +1039,12 @@ private fun DetailCard(
     progress: Float? = null,
     statusColor: Color? = null,
     sparklineData: List<Float>? = null,
-    sparklineColor: Color = StepsCyan,
+    sparklineColor: Color = ElectricIndigo,
     onClick: (() -> Unit)? = null
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
+    NocturneCard(onClick = onClick) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1036,15 +1053,15 @@ private fun DetailCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = TextOnSurface,
                         fontWeight = FontWeight.SemiBold
                     )
                     if (statusColor != null) {
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
-                                .background(statusColor, RoundedCornerShape(4.dp))
+                                .background(statusColor, CircleShape)
                         )
                     }
                 }
@@ -1052,25 +1069,31 @@ private fun DetailCard(
                 Text(
                     text = value,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.SemiBold
+                    color = TextOnSurfaceVariant,
+                    fontWeight = FontWeight.Medium
                 )
                 if (progress != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { progress.coerceIn(0f, 1f) },
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
-                        color = StepsCyan,
-                        trackColor = MaterialTheme.colorScheme.outlineVariant
-                    )
+                            .height(6.dp)
+                            .background(SurfaceHigh, RoundedCornerShape(3.dp))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                                .height(6.dp)
+                                .background(
+                                    Brush.horizontalGradient(listOf(ElectricIndigo, SoftLavender)),
+                                    RoundedCornerShape(3.dp)
+                                )
+                        )
+                    }
                 }
             }
-            // Mini sparkline
             if (sparklineData != null && sparklineData.size >= 2) {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Canvas(
                     modifier = Modifier
                         .width(60.dp)
@@ -1081,297 +1104,30 @@ private fun DetailCard(
                     val range = (maxVal - minVal).coerceAtLeast(0.01f)
                     val stepX = size.width / (sparklineData.size - 1)
                     val path = Path()
-
                     sparklineData.forEachIndexed { i, v ->
                         val x = i * stepX
                         val y = size.height - ((v - minVal) / range * size.height)
                         if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
                     }
-
-                    drawPath(
-                        path = path,
-                        color = sparklineColor,
-                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-                    )
+                    drawPath(path = path, color = sparklineColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
                 }
             }
             if (onClick != null) {
+                Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = "View details",
-                    tint = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.size(24.dp)
+                    tint = TextSubtle,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
     }
 }
 
-@Composable
-private fun MetricRow(
-    label: String,
-    value: String,
-    progress: Float? = null,
-    showDivider: Boolean = false
-) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        if (progress != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { progress.coerceIn(0f, 1f) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = StepsCyan,
-                trackColor = MaterialTheme.colorScheme.outlineVariant
-            )
-        }
-        if (showDivider) {
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-    }
-}
-
-@Composable
-private fun MetricRowWithDivider(
-    label: String,
-    value: String,
-    showDivider: Boolean = false
-) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        if (showDivider) {
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-    }
-}
-
-@Composable
-private fun MiniBarChart(
-    data: List<Float>,
-    barColor: Color,
-    modifier: Modifier = Modifier
-) {
-    val barWidth = 10.dp
-    val gap = 3.dp
-    val cornerRadius = 2.dp
-
-    Canvas(modifier = modifier) {
-        if (data.isEmpty()) return@Canvas
-
-        val canvasWidth = size.width
-        val canvasHeight = size.height
-        val barWidthPx = barWidth.toPx()
-        val gapPx = gap.toPx()
-        val cornerRadiusPx = cornerRadius.toPx()
-
-        // Calculate total width needed for all bars and gaps
-        val totalBarsWidth = data.size * barWidthPx
-        val totalGapsWidth = (data.size - 1) * gapPx
-        val totalContentWidth = totalBarsWidth + totalGapsWidth
-
-        // Center the chart horizontally
-        val startX = (canvasWidth - totalContentWidth) / 2
-
-        // Find max value for normalization (or use 1.0 if all zeros)
-        val maxValue = data.maxOrNull()?.coerceAtLeast(0.1f) ?: 1f
-
-        data.forEachIndexed { index, value ->
-            // Normalize height: value of 0 = 10% height, otherwise proportional
-            val normalizedHeight = if (value <= 0f) {
-                0.1f  // 10% for no data
-            } else {
-                (value / maxValue).coerceIn(0.1f, 1f)
-            }
-
-            val barHeight = normalizedHeight * canvasHeight
-            val x = startX + index * (barWidthPx + gapPx)
-            val y = canvasHeight - barHeight
-
-            drawRoundRect(
-                color = barColor,
-                topLeft = Offset(x, y),
-                size = Size(barWidthPx, barHeight),
-                cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
-            )
-        }
-    }
-}
-
-// Generate 7 days of realistic sample data with today's value being the actual current value
-// Returns list of 7 floats: [day1, day2, day3, day4, day5, day6, today]
-private fun generateSparklineData(current: Long, max: Long): List<Float> {
-    val todayValue = (current.toFloat() / max).coerceIn(0f, 1f)
-
-    // Generate 6 previous days with realistic variations around the today's value
-    val previousDays = List(6) { index ->
-        // Create some variation - some days higher, some lower
-        val variation = when (index % 3) {
-            0 -> 0.8f  // Lower day
-            1 -> 1.2f  // Higher day
-            else -> 1.0f  // Average day
-        }
-        val value = todayValue * variation
-        // If today has no data, previous days also have no data
-        if (todayValue <= 0f) 0f else value.coerceIn(0f, 1f)
-    }
-
-    return previousDays + listOf(todayValue)
-}
-
-private fun generateHeartRateSparklineData(baseBpm: Int): List<Float> {
-    val todayValue = (baseBpm.toFloat() / 120f).coerceIn(0f, 1f)
-
-    val previousDays = List(6) { index ->
-        val variation = when (index % 3) {
-            0 -> 0.9f
-            1 -> 1.1f
-            else -> 1.0f
-        }
-        val value = todayValue * variation
-        if (baseBpm <= 0) 0f else value.coerceIn(0f, 1f)
-    }
-
-    return previousDays + listOf(todayValue)
-}
-
-private fun generateSleepSparklineData(totalMinutes: Int): List<Float> {
-    val todayValue = (totalMinutes.toFloat() / 480f).coerceIn(0f, 1f)
-
-    val previousDays = List(6) { index ->
-        val variation = when (index % 3) {
-            0 -> 0.7f  // Short sleep
-            1 -> 1.3f  // Long sleep
-            else -> 1.0f  // Average
-        }
-        val value = todayValue * variation
-        if (totalMinutes <= 0) 0f else value.coerceIn(0f, 1f)
-    }
-
-    return previousDays + listOf(todayValue)
-}
-
-@Composable
-private fun ThreeRingGauge(
-    activityPercent: Float,
-    recoveryPercent: Float,
-    sleepPercent: Float
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RingGaugeItem(percent = activityPercent, label = "Activity", color = StepsCyan)
-            RingGaugeItem(percent = recoveryPercent, label = "Recovery", color = Color(0xFF4CD964))
-            RingGaugeItem(percent = sleepPercent, label = "Sleep", color = SleepPurple)
-        }
-    }
-}
-
-@Composable
-private fun RingGaugeItem(percent: Float, label: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(80.dp)) {
-            Canvas(modifier = Modifier.size(80.dp)) {
-                val strokeW = 8.dp.toPx()
-                val arcSize = Size(size.width - strokeW, size.height - strokeW)
-                val topLeft = Offset(strokeW / 2, strokeW / 2)
-                drawArc(color = color.copy(alpha = 0.15f), startAngle = -90f, sweepAngle = 360f, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
-                drawArc(color = color, startAngle = -90f, sweepAngle = 360f * percent, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
-            }
-            Text(text = "${(percent * 100).roundToInt()}%", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-    }
-}
-
-@Composable
-private fun StressEnergyCard(stressLevel: Int, stressLabel: String, stressColor: Color, energyPercent: Int, onClick: () -> Unit = {}) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Stress & Energy", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text(text = "Stress", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(text = "$stressLevel", color = stressColor, fontWeight = FontWeight.Bold, fontSize = 28.sp)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = stressLabel, color = stressColor, fontSize = 14.sp, modifier = Modifier.padding(bottom = 4.dp))
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "⚡", fontSize = 16.sp)
-                Spacer(modifier = Modifier.width(8.dp))
-                Box(modifier = Modifier.weight(1f).height(8.dp).background(MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))) {
-                    Box(modifier = Modifier.fillMaxWidth(energyPercent / 100f).height(8.dp).background(Color(0xFF4CD964), RoundedCornerShape(4.dp)))
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "$energyPercent%", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            }
-        }
-    }
-}
+// ═══════════════════════════════════════════════════════════
+// Body Composition Card (collapsible)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun BodyCompositionCard(
@@ -1386,16 +1142,9 @@ private fun BodyCompositionCard(
     onExpandedChange: (Boolean) -> Unit,
     onMetricClick: (HealthViewModel.MetricType) -> Unit
 ) {
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(animationSpec = tween(150)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header — always visible
+    NocturneCard {
+        Column(modifier = Modifier.animateContentSize(animationSpec = tween(200))) {
+            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1406,79 +1155,53 @@ private fun BodyCompositionCard(
                 Text(
                     text = "Body Composition",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = TextOnSurface,
                     fontWeight = FontWeight.SemiBold
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (expanded) "Collapse" else "Expand",
-                    tint = MaterialTheme.colorScheme.outline
+                    contentDescription = null,
+                    tint = TextSubtle
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Summary row — always visible (Weight + Body Fat)
+            // Summary — always visible
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 if (hasWeight) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.weight.kilograms), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "kg", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.weight.kilograms), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "kg", color = TextSubtle, fontSize = 12.sp)
                     }
                 }
                 if (hasBodyFat) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.bodyFat.percentage), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "% fat", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.bodyFat.percentage), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "% fat", color = TextSubtle, fontSize = 12.sp)
                     }
                 }
                 if (hasLeanMass) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.leanBodyMass.kilograms), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "kg lean", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.leanBodyMass.kilograms), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "kg lean", color = TextSubtle, fontSize = 12.sp)
                     }
                 }
             }
 
             // Expanded details
             if (expanded) {
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                if (hasWeight) {
-                    BodyMetricRow("Weight", String.format("%.1f kg", healthData.weight.kilograms)) {
-                        onMetricClick(HealthViewModel.MetricType.WEIGHT)
-                    }
-                }
-                if (hasBodyFat) {
-                    BodyMetricRow("Body Fat", String.format("%.1f%%", healthData.bodyFat.percentage)) {
-                        onMetricClick(HealthViewModel.MetricType.BODY_FAT)
-                    }
-                }
-                if (hasBMR) {
-                    BodyMetricRow("BMR", String.format("%.0f kcal", healthData.basalMetabolicRate.caloriesPerDay)) {
-                        onMetricClick(HealthViewModel.MetricType.BASAL_METABOLIC_RATE)
-                    }
-                }
-                if (hasBodyWater) {
-                    BodyMetricRow("Body Water", String.format("%.1f kg", healthData.bodyWaterMass.kilograms)) {
-                        onMetricClick(HealthViewModel.MetricType.BODY_WATER_MASS)
-                    }
-                }
-                if (hasBoneMass) {
-                    BodyMetricRow("Bone Mass", String.format("%.1f kg", healthData.boneMass.kilograms)) {
-                        onMetricClick(HealthViewModel.MetricType.BONE_MASS)
-                    }
-                }
-                if (hasLeanMass) {
-                    BodyMetricRow("Lean Mass", String.format("%.1f kg", healthData.leanBodyMass.kilograms)) {
-                        onMetricClick(HealthViewModel.MetricType.LEAN_BODY_MASS)
-                    }
-                }
+                if (hasWeight) BodyMetricRow("Weight", String.format("%.1f kg", healthData.weight.kilograms)) { onMetricClick(HealthViewModel.MetricType.WEIGHT) }
+                if (hasBodyFat) BodyMetricRow("Body Fat", String.format("%.1f%%", healthData.bodyFat.percentage)) { onMetricClick(HealthViewModel.MetricType.BODY_FAT) }
+                if (hasBMR) BodyMetricRow("BMR", String.format("%.0f kcal", healthData.basalMetabolicRate.caloriesPerDay)) { onMetricClick(HealthViewModel.MetricType.BASAL_METABOLIC_RATE) }
+                if (hasBodyWater) BodyMetricRow("Body Water", String.format("%.1f kg", healthData.bodyWaterMass.kilograms)) { onMetricClick(HealthViewModel.MetricType.BODY_WATER_MASS) }
+                if (hasBoneMass) BodyMetricRow("Bone Mass", String.format("%.1f kg", healthData.boneMass.kilograms)) { onMetricClick(HealthViewModel.MetricType.BONE_MASS) }
+                if (hasLeanMass) BodyMetricRow("Lean Mass", String.format("%.1f kg", healthData.leanBodyMass.kilograms)) { onMetricClick(HealthViewModel.MetricType.LEAN_BODY_MASS) }
             }
         }
     }
@@ -1494,14 +1217,18 @@ private fun BodyMetricRow(label: String, value: String, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
+        Text(text = label, color = TextOnSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = value, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Text(text = value, color = TextOnSurface, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.width(4.dp))
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextSubtle, modifier = Modifier.size(18.dp))
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Vitals Card (collapsible)
+// ═══════════════════════════════════════════════════════════
 
 @Composable
 private fun VitalsCard(
@@ -1517,8 +1244,6 @@ private fun VitalsCard(
     onExpandedChange: (Boolean) -> Unit,
     onMetricClick: (HealthViewModel.MetricType) -> Unit
 ) {
-
-    // Check if all vitals are normal
     val hrvCheck = if (hasHRV) (healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!) >= 30 else true
     val spo2Check = if (hasBloodOxygen) (healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!) >= 95 else true
     val rrCheck = if (hasRespiratoryRate) (healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!) in 12.0..20.0 else true
@@ -1526,15 +1251,11 @@ private fun VitalsCard(
     val bgCheck = if (hasBloodGlucose) healthData.bloodGlucose.levelMgPerDl!! in 60.0..140.0 else true
     val btCheck = if (hasBodyTemp) healthData.bodyTemperature.temperatureCelsius!! in 35.5..38.0 else true
     val allNormal = hrvCheck && spo2Check && rrCheck && bpCheck && bgCheck && btCheck
-    val statusColor = if (allNormal) Color(0xFF4CD964) else Color(0xFFFFCC00)
+    val statusColor = if (allNormal) SuccessGreen else WarningOrange
     val statusText = if (allNormal) "All normal" else "Needs attention"
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    NocturneCard {
+        Column(modifier = Modifier.animateContentSize(animationSpec = tween(200))) {
             // Header
             Row(
                 modifier = Modifier
@@ -1547,14 +1268,14 @@ private fun VitalsCard(
                     Text(
                         text = "Vitals",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = TextOnSurface,
                         fontWeight = FontWeight.SemiBold
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Box(
                         modifier = Modifier
-                            .background(statusColor.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                            .background(statusColor.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 3.dp)
                     ) {
                         Text(text = statusText, color = statusColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                     }
@@ -1562,13 +1283,13 @@ private fun VitalsCard(
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline
+                    tint = TextSubtle
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Summary row — always visible (top 3 vitals)
+            // Summary — top 3 vitals
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -1576,60 +1297,58 @@ private fun VitalsCard(
                 if (hasHRV) {
                     val hrvDisplay = healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f", hrvDisplay), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "ms HRV", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
+                        Text(text = String.format("%.0f", hrvDisplay), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "ms HRV", color = TextSubtle, fontSize = 12.sp)
                     }
                 }
                 if (hasBloodOxygen) {
                     val spo2Display = healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f%%", spo2Display), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "SpO2", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
+                        Text(text = String.format("%.0f%%", spo2Display), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "SpO2", color = TextSubtle, fontSize = 12.sp)
                     }
                 }
                 if (hasRespiratoryRate) {
                     val rrDisplay = healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f", rrDisplay), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "breaths", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
+                        Text(text = String.format("%.0f", rrDisplay), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "breaths", color = TextSubtle, fontSize = 12.sp)
                     }
                 }
             }
 
             // Expanded details
             if (expanded) {
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 if (hasHRV) {
                     val hrvAvg = healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!
-                    val dot = when { hrvAvg >= 30 -> Color(0xFF4CD964); hrvAvg >= 20 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    val dot = when { hrvAvg >= 30 -> SuccessGreen; hrvAvg >= 20 -> WarningOrange; else -> ErrorRed }
                     VitalMetricRow("Heart Rate Variability", String.format("%.0f ms", hrvAvg), dot) { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
                 }
                 if (hasBloodOxygen) {
                     val spo2Avg = healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!
-                    val dot = when { spo2Avg >= 95 -> Color(0xFF4CD964); spo2Avg >= 90 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    val dot = when { spo2Avg >= 95 -> SuccessGreen; spo2Avg >= 90 -> WarningOrange; else -> ErrorRed }
                     VitalMetricRow("Blood Oxygen", String.format("%.0f%%", spo2Avg), dot) { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
                 }
                 if (hasBloodGlucose) {
                     val bg = healthData.bloodGlucose.levelMgPerDl!!
-                    val dot = when { bg in 70.0..100.0 -> Color(0xFF4CD964); bg in 60.0..140.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    val dot = when { bg in 70.0..100.0 -> SuccessGreen; bg in 60.0..140.0 -> WarningOrange; else -> ErrorRed }
                     VitalMetricRow("Blood Glucose", String.format("%.0f mg/dL", bg), dot) { onMetricClick(HealthViewModel.MetricType.BLOOD_GLUCOSE) }
                 }
                 if (hasBloodPressure) {
                     val sys = healthData.bloodPressure.systolicMmHg!!
-                    val dot = when { sys in 90.0..120.0 -> Color(0xFF4CD964); sys in 80.0..140.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    val dot = when { sys in 90.0..120.0 -> SuccessGreen; sys in 80.0..140.0 -> WarningOrange; else -> ErrorRed }
                     VitalMetricRow("Blood Pressure", String.format("%.0f/%.0f mmHg", sys, healthData.bloodPressure.diastolicMmHg), dot) { onMetricClick(HealthViewModel.MetricType.BLOOD_PRESSURE) }
                 }
                 if (hasBodyTemp) {
                     val temp = healthData.bodyTemperature.temperatureCelsius!!
-                    val dot = when { temp in 36.1..37.2 -> Color(0xFF4CD964); temp in 35.5..38.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    val dot = when { temp in 36.1..37.2 -> SuccessGreen; temp in 35.5..38.0 -> WarningOrange; else -> ErrorRed }
                     VitalMetricRow("Body Temperature", String.format("%.1f°C", temp), dot) { onMetricClick(HealthViewModel.MetricType.BODY_TEMPERATURE) }
                 }
                 if (hasRespiratoryRate) {
                     val rrAvg = healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!
-                    val dot = when { rrAvg in 12.0..20.0 -> Color(0xFF4CD964); rrAvg in 8.0..25.0 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }
+                    val dot = when { rrAvg in 12.0..20.0 -> SuccessGreen; rrAvg in 8.0..25.0 -> WarningOrange; else -> ErrorRed }
                     VitalMetricRow("Respiratory Rate", String.format("%.0f breaths/min", rrAvg), dot) { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
                 }
                 if (hasSkinTemp) {
@@ -1651,23 +1370,202 @@ private fun VitalMetricRow(label: String, value: String, statusDot: Color?, onCl
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
+            Text(text = label, color = TextOnSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
             if (statusDot != null) {
-                Spacer(modifier = Modifier.width(6.dp))
-                Box(modifier = Modifier.size(8.dp).background(statusDot, RoundedCornerShape(4.dp)))
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(modifier = Modifier.size(8.dp).background(statusDot, CircleShape))
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = value, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Text(text = value, color = TextOnSurface, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.width(4.dp))
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextSubtle, modifier = Modifier.size(18.dp))
         }
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// Base Card — "NocturneCard" — the design system primitive
+// No borders. Depth through surface tiers. Full rounding.
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun NocturneCard(
+    modifier: Modifier = Modifier,
+    surfaceColor: Color = SurfaceMid,
+    onClick: (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(surfaceColor)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(20.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            content()
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Mini Bar Chart
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun MiniBarChart(
+    data: List<Float>,
+    barColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val barWidth = 8.dp
+    val gap = 3.dp
+    val cornerRadius = 4.dp
+
+    Canvas(modifier = modifier) {
+        if (data.isEmpty()) return@Canvas
+
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+        val barWidthPx = barWidth.toPx()
+        val gapPx = gap.toPx()
+        val cornerRadiusPx = cornerRadius.toPx()
+
+        val totalBarsWidth = data.size * barWidthPx
+        val totalGapsWidth = (data.size - 1) * gapPx
+        val totalContentWidth = totalBarsWidth + totalGapsWidth
+        val startX = (canvasWidth - totalContentWidth) / 2
+
+        val maxValue = data.maxOrNull()?.coerceAtLeast(0.1f) ?: 1f
+
+        data.forEachIndexed { index, value ->
+            val normalizedHeight = if (value <= 0f) 0.1f
+            else (value / maxValue).coerceIn(0.1f, 1f)
+
+            val barHeight = normalizedHeight * canvasHeight
+            val x = startX + index * (barWidthPx + gapPx)
+            val y = canvasHeight - barHeight
+
+            drawRoundRect(
+                color = if (index == data.size - 1) barColor else barColor.copy(alpha = 0.4f),
+                topLeft = Offset(x, y),
+                size = Size(barWidthPx, barHeight),
+                cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
+            )
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Readiness Score Calculation
+// ═══════════════════════════════════════════════════════════
+
+private fun calculateReadinessScore(healthData: HealthData): ReadinessScore {
+    var score = 100
+    val now = java.time.Instant.now()
+
+    val hoursSinceLastSleep = healthData.sleep.sessions.maxByOrNull { it.endTime }?.endTime?.let { lastWakeTime ->
+        java.time.Duration.between(lastWakeTime, now).toHours()
+    }
+
+    val awakePenalty = when {
+        hoursSinceLastSleep == null -> 50
+        hoursSinceLastSleep >= 16 -> 90
+        hoursSinceLastSleep >= 14 -> 85
+        hoursSinceLastSleep >= 12 -> 75
+        hoursSinceLastSleep >= 10 -> 65
+        hoursSinceLastSleep >= 8 -> 25
+        hoursSinceLastSleep >= 2 -> 5
+        else -> 0
+    }
+    score -= awakePenalty
+
+    healthData.sleep.totalDuration?.let { sleepDuration ->
+        val sleepHours = sleepDuration.toHours()
+        when {
+            sleepHours >= 7 -> { }
+            sleepHours >= 5 -> score -= 10
+            else -> score -= 20
+        }
+    } ?: run { score -= 15 }
+
+    healthData.restingHeartRate.bpm?.let { rhr ->
+        when {
+            rhr <= 75 -> { }
+            rhr <= 85 -> score -= 5
+            else -> score -= 10
+        }
+    } ?: healthData.heartRate.restingBpm?.let { rhr ->
+        when {
+            rhr <= 75 -> { }
+            rhr <= 85 -> score -= 5
+            else -> score -= 10
+        }
+    }
+
+    healthData.heartRateVariability.rmssdMs?.let { hrv ->
+        when {
+            hrv >= 40 -> { }
+            hrv >= 30 -> score -= 3
+            else -> score -= 8
+        }
+    }
+
+    val steps = healthData.steps.count
+    if (steps < 1000) score -= 2
+
+    score = score.coerceIn(5, 100)
+
+    val (label, color) = when {
+        score >= 81 -> "Excellent" to SuccessGreen
+        score >= 61 -> "Good" to SuccessGreen
+        score >= 41 -> "Fair" to WarningOrange
+        score >= 21 -> "Poor" to ErrorRed
+        else -> "Exhausted" to ErrorRed
+    }
+
+    return ReadinessScore(score, label, color)
+}
+
+// ═══════════════════════════════════════════════════════════
+// Sparkline Data Generators
+// ═══════════════════════════════════════════════════════════
+
+private fun generateSparklineData(current: Long, max: Long): List<Float> {
+    val todayValue = (current.toFloat() / max).coerceIn(0f, 1f)
+    val previousDays = List(6) { index ->
+        val variation = when (index % 3) { 0 -> 0.8f; 1 -> 1.2f; else -> 1.0f }
+        val value = todayValue * variation
+        if (todayValue <= 0f) 0f else value.coerceIn(0f, 1f)
+    }
+    return previousDays + listOf(todayValue)
+}
+
+private fun generateHeartRateSparklineData(baseBpm: Int): List<Float> {
+    val todayValue = (baseBpm.toFloat() / 120f).coerceIn(0f, 1f)
+    val previousDays = List(6) { index ->
+        val variation = when (index % 3) { 0 -> 0.9f; 1 -> 1.1f; else -> 1.0f }
+        val value = todayValue * variation
+        if (baseBpm <= 0) 0f else value.coerceIn(0f, 1f)
+    }
+    return previousDays + listOf(todayValue)
+}
+
+private fun generateSleepSparklineData(totalMinutes: Int): List<Float> {
+    val todayValue = (totalMinutes.toFloat() / 480f).coerceIn(0f, 1f)
+    val previousDays = List(6) { index ->
+        val variation = when (index % 3) { 0 -> 0.7f; 1 -> 1.3f; else -> 1.0f }
+        val value = todayValue * variation
+        if (totalMinutes <= 0) 0f else value.coerceIn(0f, 1f)
+    }
+    return previousDays + listOf(todayValue)
+}
+
 private fun generateVariationSparkline(baseValue: Float, points: Int, variance: Float): List<Float> {
     val random = java.util.Random(baseValue.toLong())
-    return (0 until points).map { i ->
+    return (0 until points).map {
         val variation = 1f + (random.nextFloat() * 2 - 1) * variance
         baseValue * variation
     }
