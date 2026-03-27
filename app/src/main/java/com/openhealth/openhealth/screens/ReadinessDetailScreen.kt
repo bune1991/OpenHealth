@@ -246,7 +246,7 @@ private fun FactorRow(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = TextOnSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))

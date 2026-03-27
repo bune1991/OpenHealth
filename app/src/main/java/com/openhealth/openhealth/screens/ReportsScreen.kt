@@ -249,7 +249,7 @@ private fun SummaryRow(
                     },
                     contentDescription = null,
                     tint = when {
-                        change == 0 -> MaterialTheme.colorScheme.outline
+                        change == 0 -> TextSubtle
                         isBetter -> TrendUp
                         else -> TrendDown
                     },
@@ -260,7 +260,7 @@ private fun SummaryRow(
                     text = "${if (change > 0) "+" else ""}$change%",
                     style = MaterialTheme.typography.bodySmall,
                     color = when {
-                        change == 0 -> MaterialTheme.colorScheme.outline
+                        change == 0 -> TextSubtle
                         isBetter -> TrendUp
                         else -> TrendDown
                     },
@@ -313,7 +313,7 @@ private fun WeeklyStepsChart(data: List<com.openhealth.openhealth.model.DailyDat
                             text = if (point.value >= 1000) "${(point.value / 1000).roundToInt()}k"
                             else point.value.roundToInt().toString(),
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (isToday) Accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isToday) Accent else TextOnSurfaceVariant,
                             fontSize = 10.sp
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -338,7 +338,7 @@ private fun WeeklyStepsChart(data: List<com.openhealth.openhealth.model.DailyDat
                         Text(
                             text = point.date.format(dayFormatter),
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (isToday) Accent else MaterialTheme.colorScheme.outline,
+                            color = if (isToday) Accent else TextSubtle,
                             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 10.sp
                         )

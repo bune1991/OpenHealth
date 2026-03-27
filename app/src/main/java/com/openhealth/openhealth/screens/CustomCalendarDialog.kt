@@ -100,7 +100,7 @@ fun CustomCalendarDialog(
                             imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                             contentDescription = "Next Month",
                             tint = if (displayedMonth.isBefore(YearMonth.from(today)))
-                                MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                TextOnSurfaceVariant else TextSubtle.copy(alpha = 0.3f)
                         )
                     }
                 }
@@ -209,8 +209,8 @@ fun CustomCalendarDialog(
                                         style = MaterialTheme.typography.bodySmall,
                                         color = when {
                                             isSelected -> CardSteps
-                                            isFuture -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                            else -> MaterialTheme.colorScheme.onBackground
+                                            isFuture -> TextSubtle.copy(alpha = 0.3f)
+                                            else -> TextOnSurface
                                         },
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         fontSize = 12.sp
