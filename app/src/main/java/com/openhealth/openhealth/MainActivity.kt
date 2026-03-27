@@ -54,14 +54,7 @@ import com.openhealth.openhealth.screens.AiInsightsScreen
 import com.openhealth.openhealth.screens.OnboardingScreen
 import com.openhealth.openhealth.viewmodel.ReportsData
 import com.openhealth.openhealth.screens.SettingsScreen
-import com.openhealth.openhealth.ui.theme.BackgroundBlack
-import com.openhealth.openhealth.ui.theme.ErrorRed
-import com.openhealth.openhealth.ui.theme.OpenHealthTheme
-import com.openhealth.openhealth.ui.theme.PrimaryBlue
-import com.openhealth.openhealth.ui.theme.SuccessGreen
-import com.openhealth.openhealth.ui.theme.SurfaceDark
-import com.openhealth.openhealth.ui.theme.TextPrimary
-import com.openhealth.openhealth.ui.theme.TextSecondary
+import com.openhealth.openhealth.ui.theme.*
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 
 class MainActivity : ComponentActivity() {
@@ -144,12 +137,12 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = BackgroundBlack
+                    containerColor = SurfaceLowest
                 ) { paddingValues ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(BackgroundBlack)
+                            .background(SurfaceLowest)
                             .padding(paddingValues)
                     ) {
                         when (uiState) {
@@ -297,7 +290,7 @@ fun PermissionsRequiredScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundBlack)
+            .background(SurfaceLowest)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -396,7 +389,7 @@ fun HealthConnectNotAvailableScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundBlack)
+            .background(SurfaceLowest)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
