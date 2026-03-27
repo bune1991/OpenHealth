@@ -2,11 +2,13 @@ package com.openhealth.openhealth.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -880,6 +882,13 @@ private fun MetricCard(
     sparklineData: List<Float>,
     onClick: () -> Unit
 ) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { it / 3 }
+    ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -928,11 +937,20 @@ private fun MetricCard(
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
+                    // Animate number counting up
+                    val targetNumber = value.filter { it.isDigit() }.toIntOrNull() ?: 0
+                    val animatedNumber by animateIntAsState(
+                        targetValue = targetNumber,
+                        animationSpec = tween(durationMillis = 800),
+                        label = "counter"
+                    )
+                    val displayValue = if (targetNumber > 0) value.replace(targetNumber.toString(), animatedNumber.toString()) else value
+
                     Row(
                         verticalAlignment = Alignment.Bottom
                     ) {
                         Text(
-                            text = value,
+                            text = displayValue,
                             style = MaterialTheme.typography.headlineLarge,
                             color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold,
@@ -971,6 +989,7 @@ private fun MetricCard(
             }
         }
     }
+    } // AnimatedVisibility
 }
 
 @Composable
