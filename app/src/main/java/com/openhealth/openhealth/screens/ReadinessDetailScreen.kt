@@ -1,4 +1,5 @@
 package com.openhealth.openhealth.screens
+import com.openhealth.openhealth.ui.theme.*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -49,11 +50,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.HealthData
-import com.openhealth.openhealth.ui.theme.BackgroundBlack
-import com.openhealth.openhealth.ui.theme.SurfaceDark
-import com.openhealth.openhealth.ui.theme.TextPrimary
-import com.openhealth.openhealth.ui.theme.TextSecondary
-import com.openhealth.openhealth.ui.theme.TextTertiary
 
 // Readiness Score Colors
 private val ReadinessRed = Color(0xFFE53935)
@@ -83,7 +79,7 @@ fun ReadinessDetailScreen(
                 title = {
                     Text(
                         text = "Readiness Score",
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = TextOnSurface,
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -92,21 +88,21 @@ fun ReadinessDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = TextOnSurfaceVariant
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = SurfaceLowest
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = SurfaceLowest
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(SurfaceLowest)
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -212,7 +208,7 @@ private fun SectionTitle(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = TextOnSurface,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
     )
@@ -232,9 +228,9 @@ private fun FactorRow(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = SurfaceMid
         )
     ) {
         Row(
@@ -258,13 +254,13 @@ private fun FactorRow(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = TextOnSurface,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
                         text = value,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = TextOnSurfaceVariant
                     )
                 }
             }
@@ -294,15 +290,15 @@ private fun FactorRow(
 private fun ExplanationCard(explanation: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = SurfaceMid
         )
     ) {
         Text(
             text = explanation,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = TextOnSurface,
             modifier = Modifier.padding(16.dp)
         )
     }
@@ -312,9 +308,9 @@ private fun ExplanationCard(explanation: String) {
 private fun TipsCard(tips: List<String>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = SurfaceMid
         )
     ) {
         Column(
@@ -337,7 +333,7 @@ private fun TipsCard(tips: List<String>) {
                     Text(
                         text = tip,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = TextOnSurface
                     )
                 }
             }

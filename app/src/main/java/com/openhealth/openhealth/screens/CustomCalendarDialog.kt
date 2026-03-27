@@ -1,4 +1,5 @@
 package com.openhealth.openhealth.screens
+import com.openhealth.openhealth.ui.theme.*
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -38,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.openhealth.openhealth.model.DailyDataPoint
-import com.openhealth.openhealth.ui.theme.CardSteps
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -78,7 +78,7 @@ fun CustomCalendarDialog(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
                             contentDescription = "Previous Month",
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = TextOnSurfaceVariant
                         )
                     }
                     Text(
@@ -86,7 +86,7 @@ fun CustomCalendarDialog(
                             DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
                         ),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = TextOnSurface,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(
@@ -113,7 +113,7 @@ fun CustomCalendarDialog(
                         Text(
                             text = day,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline,
+                            color = TextSubtle,
                             modifier = Modifier.weight(1f),
                             textAlign = TextAlign.Center
                         )

@@ -1,4 +1,5 @@
 package com.openhealth.openhealth.screens
+import com.openhealth.openhealth.ui.theme.*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -50,8 +51,8 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 private val Accent = Color(0xFF00BCD4)
-private val TrendUp = Color(0xFF4CD964)
-private val TrendDown = Color(0xFFFF3B30)
+private val TrendUp = SuccessGreen
+private val TrendDown = ErrorRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +66,7 @@ fun ReportsScreen(
                 title = {
                     Text(
                         text = "Reports",
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = TextOnSurface,
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -74,16 +75,16 @@ fun ReportsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = TextOnSurfaceVariant
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = SurfaceLowest
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = SurfaceLowest
     ) { paddingValues ->
         if (reportsData.isLoading) {
             Box(
@@ -154,19 +155,19 @@ private fun SummaryCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = SurfaceMid)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = TextOnSurface,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline
+                color = TextSubtle
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -204,7 +205,7 @@ private fun SummaryRow(
         Text(
             text = summary.label,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = TextOnSurface,
             modifier = Modifier.weight(1f)
         )
 
@@ -281,13 +282,13 @@ private fun WeeklyStepsChart(data: List<com.openhealth.openhealth.model.DailyDat
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = SurfaceMid)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Steps This Week",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = TextOnSurface,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(16.dp))
