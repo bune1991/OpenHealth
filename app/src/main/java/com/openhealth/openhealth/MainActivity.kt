@@ -88,42 +88,40 @@ class MainActivity : ComponentActivity() {
         com.openhealth.openhealth.widget.WidgetUpdateWorker.enqueue(this)
         com.openhealth.openhealth.widget.DailySummaryWorker.enqueue(this)
 
-        // Handle back press to navigate from detail/settings screen to dashboard
-        onBackPressedDispatcher.addCallback(this) {
-            if (::viewModel.isInitialized) {
-                when {
-                    viewModel.showSettings.value -> {
-                        viewModel.hideSettings()
-                    }
-                    viewModel.showReadinessDetail.value -> {
-                        viewModel.hideReadinessDetail()
-                    }
-                    viewModel.showAiInsights.value -> {
-                        viewModel.hideAiInsights()
-                    }
-                    viewModel.showStressDetail.value -> {
-                        viewModel.hideStressDetail()
-                    }
-                    viewModel.showReports.value -> {
-                        viewModel.hideReports()
-                    }
-                    viewModel.selectedMetric.value != null -> {
-                        viewModel.clearSelectedMetric()
-                    }
-                    else -> {
-                        isEnabled = false
-                        onBackPressedDispatcher.onBackPressed()
-                    }
-                }
-            } else {
-                isEnabled = false
-                onBackPressedDispatcher.onBackPressed()
-            }
-        }
+        // Back press handling is done in setContent via LaunchedEffect
 
         setContent {
             viewModel = viewModel()
             val settings by viewModel.settings.collectAsState()
+
+            // Re-enable back handler whenever a sub-screen is showing
+            val hasSubScreen = viewModel.selectedMetric.collectAsState().value != null ||
+                viewModel.showSettings.collectAsState().value ||
+                viewModel.showReadinessDetail.collectAsState().value ||
+                viewModel.showReports.collectAsState().value ||
+                viewModel.showStressDetail.collectAsState().value ||
+                viewModel.showAiInsights.collectAsState().value
+            androidx.compose.runtime.LaunchedEffect(hasSubScreen) {
+                onBackPressedDispatcher.addCallback(this@MainActivity) {
+                    if (::viewModel.isInitialized) {
+                        when {
+                            viewModel.showSettings.value -> viewModel.hideSettings()
+                            viewModel.showAiInsights.value -> viewModel.hideAiInsights()
+                            viewModel.showStressDetail.value -> viewModel.hideStressDetail()
+                            viewModel.showReports.value -> viewModel.hideReports()
+                            viewModel.showReadinessDetail.value -> viewModel.hideReadinessDetail()
+                            viewModel.selectedMetric.value != null -> viewModel.clearSelectedMetric()
+                            else -> {
+                                isEnabled = false
+                                onBackPressedDispatcher.onBackPressed()
+                            }
+                        }
+                    } else {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                }
+            }
 
             OpenHealthTheme(darkTheme = !settings.useLightTheme) {
 

@@ -1500,11 +1500,13 @@ private fun VitalsCard(
 ) {
 
     // Check if all vitals are normal
-    val allNormal = listOf(
-        !hasHRV || healthData.heartRateVariability.rmssdMs!! >= 30,
-        !hasBloodOxygen || healthData.oxygenSaturation.percentage!! >= 95,
-        !hasRespiratoryRate || healthData.respiratoryRate.ratePerMinute!! in 12.0..20.0
-    ).all { it }
+    val hrvCheck = if (hasHRV) (healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!) >= 30 else true
+    val spo2Check = if (hasBloodOxygen) (healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!) >= 95 else true
+    val rrCheck = if (hasRespiratoryRate) (healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!) in 12.0..20.0 else true
+    val bpCheck = if (hasBloodPressure) healthData.bloodPressure.systolicMmHg!! in 90.0..140.0 else true
+    val bgCheck = if (hasBloodGlucose) healthData.bloodGlucose.levelMgPerDl!! in 60.0..140.0 else true
+    val btCheck = if (hasBodyTemp) healthData.bodyTemperature.temperatureCelsius!! in 35.5..38.0 else true
+    val allNormal = hrvCheck && spo2Check && rrCheck && bpCheck && bgCheck && btCheck
     val statusColor = if (allNormal) Color(0xFF4CD964) else Color(0xFFFFCC00)
     val statusText = if (allNormal) "All normal" else "Needs attention"
 
