@@ -98,17 +98,17 @@ fun StressDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Stress", color = TextPrimary, style = MaterialTheme.typography.titleLarge)
+                    Text("Stress", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundBlack)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
-        containerColor = BackgroundBlack
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -122,7 +122,7 @@ fun StressDetailScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(
                         modifier = Modifier
@@ -135,6 +135,7 @@ fun StressDetailScreen(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.size(180.dp)
                         ) {
+                            val arcBgColor = MaterialTheme.colorScheme.outlineVariant
                             Canvas(modifier = Modifier.size(180.dp)) {
                                 val strokeW = 14.dp.toPx()
                                 val arcSize = Size(size.width - strokeW, size.height - strokeW)
@@ -142,7 +143,7 @@ fun StressDetailScreen(
 
                                 // Background arc (180 degrees, bottom half open)
                                 drawArc(
-                                    color = Color(0xFF2A2A2A),
+                                    color = arcBgColor,
                                     startAngle = 135f,
                                     sweepAngle = 270f,
                                     useCenter = false,
@@ -189,7 +190,7 @@ fun StressDetailScreen(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = stressLevel.toString(),
-                                    color = TextPrimary,
+                                    color = MaterialTheme.colorScheme.onBackground,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 42.sp
                                 )
@@ -209,8 +210,8 @@ fun StressDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("0", color = TextTertiary, fontSize = 12.sp)
-                            Text("100", color = TextTertiary, fontSize = 12.sp)
+                            Text("0", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
+                            Text("100", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                         }
                     }
                 }
@@ -244,20 +245,20 @@ fun StressDetailScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "Coaching",
                             style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = coaching,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 22.sp
                         )
                     }
@@ -269,13 +270,13 @@ fun StressDetailScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "Stress Breakdown",
                             style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -294,13 +295,13 @@ fun StressDetailScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "What Affects Your Stress",
                             style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -336,7 +337,7 @@ fun StressDetailScreen(
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = text,
-                                    color = TextSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     style = MaterialTheme.typography.bodyMedium,
                                     lineHeight = 20.sp
                                 )
@@ -362,10 +363,10 @@ private fun MetricCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, color = TextSecondary, fontSize = 13.sp)
+            Text(text = title, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
@@ -377,7 +378,7 @@ private fun MetricCard(
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = unit,
-                    color = TextTertiary,
+                    color = MaterialTheme.colorScheme.outline,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -394,7 +395,7 @@ private fun BreakdownRow(label: String, percent: Int, color: Color) {
     ) {
         Text(
             text = label,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 14.sp,
             modifier = Modifier.width(60.dp)
         )
@@ -402,7 +403,7 @@ private fun BreakdownRow(label: String, percent: Int, color: Color) {
             modifier = Modifier
                 .weight(1f)
                 .height(8.dp)
-                .background(Color(0xFF2A2A2A), RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))
         ) {
             Box(
                 modifier = Modifier
@@ -414,7 +415,7 @@ private fun BreakdownRow(label: String, percent: Int, color: Color) {
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "$percent%",
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
             modifier = Modifier.width(40.dp)

@@ -68,12 +68,12 @@ fun AiInsightsScreen(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("AI Insights", color = TextPrimary, style = MaterialTheme.typography.titleLarge)
+                        Text("AI Insights", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.titleLarge)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 actions = {
@@ -83,10 +83,10 @@ fun AiInsightsScreen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundBlack)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
-        containerColor = BackgroundBlack
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -130,13 +130,13 @@ fun AiInsightsScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Analyzing your health data...",
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "This may take a few seconds",
-                                color = TextTertiary,
+                                color = MaterialTheme.colorScheme.outline,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -160,7 +160,7 @@ fun AiInsightsScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = error,
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium,
                                 lineHeight = 22.sp
                             )
@@ -178,7 +178,7 @@ fun AiInsightsScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(
                             modifier = Modifier.padding(24.dp),
@@ -193,14 +193,14 @@ fun AiInsightsScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Set Up AI Insights",
-                                color = TextPrimary,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleLarge
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Add your API key in Settings to get personalized AI-powered health analysis. Your data is sent directly to your own account.",
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium,
                                 lineHeight = 22.sp,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -208,7 +208,7 @@ fun AiInsightsScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Supports: Claude, Gemini, ChatGPT",
-                                color = TextTertiary,
+                                color = MaterialTheme.colorScheme.outline,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -220,12 +220,12 @@ fun AiInsightsScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 text = insightText,
-                                color = TextPrimary,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 style = MaterialTheme.typography.bodyMedium,
                                 lineHeight = 24.sp
                             )
@@ -235,7 +235,7 @@ fun AiInsightsScreen(
                     // Disclaimer
                     Text(
                         text = "AI-generated analysis. Not medical advice. Data sent to your own $providerName account.",
-                        color = TextTertiary,
+                        color = MaterialTheme.colorScheme.outline,
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 16.sp,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,

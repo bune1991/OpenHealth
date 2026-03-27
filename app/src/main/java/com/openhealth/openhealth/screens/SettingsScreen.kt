@@ -48,7 +48,7 @@ fun SettingsScreen(
                         Text(
                             text = "Settings",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -58,21 +58,21 @@ fun SettingsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundBlack
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
-        containerColor = BackgroundBlack
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundBlack)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -83,7 +83,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = SurfaceDark
+                        containerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
                     Column(
@@ -93,13 +93,13 @@ fun SettingsScreen(
                             text = "Dashboard Metrics",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Toggle which metrics to show on your dashboard. Metrics with no data will be hidden automatically.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -234,25 +234,25 @@ fun SettingsScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "Bring Your Own Key",
                             style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Add your API key to get AI-powered health analysis. Your data goes directly to your own account — we never see it.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Provider selector
-                        Text(text = "AI Provider", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        Text(text = "AI Provider", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -307,13 +307,13 @@ fun SettingsScreen(
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text(text = "API Key", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                            Text(text = "API Key", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(4.dp))
                             androidx.compose.material3.OutlinedTextField(
                                 value = currentKey,
                                 onValueChange = onKeyChange,
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Paste your API key here", color = TextTertiary) },
+                                placeholder = { Text("Paste your API key here", color = MaterialTheme.colorScheme.outline) },
                                 visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                 singleLine = true,
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
@@ -328,13 +328,13 @@ fun SettingsScreen(
                             // Custom provider: URL + Model fields
                             if (settings.aiProvider == com.openhealth.openhealth.model.AiProvider.CUSTOM) {
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text(text = "Base URL", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                Text(text = "Base URL", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 androidx.compose.material3.OutlinedTextField(
                                     value = settings.aiCustomUrl,
                                     onValueChange = { onSettingsChanged(settings.copy(aiCustomUrl = it)) },
                                     modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("e.g. http://192.168.1.100:11434/v1", color = TextTertiary) },
+                                    placeholder = { Text("e.g. http://192.168.1.100:11434/v1", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                         focusedTextColor = TextPrimary,
@@ -345,13 +345,13 @@ fun SettingsScreen(
                                     )
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
-                                Text(text = "Model Name", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                Text(text = "Model Name", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 androidx.compose.material3.OutlinedTextField(
                                     value = settings.aiCustomModel,
                                     onValueChange = { onSettingsChanged(settings.copy(aiCustomModel = it)) },
                                     modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("e.g. llama3, mistral, gemma2", color = TextTertiary) },
+                                    placeholder = { Text("e.g. llama3, mistral, gemma2", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                         focusedTextColor = TextPrimary,
@@ -364,7 +364,7 @@ fun SettingsScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Works with: Ollama, OpenRouter, Fireworks AI, Groq, LM Studio, or any OpenAI-compatible API",
-                                    color = TextTertiary,
+                                    color = MaterialTheme.colorScheme.outline,
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -382,7 +382,7 @@ fun SettingsScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -390,7 +390,7 @@ fun SettingsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "Weather Health Advisory", color = TextPrimary, fontWeight = FontWeight.Medium)
+                            Text(text = "Weather Health Advisory", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium)
                             Switch(
                                 checked = settings.weatherEnabled,
                                 onCheckedChange = { onSettingsChanged(settings.copy(weatherEnabled = it)) },
@@ -402,18 +402,18 @@ fun SettingsScreen(
                         }
                         if (settings.weatherEnabled) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "No GPS needed — enter your coordinates manually", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                            Text(text = "No GPS needed — enter your coordinates manually", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "How: Google Maps → search your city → long press → copy coordinates", color = TextTertiary, style = MaterialTheme.typography.bodySmall)
+                            Text(text = "How: Google Maps → search your city → long press → copy coordinates", color = MaterialTheme.colorScheme.outline, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text(text = "Coordinates", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                            Text(text = "Coordinates", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedTextField(
                                     value = if (settings.weatherLat != 0.0) settings.weatherLat.toString() else "",
                                     onValueChange = { onSettingsChanged(settings.copy(weatherLat = it.toDoubleOrNull() ?: 0.0)) },
                                     modifier = Modifier.weight(1f),
-                                    placeholder = { Text("Lat", color = TextTertiary) },
+                                    placeholder = { Text("Lat", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
                                     colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
                                 )
@@ -421,7 +421,7 @@ fun SettingsScreen(
                                     value = if (settings.weatherLon != 0.0) settings.weatherLon.toString() else "",
                                     onValueChange = { onSettingsChanged(settings.copy(weatherLon = it.toDoubleOrNull() ?: 0.0)) },
                                     modifier = Modifier.weight(1f),
-                                    placeholder = { Text("Lon", color = TextTertiary) },
+                                    placeholder = { Text("Lon", color = MaterialTheme.colorScheme.outline) },
                                     singleLine = true,
                                     colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
                                 )
@@ -438,7 +438,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = SurfaceDark
+                        containerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
                     Column(
@@ -448,13 +448,13 @@ fun SettingsScreen(
                             text = "Daily Goals",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Set your daily targets for activity metrics. These are used to calculate progress bars on the dashboard.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -525,7 +525,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = SurfaceDark,
+                        containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = TextPrimary
                     )
                 ) {
@@ -579,7 +579,7 @@ private fun MetricToggleItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -594,7 +594,7 @@ private fun MetricToggleItem(
                     text = label,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -626,7 +626,7 @@ private fun GoalInputItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -651,7 +651,7 @@ private fun GoalInputItem(
                     text = title,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -667,7 +667,7 @@ private fun GoalInputItem(
                     },
                     modifier = Modifier.width(100.dp),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.SemiBold
                     ),
                     keyboardOptions = KeyboardOptions(
@@ -687,7 +687,7 @@ private fun GoalInputItem(
                 Text(
                     text = unit,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

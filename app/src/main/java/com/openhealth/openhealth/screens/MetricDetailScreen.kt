@@ -159,7 +159,7 @@ fun MetricDetailScreen(
                     ) {
                         Text(
                             text = metricInfo.title,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
@@ -167,7 +167,7 @@ fun MetricDetailScreen(
                                 DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
                             ),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -221,16 +221,16 @@ fun MetricDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundBlack
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
-        containerColor = BackgroundBlack
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundBlack)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
             when {
@@ -336,7 +336,7 @@ fun MetricDetailScreen(
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(16.dp),
-                                        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -346,8 +346,8 @@ fun MetricDetailScreen(
                                         ) {
                                             statsItems.forEach { stat ->
                                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text(text = stat.label, color = TextTertiary, fontSize = 12.sp)
-                                                    Text(text = stat.value, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                                    Text(text = stat.label, color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
+                                                    Text(text = stat.value, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                                 }
                                             }
                                         }
@@ -369,13 +369,13 @@ fun MetricDetailScreen(
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(16.dp),
-                                        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
                                         Column(modifier = Modifier.padding(16.dp)) {
                                             Text(
                                                 text = "Macros Breakdown",
                                                 style = MaterialTheme.typography.titleMedium,
-                                                color = TextPrimary,
+                                                color = MaterialTheme.colorScheme.onBackground,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Spacer(modifier = Modifier.height(16.dp))
@@ -424,13 +424,13 @@ fun MetricDetailScreen(
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                 ) {
                                     Column(modifier = Modifier.padding(16.dp)) {
                                         Text(
                                             text = "Today's Sessions",
                                             style = MaterialTheme.typography.titleMedium,
-                                            color = TextPrimary,
+                                            color = MaterialTheme.colorScheme.onBackground,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
@@ -459,13 +459,13 @@ fun MetricDetailScreen(
                                                 Column(modifier = Modifier.weight(1f)) {
                                                     Text(
                                                         text = session.exerciseType,
-                                                        color = TextPrimary,
+                                                        color = MaterialTheme.colorScheme.onBackground,
                                                         fontWeight = FontWeight.SemiBold,
                                                         style = MaterialTheme.typography.bodyLarge
                                                     )
                                                     Text(
                                                         text = "$startStr → $endStr",
-                                                        color = TextTertiary,
+                                                        color = MaterialTheme.colorScheme.outline,
                                                         style = MaterialTheme.typography.bodySmall
                                                     )
                                                 }
@@ -554,7 +554,7 @@ fun MetricDetailScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(16.dp),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = SurfaceDark
+                                        containerColor = MaterialTheme.colorScheme.surface
                                     )
                                 ) {
                                     Row(
@@ -574,14 +574,14 @@ fun MetricDetailScreen(
                                             Text(
                                                 text = metricHistory?.bestDayLabel ?: "Best Day",
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                color = TextSecondary
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                             Text(
                                                 text = bestDay.date.format(
                                                     DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
                                                 ),
                                                 style = MaterialTheme.typography.bodyLarge,
-                                                color = TextPrimary,
+                                                color = MaterialTheme.colorScheme.onBackground,
                                                 fontWeight = FontWeight.Medium
                                             )
                                         }
@@ -613,19 +613,19 @@ fun MetricDetailScreen(
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                 ) {
                                     Column(modifier = Modifier.padding(16.dp)) {
                                         Text(
                                             text = "Sleep Bank",
                                             style = MaterialTheme.typography.titleMedium,
-                                            color = TextPrimary,
+                                            color = MaterialTheme.colorScheme.onBackground,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
                                             text = "Last 7 days vs 8h target",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = TextTertiary
+                                            color = MaterialTheme.colorScheme.outline
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
                                         Row(verticalAlignment = Alignment.Bottom) {
@@ -647,7 +647,7 @@ fun MetricDetailScreen(
                                         Text(
                                             text = if (isDebt) "You're behind on sleep. Try to get extra rest this week."
                                                    else "Great job! You're meeting or exceeding your sleep target.",
-                                            color = TextSecondary,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
@@ -681,7 +681,7 @@ fun MetricDetailScreen(
                                 Text(
                                     text = if (totalRecords > 0) "All History ($totalRecords days)" else "All History",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = TextPrimary,
+                                    color = MaterialTheme.colorScheme.onBackground,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
@@ -720,7 +720,7 @@ fun MetricDetailScreen(
                     ) {
                         Text(
                             text = "No data available",
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -741,7 +741,7 @@ private fun LineChartCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -750,7 +750,7 @@ private fun LineChartCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
 
@@ -784,7 +784,7 @@ private fun LineChartCard(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextTertiary
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
             }
@@ -917,7 +917,7 @@ private fun BarChartCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -926,7 +926,7 @@ private fun BarChartCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
 
@@ -1017,7 +1017,7 @@ private fun BarChart(
                 Text(
                     text = displayValue,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 10.sp
                 )
 
@@ -1056,7 +1056,7 @@ private fun BarChart(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextTertiary,
+                    color = MaterialTheme.colorScheme.outline,
                     fontSize = 10.sp
                 )
             }
@@ -1130,7 +1130,7 @@ private fun SkeletonCard(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Box(
@@ -1166,7 +1166,7 @@ private fun TodayValueCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -1178,7 +1178,7 @@ private fun TodayValueCard(
             Text(
                 text = dateLabel,
                 style = MaterialTheme.typography.titleMedium,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -1191,7 +1191,7 @@ private fun TodayValueCard(
                 Text(
                     text = "$startTimeStr → $endTimeStr",
                     style = MaterialTheme.typography.titleLarge,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -1221,7 +1221,7 @@ private fun TodayValueCard(
                         Text(
                             text = valueFormatted,
                             style = MaterialTheme.typography.displayMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -1229,7 +1229,7 @@ private fun TodayValueCard(
                     Text(
                         text = unit,
                         style = MaterialTheme.typography.titleLarge,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -1252,7 +1252,7 @@ private fun StatCard(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -1268,7 +1268,7 @@ private fun StatCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
             Row(
@@ -1288,7 +1288,7 @@ private fun StatCard(
                     Text(
                         text = value,
                         style = MaterialTheme.typography.titleLarge,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -1296,7 +1296,7 @@ private fun StatCard(
                 Text(
                     text = unit,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 2.dp)
                 )
             }
@@ -1315,7 +1315,7 @@ private fun HistoryItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -1332,7 +1332,7 @@ private fun HistoryItem(
                         DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
                     ),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
@@ -1340,7 +1340,7 @@ private fun HistoryItem(
                         DateTimeFormatter.ofPattern("EEEE", Locale.getDefault())
                     ),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -1356,7 +1356,7 @@ private fun HistoryItem(
                         Text(
                             text = "$startTimeStr → $endTimeStr",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.height(2.dp))
@@ -1407,7 +1407,7 @@ private fun SleepStagesChart(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceDark
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -1416,7 +1416,7 @@ private fun SleepStagesChart(
             Text(
                 text = "Sleep Stages",
                 style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -1538,7 +1538,7 @@ private fun SleepStageLegendItem(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
         Row(
@@ -1547,14 +1547,14 @@ private fun SleepStageLegendItem(
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "$percent%",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1610,7 +1610,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header with status
@@ -1618,7 +1618,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                 Text(
                     text = "Insights",
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -1637,7 +1637,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
             Text(
                 text = insight.meaning,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 22.sp
             )
 
@@ -1647,7 +1647,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
             Text(
                 text = "Normal range: ${insight.normalRange}",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextTertiary
+                color = MaterialTheme.colorScheme.outline
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -1679,7 +1679,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                         Text(
                             text = tip,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 20.sp
                         )
                     }
@@ -1691,7 +1691,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
             Text(
                 text = insight.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextTertiary,
+                color = MaterialTheme.colorScheme.outline,
                 lineHeight = 18.sp
             )
         }
@@ -1708,12 +1708,12 @@ private fun MacroRow(label: String, grams: Double, percent: Int, color: Color) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.size(12.dp).background(color, RoundedCornerShape(2.dp)))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = label, color = TextPrimary, style = MaterialTheme.typography.bodyMedium)
+            Text(text = label, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyMedium)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "${grams.roundToInt()}g", color = TextPrimary, fontWeight = FontWeight.Medium)
+            Text(text = "${grams.roundToInt()}g", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "$percent%", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Text(text = "$percent%", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -1741,7 +1741,7 @@ private fun SleepClockCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -1752,7 +1752,7 @@ private fun SleepClockCard(
             Text(
                 text = "Sleep Schedule",
                 style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -1851,11 +1851,11 @@ private fun SleepClockCard(
 
                 // Center text
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "12AM", color = TextTertiary, fontSize = 10.sp)
+                    Text(text = "12AM", color = MaterialTheme.colorScheme.outline, fontSize = 10.sp)
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(text = "🌙", fontSize = 24.sp)
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text(text = "12PM", color = TextTertiary, fontSize = 10.sp)
+                    Text(text = "12PM", color = MaterialTheme.colorScheme.outline, fontSize = 10.sp)
                 }
             }
 
@@ -1867,19 +1867,19 @@ private fun SleepClockCard(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Fell asleep", color = TextTertiary, fontSize = 12.sp)
+                    Text(text = "Fell asleep", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     Text(
                         text = startTimeStr,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Woke up", color = TextTertiary, fontSize = 12.sp)
+                    Text(text = "Woke up", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     Text(
                         text = endTimeStr,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -1903,13 +1903,13 @@ private fun StepRingsCalendar(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
                 style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -1920,7 +1920,7 @@ private fun StepRingsCalendar(
                     Text(
                         text = day,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextTertiary,
+                        color = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )

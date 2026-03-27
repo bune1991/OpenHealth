@@ -80,7 +80,7 @@ fun CustomCalendarDialog(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
                             contentDescription = "Previous Month",
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     Text(
@@ -88,7 +88,7 @@ fun CustomCalendarDialog(
                             DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
                         ),
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(
@@ -115,7 +115,7 @@ fun CustomCalendarDialog(
                         Text(
                             text = day,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextTertiary,
+                            color = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.weight(1f),
                             textAlign = TextAlign.Center
                         )

@@ -98,7 +98,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
-// Fitbit Premium Colors
+// Fitbit Premium Colors (dark defaults, overridden in composable)
 private val PureBlack = Color(0xFF000000)
 private val CardBackground = Color(0xFF1A1A1A)
 private val StepsCyan = Color(0xFF00BCD4)
@@ -190,13 +190,13 @@ fun DashboardScreen(
                         Text(
                             text = "OpenHealth",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = dateText,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -205,7 +205,7 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
                             contentDescription = "Previous Day",
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
@@ -240,19 +240,19 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.Default.Assessment,
                             contentDescription = "Reports",
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings",
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PureBlack
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -269,14 +269,14 @@ fun DashboardScreen(
                 )
             }
         },
-        containerColor = PureBlack
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = isLoading,
             onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
-                .background(PureBlack)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
             LazyColumn(
@@ -300,7 +300,7 @@ fun DashboardScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = CardBackground)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Row(
@@ -309,7 +309,7 @@ fun DashboardScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(text = "${String.format("%.0f", weatherData.temperature)}°", color = TextPrimary, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                                        Text(text = "${String.format("%.0f", weatherData.temperature)}°", color = MaterialTheme.colorScheme.onBackground, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Column {
                                             Text(text = "UV ${String.format("%.0f", weatherData.uvIndex)} (${weatherData.uvLabel})", color = when(weatherData.uvLabel) { "Low" -> Color(0xFF4CD964); "Moderate" -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }, fontSize = 13.sp)
@@ -891,7 +891,7 @@ private fun MetricCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardBackground
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Box(
@@ -928,7 +928,7 @@ private fun MetricCard(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 14.sp
                         )
                     }
@@ -939,7 +939,7 @@ private fun MetricCard(
                         Text(
                             text = value,
                             style = MaterialTheme.typography.headlineLarge,
-                            color = TextPrimary,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold,
                             fontSize = 48.sp
                         )
@@ -948,7 +948,7 @@ private fun MetricCard(
                             Text(
                                 text = unit,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(bottom = 6.dp)
                             )
@@ -959,7 +959,7 @@ private fun MetricCard(
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
                         )
                     }
@@ -983,7 +983,7 @@ private fun SectionHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleSmall,
-        color = TextSecondary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         fontWeight = FontWeight.Bold,
         modifier = Modifier
             .fillMaxWidth()
@@ -1007,7 +1007,7 @@ private fun DetailCard(
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardBackground
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -1022,7 +1022,7 @@ private fun DetailCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.SemiBold
                     )
                     if (statusColor != null) {
@@ -1038,7 +1038,7 @@ private fun DetailCard(
                 Text(
                     text = value,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.SemiBold
                 )
                 if (progress != null) {
@@ -1050,7 +1050,7 @@ private fun DetailCard(
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp)),
                         color = StepsCyan,
-                        trackColor = Color(0xFF2A2A2A)
+                        trackColor = MaterialTheme.colorScheme.outlineVariant
                     )
                 }
             }
@@ -1085,7 +1085,7 @@ private fun DetailCard(
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = "View details",
-                    tint = TextTertiary,
+                    tint = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -1109,12 +1109,12 @@ private fun MetricRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -1127,13 +1127,13 @@ private fun MetricRow(
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp)),
                 color = StepsCyan,
-                trackColor = Color(0xFF2A2A2A)
+                trackColor = MaterialTheme.colorScheme.outlineVariant
             )
         }
         if (showDivider) {
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(
-                color = Color(0xFF2A2A2A),
+                color = MaterialTheme.colorScheme.outlineVariant,
                 thickness = 1.dp
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -1156,19 +1156,19 @@ private fun MetricRowWithDivider(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.SemiBold
             )
         }
         if (showDivider) {
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(
-                color = Color(0xFF2A2A2A),
+                color = MaterialTheme.colorScheme.outlineVariant,
                 thickness = 1.dp
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -1290,7 +1290,7 @@ private fun ThreeRingGauge(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -1317,10 +1317,10 @@ private fun RingGaugeItem(percent: Float, label: String, color: Color) {
                 drawArc(color = color.copy(alpha = 0.15f), startAngle = -90f, sweepAngle = 360f, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
                 drawArc(color = color, startAngle = -90f, sweepAngle = 360f * percent, useCenter = false, style = Stroke(width = strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
             }
-            Text(text = "${(percent * 100).roundToInt()}%", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = "${(percent * 100).roundToInt()}%", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
         Spacer(modifier = Modifier.height(6.dp))
-        Text(text = label, color = TextSecondary, fontSize = 12.sp)
+        Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
     }
 }
 
@@ -1329,14 +1329,14 @@ private fun StressEnergyCard(stressLevel: Int, stressLabel: String, stressColor:
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Stress & Energy", style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+            Text(text = "Stress & Energy", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column {
-                    Text(text = "Stress", color = TextSecondary, fontSize = 13.sp)
+                    Text(text = "Stress", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(text = "$stressLevel", color = stressColor, fontWeight = FontWeight.Bold, fontSize = 28.sp)
@@ -1349,11 +1349,11 @@ private fun StressEnergyCard(stressLevel: Int, stressLabel: String, stressColor:
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "⚡", fontSize = 16.sp)
                 Spacer(modifier = Modifier.width(8.dp))
-                Box(modifier = Modifier.weight(1f).height(8.dp).background(Color(0xFF2A2A2A), RoundedCornerShape(4.dp))) {
+                Box(modifier = Modifier.weight(1f).height(8.dp).background(MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))) {
                     Box(modifier = Modifier.fillMaxWidth(energyPercent / 100f).height(8.dp).background(Color(0xFF4CD964), RoundedCornerShape(4.dp)))
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "$energyPercent%", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(text = "$energyPercent%", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
     }
@@ -1378,7 +1378,7 @@ private fun BodyCompositionCard(
             .fillMaxWidth()
             .animateContentSize(animationSpec = tween(150)),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header — always visible
@@ -1392,13 +1392,13 @@ private fun BodyCompositionCard(
                 Text(
                     text = "Body Composition",
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.SemiBold
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = if (expanded) "Collapse" else "Expand",
-                    tint = TextTertiary
+                    tint = MaterialTheme.colorScheme.outline
                 )
             }
 
@@ -1411,20 +1411,20 @@ private fun BodyCompositionCard(
             ) {
                 if (hasWeight) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.weight.kilograms), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "kg", color = TextTertiary, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.weight.kilograms), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "kg", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     }
                 }
                 if (hasBodyFat) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.bodyFat.percentage), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "% fat", color = TextTertiary, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.bodyFat.percentage), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "% fat", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     }
                 }
                 if (hasLeanMass) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.leanBodyMass.kilograms), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "kg lean", color = TextTertiary, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.leanBodyMass.kilograms), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "kg lean", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     }
                 }
             }
@@ -1432,7 +1432,7 @@ private fun BodyCompositionCard(
             // Expanded details
             if (expanded) {
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = Color(0xFF2A2A2A))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (hasWeight) {
@@ -1480,11 +1480,11 @@ private fun BodyMetricRow(label: String, value: String, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = TextSecondary, style = MaterialTheme.typography.bodyLarge)
+        Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = value, color = TextPrimary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Text(text = value, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.width(4.dp))
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(18.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -1516,7 +1516,7 @@ private fun VitalsCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header
@@ -1531,7 +1531,7 @@ private fun VitalsCard(
                     Text(
                         text = "Vitals",
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -1546,7 +1546,7 @@ private fun VitalsCard(
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = TextTertiary
+                    tint = MaterialTheme.colorScheme.outline
                 )
             }
 
@@ -1560,22 +1560,22 @@ private fun VitalsCard(
                 if (hasHRV) {
                     val hrvDisplay = healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f", hrvDisplay), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "ms HRV", color = TextTertiary, fontSize = 12.sp)
+                        Text(text = String.format("%.0f", hrvDisplay), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "ms HRV", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     }
                 }
                 if (hasBloodOxygen) {
                     val spo2Display = healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f%%", spo2Display), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "SpO2", color = TextTertiary, fontSize = 12.sp)
+                        Text(text = String.format("%.0f%%", spo2Display), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "SpO2", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     }
                 }
                 if (hasRespiratoryRate) {
                     val rrDisplay = healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f", rrDisplay), color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "breaths", color = TextTertiary, fontSize = 12.sp)
+                        Text(text = String.format("%.0f", rrDisplay), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "breaths", color = MaterialTheme.colorScheme.outline, fontSize = 12.sp)
                     }
                 }
             }
@@ -1583,7 +1583,7 @@ private fun VitalsCard(
             // Expanded details
             if (expanded) {
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = Color(0xFF2A2A2A))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (hasHRV) {
@@ -1635,16 +1635,16 @@ private fun VitalMetricRow(label: String, value: String, statusDot: Color?, onCl
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = label, color = TextSecondary, style = MaterialTheme.typography.bodyLarge)
+            Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
             if (statusDot != null) {
                 Spacer(modifier = Modifier.width(6.dp))
                 Box(modifier = Modifier.size(8.dp).background(statusDot, RoundedCornerShape(4.dp)))
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = value, color = TextPrimary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Text(text = value, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.width(4.dp))
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextTertiary, modifier = Modifier.size(18.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
         }
     }
 }

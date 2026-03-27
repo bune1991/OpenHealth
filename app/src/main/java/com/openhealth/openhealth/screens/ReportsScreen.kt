@@ -70,7 +70,7 @@ fun ReportsScreen(
                 title = {
                     Text(
                         text = "Reports",
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -79,16 +79,16 @@ fun ReportsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundBlack
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
-        containerColor = BackgroundBlack
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         if (reportsData.isLoading) {
             Box(
@@ -159,19 +159,19 @@ private fun SummaryCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextTertiary
+                color = MaterialTheme.colorScheme.outline
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -183,7 +183,7 @@ private fun SummaryCard(
                 )
                 if (index < summaries.size - 1) {
                     HorizontalDivider(
-                        color = Color(0xFF2A2A2A),
+                        color = MaterialTheme.colorScheme.outlineVariant,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -209,7 +209,7 @@ private fun SummaryRow(
         Text(
             text = summary.label,
             style = MaterialTheme.typography.bodyLarge,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f)
         )
 
@@ -286,13 +286,13 @@ private fun WeeklyStepsChart(data: List<com.openhealth.openhealth.model.DailyDat
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Steps This Week",
                 style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(16.dp))
