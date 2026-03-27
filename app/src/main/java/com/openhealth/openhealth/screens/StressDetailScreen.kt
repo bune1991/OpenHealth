@@ -1,4 +1,5 @@
 package com.openhealth.openhealth.screens
+
 import com.openhealth.openhealth.ui.theme.*
 
 import androidx.compose.foundation.Canvas
@@ -15,15 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,22 +34,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.HealthData
-import kotlin.math.cos
 import kotlin.math.roundToInt
-import kotlin.math.sin
-
-private val StressLow = SuccessGreen
-private val StressMod = WarningOrange
-private val StressHigh = WarningOrange
-private val StressVeryHigh = ErrorRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,12 +63,6 @@ fun StressDetailScreen(
         stressLevel < 75 -> "High"
         else -> "Very High"
     }
-    val stressColor = when {
-        stressLevel < 25 -> StressLow
-        stressLevel < 50 -> StressMod
-        stressLevel < 75 -> StressHigh
-        else -> StressVeryHigh
-    }
 
     // Simulated stress breakdown based on level
     val highPct = (stressLevel * 0.7).roundToInt().coerceIn(0, 100)
@@ -90,11 +77,51 @@ fun StressDetailScreen(
         else -> "You're experiencing high stress. Consider practicing mindfulness or meditation to lower your stress. Avoid intense exercise until stress decreases."
     }
 
+    // Contributing factors analysis
+    val factors = mutableListOf<Triple<String, String, String>>() // icon, label, status
+    val sleepHours = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+    if (sleepHours >= 7) factors.add(Triple("sleep", "Sleep Quality", "Positive"))
+    else if (sleepHours >= 5) factors.add(Triple("sleep", "Sleep Quality", "Balanced"))
+    else if (sleepHours > 0) factors.add(Triple("sleep", "Sleep Quality", "High"))
+
+    if (hrv > 50) factors.add(Triple("hrv", "HRV Balance", "Positive"))
+    else if (hrv > 30) factors.add(Triple("hrv", "HRV Balance", "Balanced"))
+    else if (hrv > 0) factors.add(Triple("hrv", "HRV Balance", "High"))
+
+    if (rhr in 50..65) factors.add(Triple("heart", "Resting Heart Rate", "Positive"))
+    else if (rhr in 66..75) factors.add(Triple("heart", "Resting Heart Rate", "Balanced"))
+    else if (rhr > 75) factors.add(Triple("heart", "Resting Heart Rate", "High"))
+
+    val steps = healthData.steps.count
+    if (steps > 5000) factors.add(Triple("activity", "Physical Activity", "Positive"))
+    else if (steps > 2000) factors.add(Triple("activity", "Physical Activity", "Balanced"))
+    else if (steps > 0) factors.add(Triple("activity", "Physical Activity", "High"))
+
+    if (factors.isEmpty()) {
+        factors.add(Triple("info", "Data Collection", "Balanced"))
+    }
+
+    // Simulated hourly stress bars for the last 6 hours
+    val stressBars = listOf(
+        (stressLevel * 0.6f).coerceIn(5f, 95f),
+        (stressLevel * 0.8f).coerceIn(5f, 95f),
+        (stressLevel * 1.0f).coerceIn(5f, 95f),
+        (stressLevel * 0.7f).coerceIn(5f, 95f),
+        (stressLevel * 0.9f).coerceIn(5f, 95f),
+        (stressLevel * 0.5f).coerceIn(5f, 95f)
+    )
+    val maxBar = stressBars.max()
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Stress & Energy", color = ElectricIndigo, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Stress Analysis",
+                        color = ElectricIndigo,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -110,235 +137,349 @@ fun StressDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Stress Gauge
+            // ── Arc Gauge Hero ──
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(220.dp)
                     ) {
-                        // Gauge
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.size(180.dp)
-                        ) {
-                            val arcBgColor = SurfaceHighest
-                            Canvas(modifier = Modifier.size(180.dp)) {
-                                val strokeW = 14.dp.toPx()
-                                val arcSize = Size(size.width - strokeW, size.height - strokeW)
-                                val topLeft = Offset(strokeW / 2, strokeW / 2)
+                        val gradientColors = listOf(VibrantMagenta, ElectricIndigo)
+                        val bgArcColor = SurfaceHighest
+                        Canvas(modifier = Modifier.size(220.dp)) {
+                            val strokeW = 16.dp.toPx()
+                            val arcSize = Size(size.width - strokeW, size.height - strokeW)
+                            val topLeft = Offset(strokeW / 2, strokeW / 2)
 
-                                // Background arc (180 degrees, bottom half open)
-                                drawArc(
-                                    color = arcBgColor,
-                                    startAngle = 135f,
-                                    sweepAngle = 270f,
-                                    useCenter = false,
-                                    style = Stroke(width = strokeW, cap = StrokeCap.Round),
-                                    topLeft = topLeft,
-                                    size = arcSize
-                                )
+                            // Background arc 270 degrees
+                            drawArc(
+                                color = bgArcColor,
+                                startAngle = 135f,
+                                sweepAngle = 270f,
+                                useCenter = false,
+                                style = Stroke(width = strokeW, cap = StrokeCap.Round),
+                                topLeft = topLeft,
+                                size = arcSize
+                            )
 
-                                // Stress arc
-                                val sweepAngle = 270f * (stressLevel / 100f)
-                                drawArc(
-                                    color = stressColor,
-                                    startAngle = 135f,
-                                    sweepAngle = sweepAngle,
-                                    useCenter = false,
-                                    style = Stroke(width = strokeW, cap = StrokeCap.Round),
-                                    topLeft = topLeft,
-                                    size = arcSize
-                                )
+                            // Gradient stress arc
+                            val sweepAngle = 270f * (stressLevel / 100f)
+                            drawArc(
+                                brush = Brush.sweepGradient(gradientColors),
+                                startAngle = 135f,
+                                sweepAngle = sweepAngle,
+                                useCenter = false,
+                                style = Stroke(width = strokeW, cap = StrokeCap.Round),
+                                topLeft = topLeft,
+                                size = arcSize
+                            )
+                        }
 
-                                // Scale markers
-                                val cx = size.width / 2
-                                val cy = size.height / 2
-                                val radius = (size.width - strokeW) / 2
-                                for (i in 0..10) {
-                                    val angle = Math.toRadians((135.0 + i * 27.0))
-                                    val innerR = radius - strokeW
-                                    val outerR = radius - strokeW - 6.dp.toPx()
-                                    drawLine(
-                                        color = Color(0xFF555555),
-                                        start = Offset(
-                                            cx + (innerR * cos(angle)).toFloat(),
-                                            cy + (innerR * sin(angle)).toFloat()
-                                        ),
-                                        end = Offset(
-                                            cx + (outerR * cos(angle)).toFloat(),
-                                            cy + (outerR * sin(angle)).toFloat()
-                                        ),
-                                        strokeWidth = 1.5f
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = stressLevel.toString(),
+                                color = TextOnSurface,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 56.sp
+                            )
+                            Text(
+                                text = stressLabel,
+                                color = TextOnSurfaceVariant,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // "Optimal Recovery Zone" pill
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        ElectricIndigo.copy(alpha = 0.15f),
+                                        VibrantMagenta.copy(alpha = 0.15f)
                                     )
-                                }
-                            }
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = stressLevel.toString(),
-                                    color = TextOnSurface,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 42.sp
                                 )
-                                Text(
-                                    text = stressLabel,
-                                    color = stressColor,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Scale labels
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("0", color = TextSubtle, fontSize = 12.sp)
-                            Text("100", color = TextSubtle, fontSize = 12.sp)
-                        }
+                            )
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "Optimal Recovery Zone",
+                            color = ElectricIndigo,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
 
-            // Average HRV + Average HR cards
+            // ── Stats Grid: HRV + Resting HR ──
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    MetricCard(
-                        title = "Average HRV",
-                        value = if (hrv > 0) String.format("%.0f", hrv) else "--",
-                        unit = "ms",
-                        color = ElectricIndigo,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MetricCard(
-                        title = "Resting HR",
-                        value = if (rhr > 0) rhr.toString() else "--",
-                        unit = "bpm",
-                        color = Color(0xFFFF6B6B),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
+                    // HRV Card
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(SurfaceLow)
+                            .padding(16.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "HRV",
+                                color = TextSubtle,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(
+                                    text = if (hrv > 0) String.format("%.0f", hrv) else "--",
+                                    color = ElectricIndigo,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 28.sp
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "ms",
+                                    color = TextSubtle,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (hrv > 50) "Trending up" else if (hrv > 30) "Stable" else "Trending down",
+                                color = if (hrv > 50) SuccessGreen else if (hrv > 30) TextOnSurfaceVariant else ErrorRed,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
 
-            // Coaching
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceMid)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Coaching",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextOnSurface,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = coaching,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextOnSurfaceVariant,
-                            lineHeight = 22.sp
-                        )
+                    // Resting HR Card
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(SurfaceLow)
+                            .padding(16.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Resting HR",
+                                color = TextSubtle,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(
+                                    text = if (rhr > 0) rhr.toString() else "--",
+                                    color = VibrantMagenta,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 28.sp
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "bpm",
+                                    color = TextSubtle,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (rhr in 50..65) "Trending down" else if (rhr in 66..75) "Stable" else "Trending up",
+                                color = if (rhr in 50..65) SuccessGreen else if (rhr in 66..75) TextOnSurfaceVariant else ErrorRed,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }
 
-            // Stress Breakdown
+            // ── Resilience Coaching Card ──
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(SurfaceHigh)
+                        .padding(20.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Stress Breakdown",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextOnSurface,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        BreakdownRow("High", highPct, StressHigh)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        BreakdownRow("Medium", medPct, StressMod)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        BreakdownRow("Low", lowPct, StressLow)
-                    }
-                }
-            }
-
-            // What affects stress
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceMid)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "What Affects Your Stress",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextOnSurface,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        val factors = mutableListOf<Pair<String, String>>()
-
-                        val sleepHours = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
-                        if (sleepHours < 6) factors.add("😴" to "Short sleep (${String.format("%.0f", sleepHours)}h) increases stress hormones")
-                        else if (sleepHours >= 7) factors.add("😴" to "Good sleep (${String.format("%.0f", sleepHours)}h) helps manage stress")
-
-                        if (rhr > 75) factors.add("❤️" to "Elevated resting HR ($rhr bpm) may indicate physical stress")
-                        else if (rhr in 50..65) factors.add("❤️" to "Healthy resting HR ($rhr bpm) supports stress recovery")
-
-                        if (hrv < 30) factors.add("📊" to "Low HRV (${String.format("%.0f", hrv)} ms) shows reduced stress resilience")
-                        else if (hrv > 50) factors.add("📊" to "Good HRV (${String.format("%.0f", hrv)} ms) indicates strong stress resilience")
-
-                        val steps = healthData.steps.count
-                        if (steps < 1000) factors.add("🚶" to "Low activity ($steps steps) — movement helps reduce stress")
-                        else if (steps > 5000) factors.add("🚶" to "Good activity ($steps steps) — exercise is a natural stress reliever")
-
-                        if (factors.isEmpty()) {
-                            factors.add("💡" to "Keep tracking to see what affects your stress levels")
+                    Row(
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        // Gradient icon circle
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(ElectricIndigo, VibrantMagenta)
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "\uD83E\uDDD8",
+                                fontSize = 20.sp
+                            )
                         }
 
-                        factors.forEach { (emoji, text) ->
-                            Row(
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Resilience Coaching",
+                                color = TextOnSurface,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = coaching,
+                                color = TextOnSurfaceVariant,
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp
+                            )
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // "Start Exercise" pill button
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
-                                verticalAlignment = Alignment.Top
+                                    .clip(RoundedCornerShape(50))
+                                    .background(ElectricIndigo)
+                                    .padding(horizontal = 20.dp, vertical = 8.dp)
                             ) {
-                                Text(text = emoji, fontSize = 18.sp)
-                                Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = text,
-                                    color = TextOnSurfaceVariant,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    lineHeight = 20.sp
+                                    text = "Start Exercise",
+                                    color = OnIndigo,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
+                    }
+                }
+            }
+
+            // ── Stress Intensity Chart ──
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(SurfaceLow)
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Stress Intensity",
+                                color = TextOnSurface,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "LAST 6 HOURS",
+                                color = TextSubtle,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // Bar chart
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            val hours = listOf("6h", "5h", "4h", "3h", "2h", "1h")
+                            stressBars.forEachIndexed { index, value ->
+                                val isMax = value == maxBar
+                                val barHeight = (value / 100f * 100).dp
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Bottom,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .width(28.dp)
+                                            .height(barHeight)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (isMax) Brush.verticalGradient(
+                                                    listOf(VibrantMagenta, ElectricIndigo)
+                                                )
+                                                else Brush.verticalGradient(
+                                                    listOf(
+                                                        ElectricIndigo.copy(alpha = 0.4f),
+                                                        VibrantMagenta.copy(alpha = 0.6f)
+                                                    )
+                                                )
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = hours[index],
+                                        color = TextSubtle,
+                                        fontSize = 11.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Contributing Factors ──
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Contributing Factors",
+                        color = TextOnSurface,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    factors.forEach { (iconType, label, status) ->
+                        StressFactorRow(
+                            iconType = iconType,
+                            label = label,
+                            status = status
+                        )
                     }
                 }
             }
@@ -349,72 +490,74 @@ fun StressDetailScreen(
 }
 
 @Composable
-private fun MetricCard(
-    title: String,
-    value: String,
-    unit: String,
-    color: Color,
-    modifier: Modifier = Modifier
+private fun StressFactorRow(
+    iconType: String,
+    label: String,
+    status: String
 ) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+    val iconEmoji = when (iconType) {
+        "sleep" -> "\uD83D\uDE34"
+        "hrv" -> "\uD83D\uDCC8"
+        "heart" -> "\u2764\uFE0F"
+        "activity" -> "\uD83C\uDFC3"
+        else -> "\uD83D\uDCA1"
+    }
+
+    val (badgeBg, badgeText) = when (status) {
+        "Positive" -> Pair(SuccessGreen.copy(alpha = 0.15f), SuccessGreen)
+        "High" -> Pair(VibrantMagenta.copy(alpha = 0.15f), VibrantMagenta)
+        else -> Pair(SurfaceHighest, TextOnSurfaceVariant)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(50))
+            .background(SurfaceLow)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, color = TextOnSurfaceVariant, fontSize = 13.sp)
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.Bottom) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Icon circle
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(SurfaceHighest),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = iconEmoji, fontSize = 16.sp)
+                }
+
                 Text(
-                    text = value,
-                    color = color,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = unit,
-                    color = TextSubtle,
+                    text = label,
+                    color = TextOnSurface,
                     fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 4.dp)
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // Status badge
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(badgeBg)
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = status,
+                    color = badgeText,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun BreakdownRow(label: String, percent: Int, color: Color) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            color = TextOnSurface,
-            fontSize = 14.sp,
-            modifier = Modifier.width(60.dp)
-        )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(8.dp)
-                .background(SurfaceHighest, RoundedCornerShape(4.dp))
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(percent / 100f)
-                    .height(8.dp)
-                    .background(color, RoundedCornerShape(4.dp))
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = "$percent%",
-            color = TextOnSurface,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            modifier = Modifier.width(40.dp)
-        )
     }
 }

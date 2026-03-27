@@ -5,11 +5,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,8 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.*
@@ -38,23 +46,17 @@ fun SettingsScreen(
                 title = {
                     Text(
                         text = "Settings",
-                        style = MaterialTheme.typography.headlineMedium,
                         color = TextOnSurface,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Medium
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = ElectricIndigo
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = ElectricIndigo)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceLowest
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceLowest)
             )
         },
         containerColor = SurfaceLowest
@@ -67,36 +69,262 @@ fun SettingsScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // ═══════════════════════════════════════════
+            // SYSTEM OPTIMIZATION — Feature toggles
+            // ═══════════════════════════════════════════
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = SurfaceMid
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+                SectionHeader("System Optimization")
+            }
+
+            // AI Insights toggle
+            item {
+                FeatureTogglePill(
+                    icon = Icons.Default.AutoAwesome,
+                    iconColor = ElectricIndigo,
+                    title = "AI Insights",
+                    subtitle = "Predictive health analysis",
+                    isEnabled = settings.aiProvider != com.openhealth.openhealth.model.AiProvider.NONE,
+                    onToggle = {
+                        if (it) onSettingsChanged(settings.copy(aiProvider = com.openhealth.openhealth.model.AiProvider.CLAUDE))
+                        else onSettingsChanged(settings.copy(aiProvider = com.openhealth.openhealth.model.AiProvider.NONE))
+                    }
+                )
+            }
+
+            // Weather toggle
+            item {
+                FeatureTogglePill(
+                    icon = Icons.Default.Cloud,
+                    iconColor = VibrantMagenta,
+                    title = "Weather",
+                    subtitle = "Sync environmental data",
+                    isEnabled = settings.weatherEnabled,
+                    onToggle = { onSettingsChanged(settings.copy(weatherEnabled = it)) }
+                )
+            }
+
+            // Steps Streak toggle
+            item {
+                FeatureTogglePill(
+                    icon = Icons.Default.Bolt,
+                    iconColor = SoftLavender,
+                    title = "Steps Streak",
+                    subtitle = "Gamified movement tracking",
+                    isEnabled = settings.showStepsStreak,
+                    onToggle = { onSettingsChanged(settings.copy(showStepsStreak = it)) }
+                )
+            }
+
+            // Daily Summary Notification
+            item {
+                FeatureTogglePill(
+                    icon = Icons.Default.Notifications,
+                    iconColor = ElectricIndigo,
+                    title = "Daily Summary",
+                    subtitle = "Evening notification",
+                    isEnabled = settings.dailySummaryNotification,
+                    onToggle = { onSettingsChanged(settings.copy(dailySummaryNotification = it)) }
+                )
+            }
+
+            // ═══════════════════════════════════════════
+            // DEVELOPER NODE — API Configuration
+            // ═══════════════════════════════════════════
+            if (settings.aiProvider != com.openhealth.openhealth.model.AiProvider.NONE) {
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SectionHeader("Developer Node")
+                }
+
+                // AI Provider selector
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Dashboard Metrics",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
+                        listOf(
+                            com.openhealth.openhealth.model.AiProvider.CLAUDE to "Claude",
+                            com.openhealth.openhealth.model.AiProvider.GEMINI to "Gemini",
+                            com.openhealth.openhealth.model.AiProvider.CHATGPT to "ChatGPT",
+                            com.openhealth.openhealth.model.AiProvider.CUSTOM to "Custom"
+                        ).forEach { (provider, label) ->
+                            val isSelected = settings.aiProvider == provider
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(
+                                        if (isSelected) ElectricIndigo.copy(alpha = 0.2f) else SurfaceHighest
+                                    )
+                                    .clickable { onSettingsChanged(settings.copy(aiProvider = provider)) }
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) ElectricIndigo else TextOnSurfaceVariant,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // API Key input
+                item {
+                    val currentKey = when (settings.aiProvider) {
+                        com.openhealth.openhealth.model.AiProvider.CLAUDE -> settings.aiClaudeKey
+                        com.openhealth.openhealth.model.AiProvider.GEMINI -> settings.aiGeminiKey
+                        com.openhealth.openhealth.model.AiProvider.CHATGPT -> settings.aiChatgptKey
+                        com.openhealth.openhealth.model.AiProvider.CUSTOM -> settings.aiCustomKey
+                        else -> ""
+                    }
+                    val onKeyChange: (String) -> Unit = { newKey ->
+                        when (settings.aiProvider) {
+                            com.openhealth.openhealth.model.AiProvider.CLAUDE -> onSettingsChanged(settings.copy(aiClaudeKey = newKey))
+                            com.openhealth.openhealth.model.AiProvider.GEMINI -> onSettingsChanged(settings.copy(aiGeminiKey = newKey))
+                            com.openhealth.openhealth.model.AiProvider.CHATGPT -> onSettingsChanged(settings.copy(aiChatgptKey = newKey))
+                            com.openhealth.openhealth.model.AiProvider.CUSTOM -> onSettingsChanged(settings.copy(aiCustomKey = newKey))
+                            else -> {}
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    NocturneTextField(
+                        label = "API Key",
+                        value = currentKey,
+                        onValueChange = onKeyChange,
+                        placeholder = "Paste your API key here",
+                        isPassword = true
+                    )
+
+                    // Custom provider: URL + Model
+                    if (settings.aiProvider == com.openhealth.openhealth.model.AiProvider.CUSTOM) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        NocturneTextField(
+                            label = "Base URL",
+                            value = settings.aiCustomUrl,
+                            onValueChange = { onSettingsChanged(settings.copy(aiCustomUrl = it)) },
+                            placeholder = "e.g. http://192.168.1.100:11434/v1"
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Toggle which metrics to show on your dashboard. Metrics with no data will be hidden automatically.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Spacer(modifier = Modifier.height(12.dp))
+                        NocturneTextField(
+                            label = "Model Name",
+                            value = settings.aiCustomModel,
+                            onValueChange = { onSettingsChanged(settings.copy(aiCustomModel = it)) },
+                            placeholder = "e.g. llama3, mistral, gemma2"
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Group metrics by category (exclude metrics with no Health Connect data source)
+            // Weather coordinates
+            if (settings.weatherEnabled) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Coordinates (Google Maps → long press → copy)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSubtle,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        NocturneTextField(
+                            label = "",
+                            value = if (settings.weatherLat != 0.0) settings.weatherLat.toString() else "",
+                            onValueChange = { onSettingsChanged(settings.copy(weatherLat = it.toDoubleOrNull() ?: 0.0)) },
+                            placeholder = "Latitude",
+                            modifier = Modifier.weight(1f),
+                            keyboardType = KeyboardType.Decimal
+                        )
+                        NocturneTextField(
+                            label = "",
+                            value = if (settings.weatherLon != 0.0) settings.weatherLon.toString() else "",
+                            onValueChange = { onSettingsChanged(settings.copy(weatherLon = it.toDoubleOrNull() ?: 0.0)) },
+                            placeholder = "Longitude",
+                            modifier = Modifier.weight(1f),
+                            keyboardType = KeyboardType.Decimal
+                        )
+                    }
+                }
+            }
+
+            // ═══════════════════════════════════════════
+            // VISUAL FREQUENCY — Theme picker
+            // ═══════════════════════════════════════════
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionHeader("Visual Frequency")
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    ThemeCircle(
+                        label = "Nocturne",
+                        colors = listOf(Color(0xFF1A0033), Color(0xFF000000), Color(0xFF1A0040)),
+                        isSelected = !settings.useLightTheme,
+                        onClick = { onSettingsChanged(settings.copy(useLightTheme = false)) }
+                    )
+                    ThemeCircle(
+                        label = "Solar",
+                        colors = listOf(Color(0xFFFF8C00), Color(0xFFFFD700)),
+                        isSelected = false,
+                        onClick = { }
+                    )
+                    ThemeCircle(
+                        label = "Ocean",
+                        colors = listOf(Color(0xFF0077B6), Color(0xFF023E8A)),
+                        isSelected = false,
+                        onClick = { }
+                    )
+                    ThemeCircle(
+                        label = "Forest",
+                        colors = listOf(Color(0xFF10B981), Color(0xFF065F46)),
+                        isSelected = false,
+                        onClick = { }
+                    )
+                }
+            }
+
+            // ═══════════════════════════════════════════
+            // DAILY GOALS
+            // ═══════════════════════════════════════════
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionHeader("Daily Goals")
+            }
+
+            item {
+                GoalInputPill("Steps Goal", settings.stepsGoal.toString(), "steps", ElectricIndigo) { onSettingsChanged(settings.copy(stepsGoal = it.toIntOrNull() ?: 10000)) }
+            }
+            item {
+                GoalInputPill("Floors Goal", settings.floorsGoal.toString(), "floors", SuccessGreen) { onSettingsChanged(settings.copy(floorsGoal = it.toIntOrNull() ?: 10)) }
+            }
+            item {
+                GoalInputPill("Calories Goal", settings.caloriesGoal.toString(), "kcal", CardCalories) { onSettingsChanged(settings.copy(caloriesGoal = it.toIntOrNull() ?: 500)) }
+            }
+            item {
+                GoalInputPill("Distance Goal", settings.distanceGoalKm.toString(), "km", CardDistance) { onSettingsChanged(settings.copy(distanceGoalKm = it.toFloatOrNull() ?: 5.0f)) }
+            }
+
+            // ═══════════════════════════════════════════
+            // DASHBOARD METRICS
+            // ═══════════════════════════════════════════
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                SectionHeader("Dashboard Metrics")
+            }
+
+            // Metric toggles — simplified pill style
             val unsupportedMetrics = setOf(MetricType.SPEED, MetricType.POWER, MetricType.HYDRATION, MetricType.MINDFULNESS)
             val groupedMetrics = MetricType.values()
                 .filter { it !in unsupportedMetrics }
@@ -104,500 +332,154 @@ fun SettingsScreen(
 
             groupedMetrics.forEach { (category, metrics) ->
                 item {
-                    CategoryHeader(category)
+                    Text(
+                        text = category,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSubtle,
+                        modifier = Modifier.padding(top = 8.dp, start = 4.dp)
+                    )
                 }
 
                 items(metrics) { metric ->
-                    MetricToggleItem(
-                        metric = metric,
-                        isEnabled = when (metric) {
-                            MetricType.STEPS -> settings.showSteps
-                            MetricType.DISTANCE -> settings.showDistance
-                            MetricType.FLOORS -> settings.showFloors
-                            MetricType.CALORIES -> settings.showCalories
-                            MetricType.ACTIVE_CALORIES -> settings.showActiveCalories
-                            MetricType.HEART_RATE -> settings.showHeartRate
-                            MetricType.RESTING_HEART_RATE -> settings.showRestingHeartRate
-                            MetricType.WEIGHT -> settings.showWeight
-                            MetricType.BODY_FAT -> settings.showBodyFat
-                            MetricType.BASAL_METABOLIC_RATE -> settings.showBMR
-                            MetricType.BODY_WATER_MASS -> settings.showBodyWater
-                            MetricType.BONE_MASS -> settings.showBoneMass
-                            MetricType.LEAN_BODY_MASS -> settings.showLeanBodyMass
-                            MetricType.SLEEP -> settings.showSleep
-                            MetricType.VO2_MAX -> settings.showVO2Max
-                            MetricType.BLOOD_GLUCOSE -> settings.showBloodGlucose
-                            MetricType.BLOOD_PRESSURE -> settings.showBloodPressure
-                            MetricType.BODY_TEMPERATURE -> settings.showBodyTemperature
-                            MetricType.HEART_RATE_VARIABILITY -> settings.showHRV
-                            MetricType.OXYGEN_SATURATION -> settings.showOxygenSaturation
-                            MetricType.RESPIRATORY_RATE -> settings.showRespiratoryRate
-                            MetricType.SKIN_TEMPERATURE -> settings.showSkinTemperature
-                            MetricType.SPEED -> settings.showSpeed
-                            MetricType.POWER -> settings.showPower
-                            MetricType.NUTRITION -> settings.showNutrition
-                            MetricType.HYDRATION -> settings.showHydration
-                            MetricType.MINDFULNESS -> settings.showMindfulness
-                        },
-                        onToggle = { enabled ->
-                            val newSettings = when (metric) {
-                                MetricType.STEPS -> settings.copy(showSteps = enabled)
-                                MetricType.DISTANCE -> settings.copy(showDistance = enabled)
-                                MetricType.FLOORS -> settings.copy(showFloors = enabled)
-                                MetricType.CALORIES -> settings.copy(showCalories = enabled)
-                                MetricType.ACTIVE_CALORIES -> settings.copy(showActiveCalories = enabled)
-                                MetricType.HEART_RATE -> settings.copy(showHeartRate = enabled)
-                                MetricType.RESTING_HEART_RATE -> settings.copy(showRestingHeartRate = enabled)
-                                MetricType.WEIGHT -> settings.copy(showWeight = enabled)
-                                MetricType.BODY_FAT -> settings.copy(showBodyFat = enabled)
-                                MetricType.BASAL_METABOLIC_RATE -> settings.copy(showBMR = enabled)
-                                MetricType.BODY_WATER_MASS -> settings.copy(showBodyWater = enabled)
-                                MetricType.BONE_MASS -> settings.copy(showBoneMass = enabled)
-                                MetricType.LEAN_BODY_MASS -> settings.copy(showLeanBodyMass = enabled)
-                                MetricType.SLEEP -> settings.copy(showSleep = enabled)
-                                MetricType.VO2_MAX -> settings.copy(showVO2Max = enabled)
-                                MetricType.BLOOD_GLUCOSE -> settings.copy(showBloodGlucose = enabled)
-                                MetricType.BLOOD_PRESSURE -> settings.copy(showBloodPressure = enabled)
-                                MetricType.BODY_TEMPERATURE -> settings.copy(showBodyTemperature = enabled)
-                                MetricType.HEART_RATE_VARIABILITY -> settings.copy(showHRV = enabled)
-                                MetricType.OXYGEN_SATURATION -> settings.copy(showOxygenSaturation = enabled)
-                                MetricType.RESPIRATORY_RATE -> settings.copy(showRespiratoryRate = enabled)
-                                MetricType.SKIN_TEMPERATURE -> settings.copy(showSkinTemperature = enabled)
-                                MetricType.SPEED -> settings.copy(showSpeed = enabled)
-                                MetricType.POWER -> settings.copy(showPower = enabled)
-                                MetricType.NUTRITION -> settings.copy(showNutrition = enabled)
-                                MetricType.HYDRATION -> settings.copy(showHydration = enabled)
-                                MetricType.MINDFULNESS -> settings.copy(showMindfulness = enabled)
-                            }
-                            onSettingsChanged(newSettings)
-                        }
+                    MetricTogglePill(
+                        label = metric.displayName(),
+                        isEnabled = getMetricEnabled(settings, metric),
+                        onToggle = { onSettingsChanged(setMetricEnabled(settings, metric, it)) }
                     )
                 }
-
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
             }
 
-            // Theme Section
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                CategoryHeader("Appearance")
-            }
-            item {
-                MetricToggleItem(
-                    metric = null,
-                    label = "Light Theme",
-                    isEnabled = settings.useLightTheme,
-                    onToggle = { onSettingsChanged(settings.copy(useLightTheme = it)) }
-                )
-            }
-
-            // Features Section
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                CategoryHeader("Features")
-            }
-            item {
-                MetricToggleItem(
-                    metric = null,
-                    label = "Steps Streak",
-                    isEnabled = settings.showStepsStreak,
-                    onToggle = { onSettingsChanged(settings.copy(showStepsStreak = it)) }
-                )
-            }
-            item {
-                MetricToggleItem(
-                    metric = null,
-                    label = "Daily Summary Notification",
-                    isEnabled = settings.dailySummaryNotification,
-                    onToggle = { onSettingsChanged(settings.copy(dailySummaryNotification = it)) }
-                )
-            }
-
-            // AI Health Insights Section
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                CategoryHeader("AI Health Insights")
-            }
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Bring Your Own Key",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Add your API key to get AI-powered health analysis. Your data goes directly to your own account — we never see it.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Provider selector
-                        Text(text = "AI Provider", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            listOf(
-                                com.openhealth.openhealth.model.AiProvider.NONE to "None",
-                                com.openhealth.openhealth.model.AiProvider.CLAUDE to "Claude",
-                                com.openhealth.openhealth.model.AiProvider.GEMINI to "Gemini",
-                                com.openhealth.openhealth.model.AiProvider.CHATGPT to "ChatGPT",
-                                com.openhealth.openhealth.model.AiProvider.CUSTOM to "Custom"
-                            ).forEach { (provider, label) ->
-                                val isSelected = settings.aiProvider == provider
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .background(
-                                            if (isSelected) ElectricIndigo.copy(alpha = 0.2f) else SurfaceHigh,
-                                            RoundedCornerShape(8.dp)
-                                        )
-                                        .clickable { onSettingsChanged(settings.copy(aiProvider = provider)) }
-                                        .padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = label,
-                                        color = if (isSelected) ElectricIndigo else TextOnSurfaceVariant,
-                                        fontSize = 13.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            }
-                        }
-
-                        // API Key input (per-provider keys)
-                        if (settings.aiProvider != com.openhealth.openhealth.model.AiProvider.NONE) {
-                            val currentKey = when (settings.aiProvider) {
-                                com.openhealth.openhealth.model.AiProvider.CLAUDE -> settings.aiClaudeKey
-                                com.openhealth.openhealth.model.AiProvider.GEMINI -> settings.aiGeminiKey
-                                com.openhealth.openhealth.model.AiProvider.CHATGPT -> settings.aiChatgptKey
-                                com.openhealth.openhealth.model.AiProvider.CUSTOM -> settings.aiCustomKey
-                                else -> ""
-                            }
-                            val onKeyChange: (String) -> Unit = { newKey ->
-                                when (settings.aiProvider) {
-                                    com.openhealth.openhealth.model.AiProvider.CLAUDE -> onSettingsChanged(settings.copy(aiClaudeKey = newKey))
-                                    com.openhealth.openhealth.model.AiProvider.GEMINI -> onSettingsChanged(settings.copy(aiGeminiKey = newKey))
-                                    com.openhealth.openhealth.model.AiProvider.CHATGPT -> onSettingsChanged(settings.copy(aiChatgptKey = newKey))
-                                    com.openhealth.openhealth.model.AiProvider.CUSTOM -> onSettingsChanged(settings.copy(aiCustomKey = newKey))
-                                    else -> {}
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(text = "API Key", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            val fieldTextColor = if (MaterialTheme.colorScheme.background == LightBackground) Color.Black else Color.White
-                            androidx.compose.material3.OutlinedTextField(
-                                value = currentKey,
-                                onValueChange = onKeyChange,
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Paste your API key here", color = MaterialTheme.colorScheme.outline) },
-                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                                singleLine = true,
-                                textStyle = androidx.compose.ui.text.TextStyle(color = fieldTextColor)
-                            )
-
-                            // Custom provider: URL + Model fields
-                            if (settings.aiProvider == com.openhealth.openhealth.model.AiProvider.CUSTOM) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(text = "Base URL", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                androidx.compose.material3.OutlinedTextField(
-                                    value = settings.aiCustomUrl,
-                                    onValueChange = { onSettingsChanged(settings.copy(aiCustomUrl = it)) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("e.g. http://192.168.1.100:11434/v1", color = MaterialTheme.colorScheme.outline) },
-                                    singleLine = true,
-                                    textStyle = androidx.compose.ui.text.TextStyle(color = fieldTextColor)
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Text(text = "Model Name", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                androidx.compose.material3.OutlinedTextField(
-                                    value = settings.aiCustomModel,
-                                    onValueChange = { onSettingsChanged(settings.copy(aiCustomModel = it)) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("e.g. llama3, mistral, gemma2", color = MaterialTheme.colorScheme.outline) },
-                                    singleLine = true,
-                                    textStyle = androidx.compose.ui.text.TextStyle(color = fieldTextColor)
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Works with: Ollama, OpenRouter, Fireworks AI, Groq, LM Studio, or any OpenAI-compatible API",
-                                    color = MaterialTheme.colorScheme.outline,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Weather Section
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                CategoryHeader("Weather")
-            }
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "Weather Health Advisory", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium)
-                            Switch(
-                                checked = settings.weatherEnabled,
-                                onCheckedChange = { onSettingsChanged(settings.copy(weatherEnabled = it)) },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = ElectricIndigo,
-                                    checkedTrackColor = ElectricIndigo.copy(alpha = 0.4f)
-                                )
-                            )
-                        }
-                        if (settings.weatherEnabled) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "No GPS needed — enter your coordinates manually", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "How: Google Maps → search your city → long press → copy coordinates", color = MaterialTheme.colorScheme.outline, style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(text = "Coordinates", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            val coordTextColor = if (MaterialTheme.colorScheme.background == LightBackground) Color.Black else Color.White
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedTextField(
-                                    value = if (settings.weatherLat != 0.0) settings.weatherLat.toString() else "",
-                                    onValueChange = { onSettingsChanged(settings.copy(weatherLat = it.toDoubleOrNull() ?: 0.0)) },
-                                    modifier = Modifier.weight(1f),
-                                    placeholder = { Text("Lat", color = MaterialTheme.colorScheme.outline) },
-                                    singleLine = true,
-                                    textStyle = androidx.compose.ui.text.TextStyle(color = coordTextColor)
-                                )
-                                OutlinedTextField(
-                                    value = if (settings.weatherLon != 0.0) settings.weatherLon.toString() else "",
-                                    onValueChange = { onSettingsChanged(settings.copy(weatherLon = it.toDoubleOrNull() ?: 0.0)) },
-                                    modifier = Modifier.weight(1f),
-                                    placeholder = { Text("Lon", color = MaterialTheme.colorScheme.outline) },
-                                    singleLine = true,
-                                    textStyle = androidx.compose.ui.text.TextStyle(color = coordTextColor)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Daily Goals Section
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = SurfaceMid
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Daily Goals",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Set your daily targets for activity metrics. These are used to calculate progress bars on the dashboard.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Steps Goal
-            item {
-                GoalInputItem(
-                    title = "Steps Goal",
-                    value = settings.stepsGoal.toString(),
-                    unit = "steps",
-                    color = CardSteps,
-                    onValueChange = { newValue ->
-                        val goal = newValue.toIntOrNull() ?: 10000
-                        onSettingsChanged(settings.copy(stepsGoal = goal))
-                    }
-                )
-            }
-
-            // Floors Goal
-            item {
-                GoalInputItem(
-                    title = "Floors Goal",
-                    value = settings.floorsGoal.toString(),
-                    unit = "floors",
-                    color = CardFloors,
-                    onValueChange = { newValue ->
-                        val goal = newValue.toIntOrNull() ?: 10
-                        onSettingsChanged(settings.copy(floorsGoal = goal))
-                    }
-                )
-            }
-
-            // Calories Goal
-            item {
-                GoalInputItem(
-                    title = "Active Calories Goal",
-                    value = settings.caloriesGoal.toString(),
-                    unit = "kcal",
-                    color = CardCalories,
-                    onValueChange = { newValue ->
-                        val goal = newValue.toIntOrNull() ?: 500
-                        onSettingsChanged(settings.copy(caloriesGoal = goal))
-                    }
-                )
-            }
-
-            // Distance Goal
-            item {
-                GoalInputItem(
-                    title = "Distance Goal",
-                    value = settings.distanceGoalKm.toString(),
-                    unit = "km",
-                    color = CardDistance,
-                    onValueChange = { newValue ->
-                        val goal = newValue.toFloatOrNull() ?: 5.0f
-                        onSettingsChanged(settings.copy(distanceGoalKm = goal))
-                    }
-                )
-            }
-
+            // ═══════════════════════════════════════════
+            // EXPORT + RESET
+            // ═══════════════════════════════════════════
             item {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Button(
-                    onClick = { onSettingsChanged(SettingsData.DEFAULT) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SurfaceMid,
-                        contentColor = TextOnSurfaceVariant
-                    )
-                ) {
-                    Text(
-                        "Reset to Defaults",
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-
-                // Export Data
+                // Export button — gradient pill
                 if (onExportClick != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = onExportClick,
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
-                        )
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(28.dp))
+                            .background(
+                                Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta))
+                            )
+                            .clickable { onExportClick() },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(ElectricIndigo, VibrantMagenta)
-                                    ),
-                                    RoundedCornerShape(28.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.FileUpload,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "Export Data Cluster",
+                                text = "Export Data Cluster",
                                 color = Color.White,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Encrypted data will be synthesized and delivered to your primary node.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSubtle,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Reset
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(SurfaceMid)
+                        .clickable { onSettingsChanged(SettingsData.DEFAULT) }
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Reset to Defaults", color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium)
+                }
+
+                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// Components
+// ═══════════════════════════════════════════════════════════
+
 @Composable
-private fun CategoryHeader(category: String) {
+private fun SectionHeader(title: String) {
     Text(
-        text = category.uppercase(),
+        text = title.uppercase(),
         style = MaterialTheme.typography.labelMedium,
-        fontWeight = FontWeight.Bold,
-        color = ElectricIndigo,
+        color = SoftLavender,
         letterSpacing = 2.sp,
-        modifier = Modifier.padding(vertical = 8.dp)
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
     )
 }
 
 @Composable
-private fun MetricToggleItem(
-    metric: MetricType?,
-    label: String = metric?.displayName() ?: "",
+private fun FeatureTogglePill(
+    icon: ImageVector,
+    iconColor: Color,
+    title: String,
+    subtitle: String,
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(32.dp))
+            .background(SurfaceLow)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(SurfaceHighest, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(text = title, color = TextOnSurface, fontWeight = FontWeight.Medium, fontSize = 15.sp)
+                    Text(text = subtitle, color = TextOnSurfaceVariant, fontSize = 11.sp)
+                }
             }
-
             Switch(
                 checked = isEnabled,
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = ElectricIndigo,
-                    checkedTrackColor = ElectricIndigo.copy(alpha = 0.4f),
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = ElectricIndigo,
                     uncheckedThumbColor = TextSubtle,
-                    uncheckedTrackColor = SurfaceHigh
+                    uncheckedTrackColor = SurfaceHighest
                 )
             )
         }
@@ -605,7 +487,129 @@ private fun MetricToggleItem(
 }
 
 @Composable
-private fun GoalInputItem(
+private fun MetricTogglePill(
+    label: String,
+    isEnabled: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(SurfaceLow)
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = label, color = TextOnSurface, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+            Switch(
+                checked = isEnabled,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = ElectricIndigo,
+                    uncheckedThumbColor = TextSubtle,
+                    uncheckedTrackColor = SurfaceHighest
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun NocturneTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    isPassword: Boolean = false,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    Column(modifier = modifier) {
+        if (label.isNotEmpty()) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = TextOnSurfaceVariant,
+                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+            )
+        }
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(placeholder, color = TextSubtle) },
+            visualTransformation = if (isPassword) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+            singleLine = true,
+            shape = RoundedCornerShape(28.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = SurfaceHighest,
+                unfocusedContainerColor = SurfaceHighest,
+                focusedBorderColor = ElectricIndigo.copy(alpha = 0.5f),
+                unfocusedBorderColor = Color.Transparent,
+                focusedTextColor = TextOnSurface,
+                unfocusedTextColor = TextOnSurface,
+                cursorColor = ElectricIndigo
+            ),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextOnSurface)
+        )
+    }
+}
+
+@Composable
+private fun ThemeCircle(
+    label: String,
+    colors: List<Color>,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .then(
+                    if (isSelected) Modifier
+                        .clip(CircleShape)
+                        .background(ElectricIndigo.copy(alpha = 0.1f))
+                        .padding(3.dp)
+                    else Modifier
+                )
+                .clip(CircleShape)
+                .background(Brush.linearGradient(colors))
+        ) {
+            if (isSelected) {
+                // Ring border
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .background(Color.Transparent)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = label.uppercase(),
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+            color = if (isSelected) ElectricIndigo else TextSubtle
+        )
+    }
+}
+
+@Composable
+private fun GoalInputPill(
     title: String,
     value: String,
     unit: String,
@@ -614,67 +618,111 @@ private fun GoalInputItem(
 ) {
     var textValue by remember(value) { mutableStateOf(value) }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(SurfaceLow)
+            .padding(horizontal = 20.dp, vertical = 10.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(color)
+                        .background(color, CircleShape)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Text(text = title, color = TextOnSurface, fontWeight = FontWeight.Medium, fontSize = 14.sp)
             }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = textValue,
-                    onValueChange = { newValue ->
-                        textValue = newValue
-                        onValueChange(newValue)
-                    },
-                    modifier = Modifier.width(100.dp),
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = if (MaterialTheme.colorScheme.background == LightBackground) Color.Black else Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = if (unit == "km") KeyboardType.Decimal else KeyboardType.Number
-                    ),
+                    onValueChange = { textValue = it; onValueChange(it) },
+                    modifier = Modifier.width(80.dp),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextOnSurface, fontWeight = FontWeight.Bold),
+                    keyboardOptions = KeyboardOptions(keyboardType = if (unit == "km") KeyboardType.Decimal else KeyboardType.Number),
                     singleLine = true,
-                    // Default Material3 colors for theme support
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = SurfaceHighest,
+                        unfocusedContainerColor = SurfaceHighest,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedTextColor = TextOnSurface,
+                        unfocusedTextColor = TextOnSurface,
+                        cursorColor = ElectricIndigo
+                    )
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = unit,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = unit, color = TextSubtle, fontSize = 12.sp)
             }
         }
     }
+}
+
+// Helper to get metric enabled state
+private fun getMetricEnabled(settings: SettingsData, metric: MetricType): Boolean = when (metric) {
+    MetricType.STEPS -> settings.showSteps
+    MetricType.DISTANCE -> settings.showDistance
+    MetricType.FLOORS -> settings.showFloors
+    MetricType.CALORIES -> settings.showCalories
+    MetricType.ACTIVE_CALORIES -> settings.showActiveCalories
+    MetricType.HEART_RATE -> settings.showHeartRate
+    MetricType.RESTING_HEART_RATE -> settings.showRestingHeartRate
+    MetricType.WEIGHT -> settings.showWeight
+    MetricType.BODY_FAT -> settings.showBodyFat
+    MetricType.BASAL_METABOLIC_RATE -> settings.showBMR
+    MetricType.BODY_WATER_MASS -> settings.showBodyWater
+    MetricType.BONE_MASS -> settings.showBoneMass
+    MetricType.LEAN_BODY_MASS -> settings.showLeanBodyMass
+    MetricType.SLEEP -> settings.showSleep
+    MetricType.VO2_MAX -> settings.showVO2Max
+    MetricType.BLOOD_GLUCOSE -> settings.showBloodGlucose
+    MetricType.BLOOD_PRESSURE -> settings.showBloodPressure
+    MetricType.BODY_TEMPERATURE -> settings.showBodyTemperature
+    MetricType.HEART_RATE_VARIABILITY -> settings.showHRV
+    MetricType.OXYGEN_SATURATION -> settings.showOxygenSaturation
+    MetricType.RESPIRATORY_RATE -> settings.showRespiratoryRate
+    MetricType.SKIN_TEMPERATURE -> settings.showSkinTemperature
+    MetricType.NUTRITION -> settings.showNutrition
+    MetricType.SPEED -> settings.showSpeed
+    MetricType.POWER -> settings.showPower
+    MetricType.HYDRATION -> settings.showHydration
+    MetricType.MINDFULNESS -> settings.showMindfulness
+}
+
+// Helper to set metric enabled state
+private fun setMetricEnabled(settings: SettingsData, metric: MetricType, enabled: Boolean): SettingsData = when (metric) {
+    MetricType.STEPS -> settings.copy(showSteps = enabled)
+    MetricType.DISTANCE -> settings.copy(showDistance = enabled)
+    MetricType.FLOORS -> settings.copy(showFloors = enabled)
+    MetricType.CALORIES -> settings.copy(showCalories = enabled)
+    MetricType.ACTIVE_CALORIES -> settings.copy(showActiveCalories = enabled)
+    MetricType.HEART_RATE -> settings.copy(showHeartRate = enabled)
+    MetricType.RESTING_HEART_RATE -> settings.copy(showRestingHeartRate = enabled)
+    MetricType.WEIGHT -> settings.copy(showWeight = enabled)
+    MetricType.BODY_FAT -> settings.copy(showBodyFat = enabled)
+    MetricType.BASAL_METABOLIC_RATE -> settings.copy(showBMR = enabled)
+    MetricType.BODY_WATER_MASS -> settings.copy(showBodyWater = enabled)
+    MetricType.BONE_MASS -> settings.copy(showBoneMass = enabled)
+    MetricType.LEAN_BODY_MASS -> settings.copy(showLeanBodyMass = enabled)
+    MetricType.SLEEP -> settings.copy(showSleep = enabled)
+    MetricType.VO2_MAX -> settings.copy(showVO2Max = enabled)
+    MetricType.BLOOD_GLUCOSE -> settings.copy(showBloodGlucose = enabled)
+    MetricType.BLOOD_PRESSURE -> settings.copy(showBloodPressure = enabled)
+    MetricType.BODY_TEMPERATURE -> settings.copy(showBodyTemperature = enabled)
+    MetricType.HEART_RATE_VARIABILITY -> settings.copy(showHRV = enabled)
+    MetricType.OXYGEN_SATURATION -> settings.copy(showOxygenSaturation = enabled)
+    MetricType.RESPIRATORY_RATE -> settings.copy(showRespiratoryRate = enabled)
+    MetricType.SKIN_TEMPERATURE -> settings.copy(showSkinTemperature = enabled)
+    MetricType.NUTRITION -> settings.copy(showNutrition = enabled)
+    MetricType.SPEED -> settings.copy(showSpeed = enabled)
+    MetricType.POWER -> settings.copy(showPower = enabled)
+    MetricType.HYDRATION -> settings.copy(showHydration = enabled)
+    MetricType.MINDFULNESS -> settings.copy(showMindfulness = enabled)
 }
