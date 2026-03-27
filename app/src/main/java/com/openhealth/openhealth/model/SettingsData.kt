@@ -15,6 +15,9 @@ data class SettingsData(
     val aiCustomUrl: String = "",
     val aiCustomModel: String = "",
 
+    // App State
+    val onboardingCompleted: Boolean = false,
+
     // Theme
     val useLightTheme: Boolean = false,
 

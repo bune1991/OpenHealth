@@ -147,6 +147,10 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     val showStressDetail: StateFlow<Boolean> = _showStressDetail.asStateFlow()
 
     // Navigation state for reports screen
+    fun completeOnboarding() {
+        settingsManager.updateSettings(settingsManager.settings.value.copy(onboardingCompleted = true))
+    }
+
     private val _showReports = MutableStateFlow(false)
     val showReports: StateFlow<Boolean> = _showReports.asStateFlow()
 

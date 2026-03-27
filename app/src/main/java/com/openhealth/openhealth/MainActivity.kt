@@ -51,6 +51,7 @@ import com.openhealth.openhealth.screens.ReadinessDetailScreen
 import com.openhealth.openhealth.screens.ReportsScreen
 import com.openhealth.openhealth.screens.StressDetailScreen
 import com.openhealth.openhealth.screens.AiInsightsScreen
+import com.openhealth.openhealth.screens.OnboardingScreen
 import com.openhealth.openhealth.viewmodel.ReportsData
 import com.openhealth.openhealth.screens.SettingsScreen
 import com.openhealth.openhealth.ui.theme.BackgroundBlack
@@ -164,6 +165,11 @@ class MainActivity : ComponentActivity() {
                             }
                             is HealthViewModel.UiState.Ready -> {
                                 when {
+                                    !settings.onboardingCompleted -> {
+                                        OnboardingScreen(
+                                            onGetStarted = { viewModel.completeOnboarding() }
+                                        )
+                                    }
                                     showSettings -> {
                                         // Show settings screen
                                         SettingsScreen(
