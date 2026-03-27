@@ -72,6 +72,11 @@ class SettingsManager private constructor(context: Context) {
         private const val KEY_AI_CUSTOM_KEY = "ai_custom_key"
         private const val KEY_AI_CUSTOM_URL = "ai_custom_url"
         private const val KEY_AI_CUSTOM_MODEL = "ai_custom_model"
+        private const val KEY_USE_LIGHT_THEME = "use_light_theme"
+        private const val KEY_WEATHER_ENABLED = "weather_enabled"
+        private const val KEY_WEATHER_CITY = "weather_city"
+        private const val KEY_WEATHER_LAT = "weather_lat"
+        private const val KEY_WEATHER_LON = "weather_lon"
 
         // Features
         private const val KEY_SHOW_STEPS_STREAK = "show_steps_streak"
@@ -106,6 +111,13 @@ class SettingsManager private constructor(context: Context) {
             aiCustomKey = prefs.getString(KEY_AI_CUSTOM_KEY, "") ?: "",
             aiCustomUrl = prefs.getString(KEY_AI_CUSTOM_URL, "") ?: "",
             aiCustomModel = prefs.getString(KEY_AI_CUSTOM_MODEL, "") ?: "",
+            // Theme
+            useLightTheme = prefs.getBoolean(KEY_USE_LIGHT_THEME, false),
+            // Weather
+            weatherEnabled = prefs.getBoolean(KEY_WEATHER_ENABLED, false),
+            weatherCity = prefs.getString(KEY_WEATHER_CITY, "") ?: "",
+            weatherLat = prefs.getFloat(KEY_WEATHER_LAT, 0f).toDouble(),
+            weatherLon = prefs.getFloat(KEY_WEATHER_LON, 0f).toDouble(),
             // Activity metrics
             showSteps = prefs.getBoolean(KEY_SHOW_STEPS, true),
             showDistance = prefs.getBoolean(KEY_SHOW_DISTANCE, true),
@@ -170,6 +182,13 @@ class SettingsManager private constructor(context: Context) {
             putString(KEY_AI_CUSTOM_KEY, settings.aiCustomKey)
             putString(KEY_AI_CUSTOM_URL, settings.aiCustomUrl)
             putString(KEY_AI_CUSTOM_MODEL, settings.aiCustomModel)
+            // Theme
+            putBoolean(KEY_USE_LIGHT_THEME, settings.useLightTheme)
+            // Weather
+            putBoolean(KEY_WEATHER_ENABLED, settings.weatherEnabled)
+            putString(KEY_WEATHER_CITY, settings.weatherCity)
+            putFloat(KEY_WEATHER_LAT, settings.weatherLat.toFloat())
+            putFloat(KEY_WEATHER_LON, settings.weatherLon.toFloat())
             // Activity metrics
             putBoolean(KEY_SHOW_STEPS, settings.showSteps)
             putBoolean(KEY_SHOW_DISTANCE, settings.showDistance)

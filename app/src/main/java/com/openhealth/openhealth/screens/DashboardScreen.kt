@@ -46,6 +46,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -133,6 +134,7 @@ fun DashboardScreen(
     onReportsClick: () -> Unit = {},
     onStressClick: () -> Unit = {},
     onAiInsightsClick: () -> Unit = {},
+    weatherData: com.openhealth.openhealth.utils.WeatherData = com.openhealth.openhealth.utils.WeatherData(),
     stepsCalendarData: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
     stepsStreak: Int = 0,
     bodyExpanded: Boolean = false,
@@ -269,7 +271,9 @@ fun DashboardScreen(
         },
         containerColor = PureBlack
     ) { paddingValues ->
-        Box(
+        PullToRefreshBox(
+            isRefreshing = isLoading,
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .background(PureBlack)
@@ -288,6 +292,38 @@ fun DashboardScreen(
                         onClick = onReadinessClick,
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
+
+                // Weather Health Advisory
+                if (weatherData.isAvailable) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = CardBackground)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(text = "${String.format("%.0f", weatherData.temperature)}°", color = TextPrimary, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(text = "UV ${String.format("%.0f", weatherData.uvIndex)} (${weatherData.uvLabel})", color = when(weatherData.uvLabel) { "Low" -> Color(0xFF4CD964); "Moderate" -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }, fontSize = 13.sp)
+                                            Text(text = "Air: ${weatherData.aqiLabel}", color = when(weatherData.aqi) { 1 -> Color(0xFF4CD964); 2 -> Color(0xFF4CD964); 3 -> Color(0xFFFFCC00); else -> Color(0xFFFF3B30) }, fontSize = 13.sp)
+                                        }
+                                    }
+                                }
+                                if (weatherData.healthAdvisory != "Good conditions for outdoor activity") {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(text = weatherData.healthAdvisory, color = Color(0xFFFFCC00), fontSize = 12.sp, lineHeight = 16.sp)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Stress & Energy (estimated from HRV)
@@ -551,22 +587,6 @@ fun DashboardScreen(
                 }
             }
 
-            // Loading indicator
-            AnimatedVisibility(
-                visible = isLoading,
-                enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium)),
-                exit = fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMedium))
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = StepsCyan,
-                        strokeWidth = 3.dp
-                    )
-                }
-            }
         }
     }
 }

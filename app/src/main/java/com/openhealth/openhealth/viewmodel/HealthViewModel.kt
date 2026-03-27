@@ -121,6 +121,11 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     fun setBodyExpanded(expanded: Boolean) { _bodyExpanded.value = expanded }
     fun setVitalsExpanded(expanded: Boolean) { _vitalsExpanded.value = expanded }
 
+    // Weather
+    private val _weatherData = MutableStateFlow(com.openhealth.openhealth.utils.WeatherData())
+    val weatherData: StateFlow<com.openhealth.openhealth.utils.WeatherData> = _weatherData.asStateFlow()
+    private val weatherService = com.openhealth.openhealth.utils.WeatherService()
+
     // AI Insights
     private val _showAiInsights = MutableStateFlow(false)
     val showAiInsights: StateFlow<Boolean> = _showAiInsights.asStateFlow()
@@ -443,6 +448,18 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     Log.d("OpenHealth_Summary", "Steps streak: $streak days (goal: $goal)")
                 } catch (e: Exception) {
                     Log.e("HealthViewModel", "Error loading steps calendar data: ${e.message}")
+                }
+
+                // Fetch weather if enabled
+                try {
+                    val ws = currentSettings
+                    if (ws.weatherEnabled && ws.weatherLat != 0.0 && ws.weatherLon != 0.0) {
+                        val weather = weatherService.getWeather(ws.weatherLat, ws.weatherLon)
+                        _weatherData.value = weather
+                        Log.d("OpenHealth_Weather", "${ws.weatherCity}: ${weather.temperature}°C, UV: ${weather.uvIndex}, AQI: ${weather.aqi} (${weather.aqiLabel})")
+                    }
+                } catch (e: Exception) {
+                    Log.e("OpenHealth_Weather", "Error: ${e.message}")
                 }
             } catch (e: Exception) {
                 Log.e("HealthViewModel", "Error refreshing data: ${e.message}", e)

@@ -14,6 +14,15 @@ data class SettingsData(
     val aiCustomKey: String = "",
     val aiCustomUrl: String = "",
     val aiCustomModel: String = "",
+
+    // Theme
+    val useLightTheme: Boolean = false,
+
+    // Weather
+    val weatherEnabled: Boolean = false,
+    val weatherCity: String = "",
+    val weatherLat: Double = 0.0,
+    val weatherLon: Double = 0.0,
     // Activity metrics
     val showSteps: Boolean = true,
     val showDistance: Boolean = true,

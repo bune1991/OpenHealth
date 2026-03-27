@@ -122,8 +122,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            OpenHealthTheme {
-                viewModel = viewModel()
+            viewModel = viewModel()
+            val settings by viewModel.settings.collectAsState()
+
+            OpenHealthTheme(darkTheme = !settings.useLightTheme) {
 
                 val uiState by viewModel.uiState.collectAsState()
                 val healthData by viewModel.healthData.collectAsState()
@@ -140,7 +142,6 @@ class MainActivity : ComponentActivity() {
                 val aiInsightLoading by viewModel.aiInsightLoading.collectAsState()
                 val aiInsightError by viewModel.aiInsightError.collectAsState()
                 val reportsData by viewModel.reportsData.collectAsState()
-                val settings by viewModel.settings.collectAsState()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -170,7 +171,11 @@ class MainActivity : ComponentActivity() {
                                         SettingsScreen(
                                             settings = settings,
                                             onSettingsChanged = { viewModel.updateSettings(it) },
-                                            onBackClick = { viewModel.hideSettings() }
+                                            onBackClick = { viewModel.hideSettings() },
+                                            onExportClick = {
+                                                val file = com.openhealth.openhealth.utils.DataExporter.exportToCsv(this@MainActivity, healthData)
+                                                file?.let { com.openhealth.openhealth.utils.DataExporter.shareFile(this@MainActivity, it) }
+                                            }
                                         )
                                     }
                                     showAiInsights -> {
@@ -220,6 +225,7 @@ class MainActivity : ComponentActivity() {
                                         // Show dashboard with restored scroll position
                                         val (scrollIndex, scrollOffset) = viewModel.getScrollPosition()
                                         val selectedDate by viewModel.selectedDate.collectAsState()
+                                        val weatherData by viewModel.weatherData.collectAsState()
                                         val stepsCalendarData by viewModel.stepsCalendarData.collectAsState()
                                         val stepsStreak by viewModel.stepsStreak.collectAsState()
                                         val bodyExpanded by viewModel.bodyExpanded.collectAsState()
@@ -244,6 +250,7 @@ class MainActivity : ComponentActivity() {
                                             onReportsClick = { viewModel.showReports() },
                                             onStressClick = { viewModel.showStressDetail() },
                                             onAiInsightsClick = { viewModel.showAiInsights() },
+                                            weatherData = weatherData,
                                             stepsCalendarData = stepsCalendarData,
                                             stepsStreak = stepsStreak,
                                             bodyExpanded = bodyExpanded,

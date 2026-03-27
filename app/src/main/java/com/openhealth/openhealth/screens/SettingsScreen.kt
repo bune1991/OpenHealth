@@ -37,7 +37,8 @@ import com.openhealth.openhealth.ui.theme.TextTertiary
 fun SettingsScreen(
     settings: SettingsData,
     onSettingsChanged: (SettingsData) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onExportClick: (() -> Unit)? = null
 ) {
     Scaffold(
         topBar = {
@@ -186,6 +187,20 @@ fun SettingsScreen(
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                 }
+            }
+
+            // Theme Section
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                CategoryHeader("Appearance")
+            }
+            item {
+                MetricToggleItem(
+                    metric = null,
+                    label = "Light Theme",
+                    isEnabled = settings.useLightTheme,
+                    onToggle = { onSettingsChanged(settings.copy(useLightTheme = it)) }
+                )
             }
 
             // Features Section
@@ -358,6 +373,64 @@ fun SettingsScreen(
                 }
             }
 
+            // Weather Section
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                CategoryHeader("Weather")
+            }
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceDark)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "Weather Health Advisory", color = TextPrimary, fontWeight = FontWeight.Medium)
+                            Switch(
+                                checked = settings.weatherEnabled,
+                                onCheckedChange = { onSettingsChanged(settings.copy(weatherEnabled = it)) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = CardSteps,
+                                    checkedTrackColor = CardSteps.copy(alpha = 0.5f)
+                                )
+                            )
+                        }
+                        if (settings.weatherEnabled) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(text = "No GPS needed — enter your coordinates manually", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(text = "How: Google Maps → search your city → long press → copy coordinates", color = TextTertiary, style = MaterialTheme.typography.bodySmall)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(text = "Coordinates", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedTextField(
+                                    value = if (settings.weatherLat != 0.0) settings.weatherLat.toString() else "",
+                                    onValueChange = { onSettingsChanged(settings.copy(weatherLat = it.toDoubleOrNull() ?: 0.0)) },
+                                    modifier = Modifier.weight(1f),
+                                    placeholder = { Text("Lat", color = TextTertiary) },
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
+                                )
+                                OutlinedTextField(
+                                    value = if (settings.weatherLon != 0.0) settings.weatherLon.toString() else "",
+                                    onValueChange = { onSettingsChanged(settings.copy(weatherLon = it.toDoubleOrNull() ?: 0.0)) },
+                                    modifier = Modifier.weight(1f),
+                                    placeholder = { Text("Lon", color = TextTertiary) },
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = Color(0xFF00B4D8), unfocusedBorderColor = Color(0xFF444444))
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Daily Goals Section
             item {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -460,6 +533,22 @@ fun SettingsScreen(
                         "Reset to Defaults",
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
+                }
+
+                // Export Data
+                if (onExportClick != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = onExportClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00B4D8).copy(alpha = 0.2f),
+                            contentColor = Color(0xFF00B4D8)
+                        )
+                    ) {
+                        Text("Export Health Data (CSV)", modifier = Modifier.padding(vertical = 8.dp))
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))

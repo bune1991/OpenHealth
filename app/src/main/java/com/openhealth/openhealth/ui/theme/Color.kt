@@ -85,3 +85,13 @@ val DistanceAccent = CardDistance
 val GradientStart = BackgroundBlack
 val GradientEnd = SurfaceDark
 val FabColor = Color(0xFF2A2A2A)  // Dark subtle FAB
+
+// Light Theme Color Variants
+val LightBackground = Color(0xFFF5F5F5)
+val LightSurface = Color(0xFFFFFFFF)
+val LightSurfaceVariant = Color(0xFFE8E8E8)
+val LightCardBackground = Color(0xFFFFFFFF)
+val LightTextPrimary = Color(0xFF1A1A1A)
+val LightTextSecondary = Color(0xFF666666)
+val LightTextTertiary = Color(0xFF999999)
+val LightFabColor = Color(0xFFE0E0E0)

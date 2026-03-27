@@ -1,19 +1,55 @@
 package com.openhealth.openhealth.ui.theme
 
 import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+
+data class AppColorScheme(
+    val background: Color,
+    val surface: Color,
+    val surfaceVariant: Color,
+    val cardBackground: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textTertiary: Color,
+    val fabColor: Color,
+    val isDark: Boolean
+)
+
+val DarkAppColors = AppColorScheme(
+    background = BackgroundBlack,
+    surface = SurfaceDark,
+    surfaceVariant = SurfaceVariant,
+    cardBackground = CardBackground,
+    textPrimary = TextPrimary,
+    textSecondary = TextSecondary,
+    textTertiary = TextTertiary,
+    fabColor = FabColor,
+    isDark = true
+)
+
+val LightAppColors = AppColorScheme(
+    background = LightBackground,
+    surface = LightSurface,
+    surfaceVariant = LightSurfaceVariant,
+    cardBackground = LightCardBackground,
+    textPrimary = LightTextPrimary,
+    textSecondary = LightTextSecondary,
+    textTertiary = LightTextTertiary,
+    fabColor = LightFabColor,
+    isDark = false
+)
+
+val LocalAppColors = compositionLocalOf { DarkAppColors }
 
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryBlue,
@@ -22,12 +58,6 @@ private val DarkColorScheme = darkColorScheme(
     onPrimaryContainer = TextPrimary,
     secondary = AccentCyan,
     onSecondary = BackgroundBlack,
-    secondaryContainer = SurfaceVariant,
-    onSecondaryContainer = TextPrimary,
-    tertiary = AccentTeal,
-    onTertiary = BackgroundBlack,
-    tertiaryContainer = SurfaceVariant,
-    onTertiaryContainer = TextPrimary,
     background = BackgroundBlack,
     onBackground = TextPrimary,
     surface = SurfaceDark,
@@ -41,42 +71,29 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryBlue,
-    onPrimary = BackgroundBlack,
-    primaryContainer = SurfaceDark,
-    onPrimaryContainer = TextPrimary,
+    onPrimary = Color.White,
+    primaryContainer = LightSurface,
+    onPrimaryContainer = LightTextPrimary,
     secondary = AccentCyan,
-    onSecondary = BackgroundBlack,
-    secondaryContainer = SurfaceVariant,
-    onSecondaryContainer = TextPrimary,
-    tertiary = AccentTeal,
-    onTertiary = BackgroundBlack,
-    tertiaryContainer = SurfaceVariant,
-    onTertiaryContainer = TextPrimary,
-    background = BackgroundBlack,
-    onBackground = TextPrimary,
-    surface = SurfaceDark,
-    onSurface = TextPrimary,
-    surfaceVariant = SurfaceVariant,
-    onSurfaceVariant = TextSecondary,
+    onSecondary = Color.White,
+    background = LightBackground,
+    onBackground = LightTextPrimary,
+    surface = LightSurface,
+    onSurface = LightTextPrimary,
+    surfaceVariant = LightSurfaceVariant,
+    onSurfaceVariant = LightTextSecondary,
     error = ErrorRed,
-    onError = TextPrimary,
-    outline = SurfaceVariant
+    onError = Color.White,
+    outline = LightSurfaceVariant
 )
 
 @Composable
 fun OpenHealthTheme(
-    darkTheme: Boolean = true, // Default to dark theme for health app
-    dynamicColor: Boolean = false, // Disable dynamic color for consistent branding
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val appColors = if (darkTheme) DarkAppColors else LightAppColors
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -89,9 +106,11 @@ fun OpenHealthTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalAppColors provides appColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
