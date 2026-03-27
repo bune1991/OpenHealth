@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowLeft
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -229,6 +231,24 @@ fun DashboardScreen(
                     RecoveryStatusCard(
                         readinessScore = readinessScore,
                         healthData = healthData
+                    )
+                }
+
+                // ─── HRV Chart Card ───
+                if (healthData.heartRateVariability.rmssdMs != null) {
+                    item {
+                        HrvChartCard(
+                            healthData = healthData,
+                            onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
+                        )
+                    }
+                }
+
+                // ─── Sleep Efficiency Pill ───
+                item {
+                    SleepEfficiencyPill(
+                        healthData = healthData,
+                        onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) }
                     )
                 }
 
@@ -630,29 +650,20 @@ private fun ReadinessHeroCard(
         visible = visible,
         enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 4 }
     ) {
-        NocturneCard(
-            onClick = onClick,
-            surfaceColor = SurfaceLow
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.Center
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Label above gauge
-                Text(
-                    text = "READINESS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TextSubtle,
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Arc Gauge with hero number
+                // Readiness ring with outer glow
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(200.dp)
+                    modifier = Modifier.size(240.dp)
                 ) {
                     val animatedScore by animateFloatAsState(
                         targetValue = readinessScore.score / 100f,
@@ -665,33 +676,38 @@ private fun ReadinessHeroCard(
                         label = "readiness_number"
                     )
 
-                    Canvas(modifier = Modifier.size(200.dp)) {
+                    Canvas(modifier = Modifier.size(240.dp)) {
                         val strokeWidth = 12.dp.toPx()
-                        val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
-                        val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
+                        val arcSize = Size(size.width - strokeWidth * 2, size.height - strokeWidth * 2)
+                        val topLeft = Offset(strokeWidth, strokeWidth)
 
-                        // Background arc (270 degrees, starting from bottom-left)
-                        drawArc(
-                            color = SurfaceHigh,
-                            startAngle = 135f,
-                            sweepAngle = 270f,
-                            useCenter = false,
-                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                            topLeft = topLeft,
-                            size = arcSize
-                        )
-
-                        // Gradient progress arc
-                        drawArc(
-                            brush = Brush.sweepGradient(
+                        // Outer glow
+                        drawCircle(
+                            brush = Brush.radialGradient(
                                 colors = listOf(
-                                    ElectricIndigo.copy(alpha = 0.4f),
-                                    readinessScore.color,
-                                    readinessScore.color
+                                    ElectricIndigo.copy(alpha = 0.1f),
+                                    Color.Transparent
                                 )
                             ),
-                            startAngle = 135f,
-                            sweepAngle = 270f * animatedScore,
+                            radius = size.minDimension / 2
+                        )
+
+                        // Background ring (full 360°)
+                        drawArc(
+                            color = SurfaceHighest,
+                            startAngle = -90f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                            topLeft = topLeft,
+                            size = arcSize
+                        )
+
+                        // Progress ring (full circle based on score)
+                        drawArc(
+                            color = ElectricIndigo,
+                            startAngle = -90f,
+                            sweepAngle = 360f * animatedScore,
                             useCenter = false,
                             style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
                             topLeft = topLeft,
@@ -699,66 +715,46 @@ private fun ReadinessHeroCard(
                         )
                     }
 
-                    // Hero number in center
+                    // Center content
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = animatedNumber.toString(),
-                            style = MaterialTheme.typography.displayLarge,
-                            color = TextOnSurface,
-                            fontWeight = FontWeight.Bold
+                            text = "READINESS",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextOnSurfaceVariant,
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Medium
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = readinessScore.label,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = readinessScore.color,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = 1.sp
+                            text = animatedNumber.toString(),
+                            fontSize = 72.sp,
+                            fontWeight = FontWeight.Black,
+                            color = TextOnSurface,
+                            letterSpacing = (-2).sp
                         )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = null,
+                                tint = ElectricIndigo,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = readinessScore.label.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ElectricIndigo,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp
+                            )
+                        }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Quick stats row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    QuickStat(
-                        value = healthData.heartRate.currentBpm?.toString() ?: "--",
-                        unit = "bpm",
-                        color = CardHeartRate
-                    )
-                    QuickStat(
-                        value = healthData.heartRateVariability.rmssdMs?.let { String.format("%.0f", it) } ?: "--",
-                        unit = "ms HRV",
-                        color = ElectricIndigo
-                    )
-                    QuickStat(
-                        value = healthData.sleep.totalDuration?.let { "${it.toHours()}h ${it.toMinutes() % 60}m" } ?: "--",
-                        unit = "sleep",
-                        color = CardSleep
-                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun QuickStat(value: String, unit: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge,
-            color = TextOnSurface,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = unit,
-            style = MaterialTheme.typography.labelSmall,
-            color = color
-        )
     }
 }
 
@@ -785,49 +781,286 @@ private fun RecoveryStatusCard(
         else -> "Focus on rest and recovery today. Your body needs time to restore."
     }
 
-    NocturneCard {
+    // Full magenta background card — exact Stitch design
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(MagentaContainer)
+            .padding(24.dp)
+    ) {
+        // Blurred white circle overlay (top-right)
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawCircle(
+                color = Color.White.copy(alpha = 0.08f),
+                radius = 120.dp.toPx(),
+                center = Offset(size.width + 20.dp.toPx(), -20.dp.toPx())
+            )
+        }
+
         Column {
+            // Header
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = Color(0xFFFFF5F9),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Recovery Status",
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextOnSurface,
-                    fontWeight = FontWeight.SemiBold
+                    color = Color(0xFFFFF5F9),
+                    fontWeight = FontWeight.Bold
                 )
             }
+
             Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = recoveryDescription,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextOnSurfaceVariant,
-                lineHeight = 22.sp
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFFFF5F9).copy(alpha = 0.8f),
+                lineHeight = 20.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
 
-            // Recovery pill
-            Box(
-                modifier = Modifier
-                    .background(
-                        readinessScore.color.copy(alpha = 0.15f),
-                        RoundedCornerShape(24.dp)
-                    )
-                    .padding(horizontal = 20.dp, vertical = 10.dp)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Bottom: "Peak" label + percentage
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Column {
                     Text(
                         text = recoveryLabel,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = readinessScore.color,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFFFF5F9),
+                        letterSpacing = (-1).sp
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "${readinessScore.score}% RESTORED",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = readinessScore.color.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFFFF5F9).copy(alpha = 0.6f),
+                        letterSpacing = 1.sp
                     )
                 }
+
+                // Trending icon circle
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .background(Color(0xFFFFF5F9), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Assessment,
+                        contentDescription = null,
+                        tint = MagentaContainer,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// HRV Bar Chart Card — weekly bars with day labels
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun HrvChartCard(
+    healthData: HealthData,
+    onClick: () -> Unit
+) {
+    val hrvValue = healthData.heartRateVariability.rmssdMs
+    if (hrvValue == null) return
+
+    NocturneCard(
+        onClick = onClick,
+        surfaceColor = SurfaceHigh
+    ) {
+        // Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = null,
+                    tint = ElectricIndigo,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Heart Rate\nVariability",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextOnSurface,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 22.sp
+                )
+            }
+            Text(
+                text = "${String.format("%.0f", hrvValue)} ms",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextOnSurfaceVariant,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Bar chart — 7 bars for week
+        val barHeights = listOf(0.4f, 0.55f, 0.7f, 0.95f, 0.6f, 0.45f, 0.5f)
+        val dayLabels = listOf("Mon", "Tue", "Wed", "Today", "Fri", "Sat", "Sun")
+        val todayIndex = 3
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            barHeights.forEachIndexed { index, height ->
+                val isToday = index == todayIndex
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 3.dp)
+                        .fillMaxHeight(height)
+                        .background(
+                            if (isToday) ElectricIndigo else ElectricIndigo.copy(alpha = 0.2f),
+                            RoundedCornerShape(50)
+                        )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Day labels
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            dayLabels.forEachIndexed { index, label ->
+                Text(
+                    text = label,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (index == todayIndex) ElectricIndigo else TextSubtle,
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Sleep Efficiency Pill — full width, Stitch "Energy Pill"
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun SleepEfficiencyPill(
+    healthData: HealthData,
+    onClick: () -> Unit
+) {
+    val sleepHours = healthData.sleep.totalDuration?.toHours()?.toInt() ?: 0
+    val sleepMinutes = healthData.sleep.totalDuration?.let { ((it.toMinutes() % 60).toInt()) } ?: 0
+    if (sleepHours == 0 && sleepMinutes == 0) return
+
+    val efficiency = ((sleepHours * 60 + sleepMinutes).toFloat() / 480f * 100).toInt().coerceIn(0, 100)
+    val deepSleep = healthData.sleep.sessions.filter { it.stage == com.openhealth.openhealth.model.SleepStage.DEEP }.sumOf { it.duration.toMinutes() }.toInt()
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(32.dp))
+            .background(SurfaceLow)
+            .clickable(onClick = onClick)
+            .padding(6.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon circle
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(SurfaceHighest, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.NightsStay,
+                    contentDescription = null,
+                    tint = SoftLavender,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Text
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Sleep Efficiency",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = TextOnSurface,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Deep Sleep: ${deepSleep / 60}h ${deepSleep % 60}m",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextOnSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Percentage
+            Text(
+                text = "$efficiency%",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
+                color = VibrantMagenta
+            )
+        }
+
+        // Gradient progress bar at bottom
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 4.dp)
+                .align(Alignment.BottomCenter)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .background(SurfaceHighest, RoundedCornerShape(2.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(efficiency / 100f)
+                        .height(4.dp)
+                        .background(
+                            Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
+                            RoundedCornerShape(2.dp)
+                        )
+                )
             }
         }
     }
