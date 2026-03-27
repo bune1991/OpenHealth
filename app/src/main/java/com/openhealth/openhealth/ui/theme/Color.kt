@@ -12,21 +12,23 @@ val SurfaceLow = Color(0xFF131313)           // Large structural sections
 val SurfaceMid = Color(0xFF191919)           // Floating cards
 val SurfaceHigh = Color(0xFF1F1F1F)          // Active/interactive cards
 val SurfaceHighest = Color(0xFF262626)       // Overlays, focused inputs
-val SurfaceBright = Color(0xFF333333)        // Hover/pressed states
+val SurfaceBright = Color(0xFF2C2C2C)        // Hover/pressed states (exact Stitch)
+val SurfaceDim = Color(0xFF0E0E0E)           // Surface dim / background
 
 // Primary — Electric Indigo
 val ElectricIndigo = Color(0xFFB89FFF)       // Primary accent
-val ElectricIndigoDim = Color(0xFF9B7AE6)    // Dimmed primary for subtle use
-val IndigoContainer = Color(0xFF7F3AFC)      // Primary container / gradient end
-val OnIndigo = Color(0xFF2A0066)             // Text on primary
+val ElectricIndigoDim = Color(0xFF834FFF)    // Dimmed primary (exact Stitch: primary-dim)
+val IndigoContainer = Color(0xFFAC8EFF)      // Primary container (exact Stitch)
+val OnIndigo = Color(0xFF37008E)             // Text on primary (exact Stitch)
 
 // Secondary — Vibrant Magenta
 val VibrantMagenta = Color(0xFFFF51FA)       // Secondary accent — "spark" moments
 val MagentaContainer = Color(0xFFA900A9)     // Secondary container
-val OnMagenta = Color(0xFF3D0039)            // Text on secondary
+val OnMagenta = Color(0xFF400040)            // Text on secondary (exact Stitch)
 
 // Tertiary — Soft Lavender
-val SoftLavender = Color(0xFFAE89FF)         // Tertiary/supportive accent
+val SoftLavender = Color(0xFFAE89FF)         // Tertiary dim (exact Stitch)
+val Tertiary = Color(0xFFBA9AFF)             // Tertiary (exact Stitch)
 
 // Text Colors (no pure white for body — reduce eye strain)
 val TextOnSurface = Color(0xFFFFFFFF)        // High emphasis (headlines, hero numbers)
@@ -85,6 +87,11 @@ val ChartFillCalories = Color(0x20FF9F43)
 
 // Ghost Border (accessibility fallback)
 val GhostBorder = Color(0x26484848)          // outline_variant at 15% opacity
+val OutlineColor = Color(0xFF757575)         // outline (exact Stitch)
+val OutlineVariantColor = Color(0xFF484848)  // outline-variant (exact Stitch)
+
+// Error (exact Stitch)
+val ErrorPink = Color(0xFFFF6E84)            // error (exact Stitch)
 
 // Legacy aliases (keep existing code working during migration)
 val BackgroundBlack = SurfaceLowest

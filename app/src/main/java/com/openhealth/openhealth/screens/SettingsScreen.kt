@@ -15,18 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.*
-import com.openhealth.openhealth.ui.theme.CardCalories
-import com.openhealth.openhealth.ui.theme.CardDistance
-import com.openhealth.openhealth.ui.theme.CardFloors
-import com.openhealth.openhealth.ui.theme.CardSteps
-import com.openhealth.openhealth.ui.theme.LightBackground
-import com.openhealth.openhealth.ui.theme.SurfaceVariant
+import com.openhealth.openhealth.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,46 +36,44 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = "Settings",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    Text(
+                        text = "Settings",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = TextOnSurface,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = ElectricIndigo
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = SurfaceLowest
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = SurfaceLowest
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(SurfaceLowest)
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = SurfaceMid
                     )
                 ) {
                     Column(
@@ -266,7 +260,7 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .background(
-                                            if (isSelected) Color(0xFF00B4D8).copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant,
+                                            if (isSelected) ElectricIndigo.copy(alpha = 0.2f) else SurfaceHigh,
                                             RoundedCornerShape(8.dp)
                                         )
                                         .clickable { onSettingsChanged(settings.copy(aiProvider = provider)) }
@@ -275,7 +269,7 @@ fun SettingsScreen(
                                 ) {
                                     Text(
                                         text = label,
-                                        color = if (isSelected) Color(0xFF00B4D8) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = if (isSelected) ElectricIndigo else TextOnSurfaceVariant,
                                         fontSize = 13.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     )
@@ -374,8 +368,8 @@ fun SettingsScreen(
                                 checked = settings.weatherEnabled,
                                 onCheckedChange = { onSettingsChanged(settings.copy(weatherEnabled = it)) },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = CardSteps,
-                                    checkedTrackColor = CardSteps.copy(alpha = 0.5f)
+                                    checkedThumbColor = ElectricIndigo,
+                                    checkedTrackColor = ElectricIndigo.copy(alpha = 0.4f)
                                 )
                             )
                         }
@@ -416,9 +410,9 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = SurfaceMid
                     )
                 ) {
                     Column(
@@ -503,10 +497,10 @@ fun SettingsScreen(
                 Button(
                     onClick = { onSettingsChanged(SettingsData.DEFAULT) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onBackground
+                        containerColor = SurfaceMid,
+                        contentColor = TextOnSurfaceVariant
                     )
                 ) {
                     Text(
@@ -520,14 +514,31 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
                         onClick = onExportClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00B4D8).copy(alpha = 0.2f),
-                            contentColor = Color(0xFF00B4D8)
+                            containerColor = Color.Transparent
                         )
                     ) {
-                        Text("Export Health Data (CSV)", modifier = Modifier.padding(vertical = 8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(ElectricIndigo, VibrantMagenta)
+                                    ),
+                                    RoundedCornerShape(28.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Export Data Cluster",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
 
@@ -540,10 +551,11 @@ fun SettingsScreen(
 @Composable
 private fun CategoryHeader(category: String) {
     Text(
-        text = category,
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.SemiBold,
-        color = CardSteps,
+        text = category.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Bold,
+        color = ElectricIndigo,
+        letterSpacing = 2.sp,
         modifier = Modifier.padding(vertical = 8.dp)
     )
 }
@@ -557,9 +569,9 @@ private fun MetricToggleItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = SurfaceMid
         )
     ) {
         Row(
@@ -582,10 +594,10 @@ private fun MetricToggleItem(
                 checked = isEnabled,
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = CardSteps,
-                    checkedTrackColor = CardSteps.copy(alpha = 0.5f),
-                    uncheckedThumbColor = SurfaceVariant,
-                    uncheckedTrackColor = SurfaceVariant.copy(alpha = 0.5f)
+                    checkedThumbColor = ElectricIndigo,
+                    checkedTrackColor = ElectricIndigo.copy(alpha = 0.4f),
+                    uncheckedThumbColor = TextSubtle,
+                    uncheckedTrackColor = SurfaceHigh
                 )
             )
         }
@@ -604,9 +616,9 @@ private fun GoalInputItem(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = SurfaceMid
         )
     ) {
         Row(

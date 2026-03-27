@@ -179,18 +179,26 @@ fun DashboardScreen(
     Scaffold(
         containerColor = SurfaceLowest
     ) { paddingValues ->
-        PullToRefreshBox(
-            isRefreshing = isLoading,
-            onRefresh = onRefresh,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(SurfaceLowest)
                 .padding(paddingValues)
         ) {
+        PullToRefreshBox(
+            isRefreshing = isLoading,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxSize()
+        ) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                contentPadding = PaddingValues(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = 16.dp,
+                    bottom = 100.dp  // Space for floating bottom nav
+                ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // ─── Header ───
@@ -497,11 +505,17 @@ fun DashboardScreen(
                     }
                 }
 
-                // Bottom spacing
+                // Bottom spacing for nav bar
                 item {
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
+        }
+
+            // ─── Floating Bottom Nav Bar ───
+            FloatingBottomNavBar(
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
@@ -1380,6 +1394,130 @@ private fun VitalMetricRow(label: String, value: String, statusDot: Color?, onCl
             Text(text = value, color = TextOnSurface, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.width(4.dp))
             Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextSubtle, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Floating Bottom Nav Bar — pill-shaped, glassmorphism
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun FloatingBottomNavBar(
+    modifier: Modifier = Modifier
+) {
+    // For now, "Readiness" is always active (tab 0)
+    val activeTab = 0
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(SurfaceLow.copy(alpha = 0.85f))
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(
+                icon = "bolt",
+                label = "Readiness",
+                isActive = activeTab == 0,
+                onClick = { }
+            )
+            BottomNavItem(
+                icon = "fitness",
+                label = "Activity",
+                isActive = activeTab == 1,
+                onClick = { }
+            )
+            BottomNavItem(
+                icon = "heart",
+                label = "Vitals",
+                isActive = activeTab == 2,
+                onClick = { }
+            )
+            BottomNavItem(
+                icon = "chart",
+                label = "Progress",
+                isActive = activeTab == 3,
+                onClick = { }
+            )
+        }
+    }
+}
+
+@Composable
+private fun BottomNavItem(
+    icon: String,
+    label: String,
+    isActive: Boolean,
+    onClick: () -> Unit
+) {
+    val iconVector = when (icon) {
+        "bolt" -> Icons.Default.Favorite  // Readiness
+        "fitness" -> Icons.AutoMirrored.Filled.DirectionsWalk  // Activity
+        "heart" -> Icons.Default.Favorite  // Vitals
+        "chart" -> Icons.Default.Assessment  // Progress
+        else -> Icons.Default.Favorite
+    }
+
+    if (isActive) {
+        // Active: gradient pill
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(ElectricIndigoDim, VibrantMagenta)
+                    )
+                )
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = iconVector,
+                    contentDescription = label,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    text = label.uppercase(),
+                    color = Color.White,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+        }
+    } else {
+        // Inactive
+        Box(
+            modifier = Modifier
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = iconVector,
+                    contentDescription = label,
+                    tint = TextOnSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    text = label.uppercase(),
+                    color = TextOnSurfaceVariant.copy(alpha = 0.7f),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 1.sp
+                )
+            }
         }
     }
 }
