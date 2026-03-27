@@ -50,6 +50,7 @@ import com.openhealth.openhealth.screens.MetricDetailScreen
 import com.openhealth.openhealth.screens.ReadinessDetailScreen
 import com.openhealth.openhealth.screens.ReportsScreen
 import com.openhealth.openhealth.screens.StressDetailScreen
+import com.openhealth.openhealth.screens.AiInsightsScreen
 import com.openhealth.openhealth.viewmodel.ReportsData
 import com.openhealth.openhealth.screens.SettingsScreen
 import com.openhealth.openhealth.ui.theme.BackgroundBlack
@@ -97,6 +98,9 @@ class MainActivity : ComponentActivity() {
                     viewModel.showReadinessDetail.value -> {
                         viewModel.hideReadinessDetail()
                     }
+                    viewModel.showAiInsights.value -> {
+                        viewModel.hideAiInsights()
+                    }
                     viewModel.showStressDetail.value -> {
                         viewModel.hideStressDetail()
                     }
@@ -131,6 +135,10 @@ class MainActivity : ComponentActivity() {
                 val showReadinessDetail by viewModel.showReadinessDetail.collectAsState()
                 val showReports by viewModel.showReports.collectAsState()
                 val showStressDetail by viewModel.showStressDetail.collectAsState()
+                val showAiInsights by viewModel.showAiInsights.collectAsState()
+                val aiInsightText by viewModel.aiInsightText.collectAsState()
+                val aiInsightLoading by viewModel.aiInsightLoading.collectAsState()
+                val aiInsightError by viewModel.aiInsightError.collectAsState()
                 val reportsData by viewModel.reportsData.collectAsState()
                 val settings by viewModel.settings.collectAsState()
 
@@ -163,6 +171,16 @@ class MainActivity : ComponentActivity() {
                                             settings = settings,
                                             onSettingsChanged = { viewModel.updateSettings(it) },
                                             onBackClick = { viewModel.hideSettings() }
+                                        )
+                                    }
+                                    showAiInsights -> {
+                                        AiInsightsScreen(
+                                            insightText = aiInsightText,
+                                            isLoading = aiInsightLoading,
+                                            error = aiInsightError,
+                                            providerName = settings.aiProvider.name,
+                                            onRefreshClick = { viewModel.refreshAiInsight() },
+                                            onBackClick = { viewModel.hideAiInsights() }
                                         )
                                     }
                                     showStressDetail -> {
@@ -225,6 +243,7 @@ class MainActivity : ComponentActivity() {
                                             onDateSelected = { date -> viewModel.navigateToDate(date) },
                                             onReportsClick = { viewModel.showReports() },
                                             onStressClick = { viewModel.showStressDetail() },
+                                            onAiInsightsClick = { viewModel.showAiInsights() },
                                             stepsCalendarData = stepsCalendarData,
                                             stepsStreak = stepsStreak,
                                             bodyExpanded = bodyExpanded,

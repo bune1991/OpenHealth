@@ -132,6 +132,7 @@ fun DashboardScreen(
     onDateSelected: ((LocalDate) -> Unit)? = null,
     onReportsClick: () -> Unit = {},
     onStressClick: () -> Unit = {},
+    onAiInsightsClick: () -> Unit = {},
     stepsCalendarData: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
     stepsStreak: Int = 0,
     bodyExpanded: Boolean = false,
@@ -316,6 +317,17 @@ fun DashboardScreen(
                             stressColor = stressColor,
                             energyPercent = energyPct,
                             onClick = onStressClick
+                        )
+                    }
+                }
+
+                // AI Insights Card (only if provider is configured)
+                if (settings.aiProvider != com.openhealth.openhealth.model.AiProvider.NONE) {
+                    item {
+                        DetailCard(
+                            title = "✨ AI Health Analysis",
+                            value = "Get personalized insights from ${settings.aiProvider.name}",
+                            onClick = onAiInsightsClick
                         )
                     }
                 }

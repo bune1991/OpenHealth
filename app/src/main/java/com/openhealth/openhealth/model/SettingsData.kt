@@ -1,6 +1,19 @@
 package com.openhealth.openhealth.model
 
+enum class AiProvider {
+    NONE, CLAUDE, GEMINI, CHATGPT, CUSTOM
+}
+
 data class SettingsData(
+    // AI Health Insights
+    val aiProvider: AiProvider = AiProvider.NONE,
+    val aiApiKey: String = "",
+    val aiClaudeKey: String = "",
+    val aiGeminiKey: String = "",
+    val aiChatgptKey: String = "",
+    val aiCustomKey: String = "",
+    val aiCustomUrl: String = "",
+    val aiCustomModel: String = "",
     // Activity metrics
     val showSteps: Boolean = true,
     val showDistance: Boolean = true,

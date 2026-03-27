@@ -43,7 +43,10 @@ import com.openhealth.openhealth.model.PowerData
 import com.openhealth.openhealth.model.NutritionData
 import com.openhealth.openhealth.model.HydrationData
 import com.openhealth.openhealth.model.MindfulnessSessionData
+import com.openhealth.openhealth.utils.AiHealthService
+import com.openhealth.openhealth.utils.AiInsightCache
 import com.openhealth.openhealth.utils.HealthConnectManager
+import com.openhealth.openhealth.utils.HealthPromptBuilder
 import com.openhealth.openhealth.utils.PermissionManager
 import com.openhealth.openhealth.utils.SettingsManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,6 +120,18 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun setBodyExpanded(expanded: Boolean) { _bodyExpanded.value = expanded }
     fun setVitalsExpanded(expanded: Boolean) { _vitalsExpanded.value = expanded }
+
+    // AI Insights
+    private val _showAiInsights = MutableStateFlow(false)
+    val showAiInsights: StateFlow<Boolean> = _showAiInsights.asStateFlow()
+    private val _aiInsightText = MutableStateFlow<String?>(null)
+    val aiInsightText: StateFlow<String?> = _aiInsightText.asStateFlow()
+    private val _aiInsightLoading = MutableStateFlow(false)
+    val aiInsightLoading: StateFlow<Boolean> = _aiInsightLoading.asStateFlow()
+    private val _aiInsightError = MutableStateFlow<String?>(null)
+    val aiInsightError: StateFlow<String?> = _aiInsightError.asStateFlow()
+    private val aiHealthService = AiHealthService()
+    private lateinit var aiInsightCache: AiInsightCache
 
     // Settings
     private val settingsManager = SettingsManager.getInstance(context)
@@ -490,6 +505,75 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun hideReadinessDetail() {
         _showReadinessDetail.value = false
+    }
+
+    // AI Insights navigation
+    fun showAiInsights() {
+        if (!::aiInsightCache.isInitialized) aiInsightCache = AiInsightCache(context)
+        _showAiInsights.value = true
+        fetchAiInsight(forceRefresh = false)
+    }
+
+    fun hideAiInsights() {
+        _showAiInsights.value = false
+    }
+
+    fun refreshAiInsight() {
+        fetchAiInsight(forceRefresh = true)
+    }
+
+    private fun fetchAiInsight(forceRefresh: Boolean) {
+        val currentSettings = settingsManager.settings.value
+        val activeKey = when (currentSettings.aiProvider) {
+            com.openhealth.openhealth.model.AiProvider.CLAUDE -> currentSettings.aiClaudeKey
+            com.openhealth.openhealth.model.AiProvider.GEMINI -> currentSettings.aiGeminiKey
+            com.openhealth.openhealth.model.AiProvider.CHATGPT -> currentSettings.aiChatgptKey
+            com.openhealth.openhealth.model.AiProvider.CUSTOM -> currentSettings.aiCustomKey
+            com.openhealth.openhealth.model.AiProvider.NONE -> ""
+        }
+
+        if (currentSettings.aiProvider == com.openhealth.openhealth.model.AiProvider.NONE || (activeKey.isBlank() && currentSettings.aiProvider != com.openhealth.openhealth.model.AiProvider.CUSTOM)) {
+            _aiInsightError.value = "Configure an AI provider and API key in Settings"
+            return
+        }
+
+        val today = LocalDate.now(kuwaitZone)
+
+        if (!forceRefresh) {
+            val cached = aiInsightCache.getCached(today)
+            if (cached != null) {
+                _aiInsightText.value = cached
+                _aiInsightError.value = null
+                return
+            }
+        }
+
+        viewModelScope.launch {
+            _aiInsightLoading.value = true
+            _aiInsightError.value = null
+
+            val prompt = HealthPromptBuilder.buildDailySummaryPrompt(_healthData.value)
+            Log.d("AiInsights", "Prompt length: ${prompt.length} chars")
+
+            val result = aiHealthService.getInsights(
+                provider = currentSettings.aiProvider,
+                apiKey = activeKey,
+                healthSummaryPrompt = prompt,
+                customUrl = currentSettings.aiCustomUrl,
+                customModel = currentSettings.aiCustomModel
+            )
+
+            result.onSuccess { text: String ->
+                _aiInsightText.value = text
+                aiInsightCache.save(today, text, currentSettings.aiProvider)
+                Log.d("AiInsights", "Success: ${text.take(100)}...")
+            }.onFailure { err: Throwable ->
+                _aiInsightError.value = err.message ?: "Unknown error"
+                Log.e("AiInsights", "Error: ${err.message}")
+            }
+
+            _aiInsightLoading.value = false
+        }
     }
 
     // Stress detail navigation

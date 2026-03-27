@@ -95,4 +95,7 @@ dependencies {
 
     // WorkManager (for periodic widget updates)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // OkHttp (for AI API calls)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

@@ -63,6 +63,16 @@ class SettingsManager private constructor(context: Context) {
         private const val KEY_SHOW_HYDRATION = "show_hydration"
         private const val KEY_SHOW_MINDFULNESS = "show_mindfulness"
 
+        // AI Insights
+        private const val KEY_AI_PROVIDER = "ai_provider"
+        private const val KEY_AI_API_KEY = "ai_api_key"
+        private const val KEY_AI_CLAUDE_KEY = "ai_claude_key"
+        private const val KEY_AI_GEMINI_KEY = "ai_gemini_key"
+        private const val KEY_AI_CHATGPT_KEY = "ai_chatgpt_key"
+        private const val KEY_AI_CUSTOM_KEY = "ai_custom_key"
+        private const val KEY_AI_CUSTOM_URL = "ai_custom_url"
+        private const val KEY_AI_CUSTOM_MODEL = "ai_custom_model"
+
         // Features
         private const val KEY_SHOW_STEPS_STREAK = "show_steps_streak"
         private const val KEY_DAILY_SUMMARY_NOTIFICATION = "daily_summary_notification"
@@ -87,6 +97,15 @@ class SettingsManager private constructor(context: Context) {
 
     private fun loadSettings(): SettingsData {
         return SettingsData(
+            // AI Insights
+            aiProvider = try { com.openhealth.openhealth.model.AiProvider.valueOf(prefs.getString(KEY_AI_PROVIDER, "NONE") ?: "NONE") } catch (e: Exception) { com.openhealth.openhealth.model.AiProvider.NONE },
+            aiApiKey = prefs.getString(KEY_AI_API_KEY, "") ?: "",
+            aiClaudeKey = prefs.getString(KEY_AI_CLAUDE_KEY, "") ?: "",
+            aiGeminiKey = prefs.getString(KEY_AI_GEMINI_KEY, "") ?: "",
+            aiChatgptKey = prefs.getString(KEY_AI_CHATGPT_KEY, "") ?: "",
+            aiCustomKey = prefs.getString(KEY_AI_CUSTOM_KEY, "") ?: "",
+            aiCustomUrl = prefs.getString(KEY_AI_CUSTOM_URL, "") ?: "",
+            aiCustomModel = prefs.getString(KEY_AI_CUSTOM_MODEL, "") ?: "",
             // Activity metrics
             showSteps = prefs.getBoolean(KEY_SHOW_STEPS, true),
             showDistance = prefs.getBoolean(KEY_SHOW_DISTANCE, true),
@@ -142,6 +161,15 @@ class SettingsManager private constructor(context: Context) {
 
     private fun saveSettings(settings: SettingsData) {
         prefs.edit().apply {
+            // AI Insights
+            putString(KEY_AI_PROVIDER, settings.aiProvider.name)
+            putString(KEY_AI_API_KEY, settings.aiApiKey)
+            putString(KEY_AI_CLAUDE_KEY, settings.aiClaudeKey)
+            putString(KEY_AI_GEMINI_KEY, settings.aiGeminiKey)
+            putString(KEY_AI_CHATGPT_KEY, settings.aiChatgptKey)
+            putString(KEY_AI_CUSTOM_KEY, settings.aiCustomKey)
+            putString(KEY_AI_CUSTOM_URL, settings.aiCustomUrl)
+            putString(KEY_AI_CUSTOM_MODEL, settings.aiCustomModel)
             // Activity metrics
             putBoolean(KEY_SHOW_STEPS, settings.showSteps)
             putBoolean(KEY_SHOW_DISTANCE, settings.showDistance)
