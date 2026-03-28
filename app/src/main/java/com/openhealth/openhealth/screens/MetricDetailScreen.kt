@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowLeft
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
@@ -1451,112 +1452,63 @@ private fun SleepStagesChart(
     val remPercent = sleepStages.remSleepMinutes.toFloat() / totalMinutes
     val awakePercent = sleepStages.awakeMinutes.toFloat() / totalMinutes
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
-        )
+    // Stitch: bg-surface-container-high, stacked pill bar
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(SurfaceHigh)
+            .padding(20.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "Sleep Stages",
-                style = MaterialTheme.typography.titleMedium,
-                color = TextOnSurface,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+        Column {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Sleep Stages", style = MaterialTheme.typography.titleSmall, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                Text("Restorative", style = MaterialTheme.typography.labelSmall, color = ElectricIndigo, fontWeight = FontWeight.Bold)
+            }
 
-            // Stacked bar chart
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Stacked energy pill bar — rounded-full
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(32.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.background,
-                        shape = RoundedCornerShape(8.dp)
-                    )
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(SurfaceHighest)
             ) {
                 Row(modifier = Modifier.fillMaxSize()) {
-                    if (deepPercent > 0f) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .weight(deepPercent)
-                                .background(
-                                    color = Color(0xFF4A148C),
-                                    shape = RoundedCornerShape(
-                                        topStart = 8.dp,
-                                        bottomStart = 8.dp
-                                    )
-                                )
-                        )
+                    if (awakePercent > 0f) {
+                        Box(modifier = Modifier.fillMaxHeight().weight(awakePercent).background(TextSubtle))
                     }
                     if (lightPercent > 0f) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .weight(lightPercent)
-                                .background(color = Color(0xFF1976D2))
-                        )
+                        Box(modifier = Modifier.fillMaxHeight().weight(lightPercent).background(SoftLavender))
+                    }
+                    if (deepPercent > 0f) {
+                        Box(modifier = Modifier.fillMaxHeight().weight(deepPercent).background(ElectricIndigo))
                     }
                     if (remPercent > 0f) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .weight(remPercent)
-                                .background(color = Color(0xFF00BCD4))
-                        )
-                    }
-                    if (awakePercent > 0f) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .weight(awakePercent)
-                                .background(
-                                    color = Color(0xFFFF9800),
-                                    shape = RoundedCornerShape(
-                                        topEnd = 8.dp,
-                                        bottomEnd = 8.dp
-                                    )
-                                )
-                        )
+                        Box(modifier = Modifier.fillMaxHeight().weight(remPercent).background(VibrantMagenta))
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Legend
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SleepStageLegendItem(
-                    color = Color(0xFF4A148C),
-                    label = "Deep Sleep",
-                    value = sleepStages.deepSleepHours,
-                    percent = (deepPercent * 100).roundToInt()
-                )
-                SleepStageLegendItem(
-                    color = Color(0xFF1976D2),
-                    label = "Light Sleep",
-                    value = sleepStages.lightSleepHours,
-                    percent = (lightPercent * 100).roundToInt()
-                )
-                SleepStageLegendItem(
-                    color = Color(0xFF00BCD4),
-                    label = "REM Sleep",
-                    value = sleepStages.remSleepHours,
-                    percent = (remPercent * 100).roundToInt()
-                )
-                SleepStageLegendItem(
-                    color = Color(0xFFFF9800),
-                    label = "Awake",
-                    value = sleepStages.awakeHours,
-                    percent = (awakePercent * 100).roundToInt()
-                )
+            // Legend — 2x2 grid matching Stitch
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SleepStageLegendItem(color = TextSubtle, label = "Awake", value = sleepStages.awakeHours, percent = (awakePercent * 100).roundToInt())
+                    SleepStageLegendItem(color = ElectricIndigo, label = "Deep", value = sleepStages.deepSleepHours, percent = (deepPercent * 100).roundToInt())
+                }
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SleepStageLegendItem(color = SoftLavender, label = "Light", value = sleepStages.lightSleepHours, percent = (lightPercent * 100).roundToInt())
+                    SleepStageLegendItem(color = VibrantMagenta, label = "REM", value = sleepStages.remSleepHours, percent = (remPercent * 100).roundToInt())
+                }
             }
         }
     }
@@ -1569,42 +1521,12 @@ private fun SleepStageLegendItem(
     value: String,
     percent: Int
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(color, RoundedCornerShape(2.dp))
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextOnSurface
-            )
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextOnSurface,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "$percent%",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextOnSurfaceVariant
-            )
-        }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(8.dp).background(color, CircleShape))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = label, fontSize = 12.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium)
+        Spacer(modifier = Modifier.weight(1f))
+        Text(text = value, fontSize = 12.sp, color = TextOnSurface, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -1802,158 +1724,165 @@ private fun SleepClockCard(
     val startHour = startZoned.hour + startZoned.minute / 60f
     val endHour = endZoned.hour + endZoned.minute / 60f
 
-    // Format times
     val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
     val startTimeStr = startZoned.format(timeFormatter)
     val endTimeStr = endZoned.format(timeFormatter)
 
-    val sleepColor = Color(0xFF9B59B6)
-    val clockBg = Color(0xFF1A1A2E)
+    val durationMs = java.time.Duration.between(sleepStart, sleepEnd).toMinutes()
+    val sleepH = (durationMs / 60).toInt()
+    val sleepM = (durationMs % 60).toInt()
 
-    Card(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Sleep Clock Ring
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(240.dp)
         ) {
-            Text(
-                text = "Sleep Schedule",
-                style = MaterialTheme.typography.titleMedium,
-                color = TextOnSurface,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Canvas(modifier = Modifier.size(240.dp)) {
+                val cx = size.width / 2
+                val cy = size.height / 2
+                val radius = size.width / 2 - 24.dp.toPx()
+                val strokeW = 14.dp.toPx()
 
-            // Clock face
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(220.dp)
-            ) {
-                Canvas(modifier = Modifier.size(220.dp)) {
-                    val cx = size.width / 2
-                    val cy = size.height / 2
-                    val radius = size.width / 2 - 20.dp.toPx()
-                    val strokeW = 20.dp.toPx()
+                // Track ring
+                drawArc(
+                    color = SurfaceHighest.copy(alpha = 0.3f),
+                    startAngle = 0f, sweepAngle = 360f,
+                    useCenter = false,
+                    style = Stroke(width = strokeW, cap = StrokeCap.Round),
+                    topLeft = Offset(cx - radius, cy - radius),
+                    size = Size(radius * 2, radius * 2)
+                )
 
-                    // Clock background circle
-                    drawCircle(
-                        color = clockBg,
-                        radius = radius + strokeW / 2,
-                        center = Offset(cx, cy)
+                // Sleep arc with gradient
+                val startAngle = (startHour % 12) * 30f - 90f
+                var sweep = ((endHour % 12) * 30f - 90f) - startAngle
+                if (sweep <= 0) sweep += 360f
+
+                drawArc(
+                    brush = Brush.sweepGradient(
+                        listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
+                    ),
+                    startAngle = startAngle,
+                    sweepAngle = sweep,
+                    useCenter = false,
+                    style = Stroke(width = strokeW, cap = StrokeCap.Round),
+                    topLeft = Offset(cx - radius, cy - radius),
+                    size = Size(radius * 2, radius * 2)
+                )
+            }
+
+            // Center content
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "TOTAL SLEEP",
+                    fontSize = 10.sp,
+                    color = TextOnSurfaceVariant,
+                    letterSpacing = 2.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${sleepH}h ${sleepM}m",
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Black,
+                    color = TextOnSurface,
+                    letterSpacing = (-1).sp
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = null,
+                        tint = ElectricIndigo,
+                        modifier = Modifier.size(14.dp)
                     )
-
-                    // Outer ring background
-                    drawArc(
-                        color = Color(0xFF2A2A3A),
-                        startAngle = 0f,
-                        sweepAngle = 360f,
-                        useCenter = false,
-                        style = Stroke(width = strokeW, cap = StrokeCap.Round),
-                        topLeft = Offset(cx - radius, cy - radius),
-                        size = Size(radius * 2, radius * 2)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (sleepH >= 7) "OPTIMAL RANGE" else "BELOW TARGET",
+                        fontSize = 10.sp,
+                        color = ElectricIndigo,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
-
-                    // Convert hours to angles (12h clock, 0h = top = -90 degrees)
-                    // On a 12h clock: 12AM/12PM = top, 6AM/6PM = bottom
-                    val startAngle = (startHour % 12) * 30f - 90f
-                    var endAngle = (endHour % 12) * 30f - 90f
-
-                    // Calculate sweep (sleep arc)
-                    var sweep = endAngle - startAngle
-                    if (sweep <= 0) sweep += 360f // crosses midnight or noon
-
-                    // Sleep arc
-                    drawArc(
-                        color = sleepColor,
-                        startAngle = startAngle,
-                        sweepAngle = sweep,
-                        useCenter = false,
-                        style = Stroke(width = strokeW, cap = StrokeCap.Round),
-                        topLeft = Offset(cx - radius, cy - radius),
-                        size = Size(radius * 2, radius * 2)
-                    )
-
-                    // Hour markers
-                    for (h in 0..11) {
-                        val angle = Math.toRadians((h * 30.0 - 90.0))
-                        val isMain = h % 3 == 0
-                        val outerR = radius - strokeW / 2 - 8.dp.toPx()
-                        val innerR = outerR - if (isMain) 10.dp.toPx() else 5.dp.toPx()
-
-                        drawLine(
-                            color = Color(0xFF555566),
-                            start = Offset(
-                                cx + (outerR * kotlin.math.cos(angle)).toFloat(),
-                                cy + (outerR * kotlin.math.sin(angle)).toFloat()
-                            ),
-                            end = Offset(
-                                cx + (innerR * kotlin.math.cos(angle)).toFloat(),
-                                cy + (innerR * kotlin.math.sin(angle)).toFloat()
-                            ),
-                            strokeWidth = if (isMain) 2.5f else 1.5f
-                        )
-                    }
-
-                    // Sleep start dot
-                    val startRad = Math.toRadians((startAngle + 90).toDouble())
-                    drawCircle(
-                        color = Color.White,
-                        radius = 5.dp.toPx(),
-                        center = Offset(
-                            cx + (radius * kotlin.math.cos(Math.toRadians(startAngle.toDouble()))).toFloat(),
-                            cy + (radius * kotlin.math.sin(Math.toRadians(startAngle.toDouble()))).toFloat()
-                        )
-                    )
-
-                    // Sleep end dot
-                    drawCircle(
-                        color = Color.White,
-                        radius = 5.dp.toPx(),
-                        center = Offset(
-                            cx + (radius * kotlin.math.cos(Math.toRadians((startAngle + sweep).toDouble()))).toFloat(),
-                            cy + (radius * kotlin.math.sin(Math.toRadians((startAngle + sweep).toDouble()))).toFloat()
-                        )
-                    )
-                }
-
-                // Center text
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "12AM", color = TextSubtle, fontSize = 10.sp)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text(text = "🌙", fontSize = 24.sp)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text(text = "12PM", color = TextSubtle, fontSize = 10.sp)
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Clock markers
+            Text(
+                text = "12 PM",
+                fontSize = 10.sp,
+                color = TextOnSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp)
+            )
+            Text(
+                text = "12 AM",
+                fontSize = 10.sp,
+                color = TextOnSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
+            )
+        }
 
-            // Time labels
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Bedtime / Wake Up
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("BEDTIME", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(startTimeStr, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("WAKE UP", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(endTimeStr, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Efficiency + Consistency stat cards
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            val efficiency = ((sleepH * 60 + sleepM).toFloat() / 480f * 100).toInt().coerceIn(0, 100)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(SurfaceLow)
+                    .padding(20.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Fell asleep", color = TextSubtle, fontSize = 12.sp)
-                    Text(
-                        text = startTimeStr,
-                        color = TextOnSurface,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
+                Column {
+                    Text("EFFICIENCY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text("$efficiency", fontSize = 32.sp, fontWeight = FontWeight.Black, color = VibrantMagenta)
+                        Text("%", fontSize = 14.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                    }
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Woke up", color = TextSubtle, fontSize = 12.sp)
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(SurfaceLow)
+                    .padding(20.dp)
+            ) {
+                Column {
+                    Text("CONSISTENCY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = endTimeStr,
-                        color = TextOnSurface,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        text = if (sleepH >= 7) "High" else if (sleepH >= 5) "Medium" else "Low",
+                        fontSize = 28.sp, fontWeight = FontWeight.Black, color = ElectricIndigo
                     )
                 }
             }
