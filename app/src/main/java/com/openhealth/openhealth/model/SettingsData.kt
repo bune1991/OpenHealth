@@ -19,7 +19,7 @@ data class SettingsData(
     val onboardingCompleted: Boolean = false,
 
     // Theme
-    val useLightTheme: Boolean = false,
+    val themeName: String = "nocturne",
 
     // Weather
     val weatherEnabled: Boolean = false,

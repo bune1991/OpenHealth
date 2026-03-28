@@ -271,26 +271,32 @@ fun SettingsScreen(
                     ThemeCircle(
                         label = "Nocturne",
                         colors = listOf(Color(0xFF1A0033), Color(0xFF000000), Color(0xFF1A0040)),
-                        isSelected = !settings.useLightTheme,
-                        onClick = { onSettingsChanged(settings.copy(useLightTheme = false)) }
+                        isSelected = settings.themeName == "nocturne",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "nocturne")) }
                     )
                     ThemeCircle(
                         label = "Solar",
                         colors = listOf(Color(0xFFFF8C00), Color(0xFFFFD700)),
-                        isSelected = false,
-                        onClick = { }
+                        isSelected = settings.themeName == "solar",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "solar")) }
                     )
                     ThemeCircle(
                         label = "Ocean",
                         colors = listOf(Color(0xFF0077B6), Color(0xFF023E8A)),
-                        isSelected = false,
-                        onClick = { }
+                        isSelected = settings.themeName == "ocean",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "ocean")) }
                     )
                     ThemeCircle(
                         label = "Forest",
                         colors = listOf(Color(0xFF10B981), Color(0xFF065F46)),
-                        isSelected = false,
-                        onClick = { }
+                        isSelected = settings.themeName == "forest",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "forest")) }
+                    )
+                    ThemeCircle(
+                        label = "Light",
+                        colors = listOf(Color(0xFFB89FFF), Color(0xFFF5F5F5)),
+                        isSelected = settings.themeName == "light",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "light")) }
                     )
                 }
             }

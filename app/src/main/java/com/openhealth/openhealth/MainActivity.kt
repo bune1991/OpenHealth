@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            OpenHealthTheme(darkTheme = !settings.useLightTheme) {
+            OpenHealthTheme(themeName = settings.themeName) {
 
                 val uiState by viewModel.uiState.collectAsState()
                 val healthData by viewModel.healthData.collectAsState()

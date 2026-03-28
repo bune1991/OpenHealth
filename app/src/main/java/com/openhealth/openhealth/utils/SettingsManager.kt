@@ -73,7 +73,7 @@ class SettingsManager private constructor(context: Context) {
         private const val KEY_AI_CUSTOM_URL = "ai_custom_url"
         private const val KEY_AI_CUSTOM_MODEL = "ai_custom_model"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
-        private const val KEY_USE_LIGHT_THEME = "use_light_theme"
+        private const val KEY_THEME_NAME = "theme_name"
         private const val KEY_WEATHER_ENABLED = "weather_enabled"
         private const val KEY_WEATHER_CITY = "weather_city"
         private const val KEY_WEATHER_LAT = "weather_lat"
@@ -116,7 +116,7 @@ class SettingsManager private constructor(context: Context) {
             // App State
             onboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false),
             // Theme
-            useLightTheme = prefs.getBoolean(KEY_USE_LIGHT_THEME, false),
+            themeName = prefs.getString(KEY_THEME_NAME, "nocturne") ?: "nocturne",
             // Weather
             weatherEnabled = prefs.getBoolean(KEY_WEATHER_ENABLED, false),
             weatherCity = prefs.getString(KEY_WEATHER_CITY, "") ?: "",
@@ -190,7 +190,7 @@ class SettingsManager private constructor(context: Context) {
             // App State
             putBoolean(KEY_ONBOARDING_COMPLETED, settings.onboardingCompleted)
             // Theme
-            putBoolean(KEY_USE_LIGHT_THEME, settings.useLightTheme)
+            putString(KEY_THEME_NAME, settings.themeName)
             // Weather
             putBoolean(KEY_WEATHER_ENABLED, settings.weatherEnabled)
             putString(KEY_WEATHER_CITY, settings.weatherCity)
