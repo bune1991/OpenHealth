@@ -853,7 +853,7 @@ fun MetricDetailScreen(
                         }
 
                         // ═══════════════════════════════════════
-                        // Body Composition Detail Layout
+                        // Body Composition Detail Layout — Stitch Design
                         // ═══════════════════════════════════════
                         val isBodyCompMetric = metricType in listOf(
                             HealthViewModel.MetricType.WEIGHT,
@@ -865,15 +865,22 @@ fun MetricDetailScreen(
                         )
 
                         if (isBodyCompMetric && healthData != null) {
-                            // Hero — Current Weight with weekly delta
+
+                            // ── 1. Weight Ring Gauge Hero ──
                             item {
                                 val currentWeight = healthData.weight.kilograms
                                 val weightStr = currentWeight?.let { String.format("%.1f", it) } ?: "--"
+                                val targetWeight = 59.0
+                                val progress = currentWeight?.let {
+                                    val maxRange = 20.0 // assume +-20 kg range
+                                    (1.0 - ((it - targetWeight) / maxRange).coerceIn(0.0, 1.0)).toFloat()
+                                } ?: 0f
 
-                                val last7 = metricHistory?.allHistoricalData?.takeLast(7)
-                                val weekDelta = if (last7 != null && last7.size >= 2) {
-                                    last7.last().value - last7.first().value
-                                } else null
+                                val animatedProgress by animateFloatAsState(
+                                    targetValue = progress,
+                                    animationSpec = tween(durationMillis = 1200),
+                                    label = "ringProgress"
+                                )
 
                                 Box(
                                     modifier = Modifier
@@ -886,154 +893,226 @@ fun MetricDetailScreen(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text(
-                                            text = "CURRENT WEIGHT",
-                                            color = TextOnSurfaceVariant,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            letterSpacing = 2.sp
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = "$weightStr kg",
-                                            color = TextOnSurface,
-                                            fontSize = 44.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        if (weekDelta != null) {
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            val deltaStr = String.format("%+.1f", weekDelta)
-                                            val deltaColor = if (weekDelta <= 0) SuccessGreen else ErrorRed
+                                        // Ring gauge
+                                        Box(
+                                            modifier = Modifier.size(200.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Canvas(modifier = Modifier.size(200.dp)) {
+                                                val strokeWidth = 14.dp.toPx()
+                                                val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
+                                                val topLeft = Offset(strokeWidth / 2f, strokeWidth / 2f)
+                                                val startAngle = 135f
+                                                val sweepTotal = 270f
+
+                                                // Track
+                                                drawArc(
+                                                    color = SurfaceHighest,
+                                                    startAngle = startAngle,
+                                                    sweepAngle = sweepTotal,
+                                                    useCenter = false,
+                                                    topLeft = topLeft,
+                                                    size = arcSize,
+                                                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                                                )
+
+                                                // Gradient arc
+                                                drawArc(
+                                                    brush = Brush.sweepGradient(
+                                                        listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
+                                                    ),
+                                                    startAngle = startAngle,
+                                                    sweepAngle = sweepTotal * animatedProgress,
+                                                    useCenter = false,
+                                                    topLeft = topLeft,
+                                                    size = arcSize,
+                                                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                                                )
+                                            }
+                                            // Center text
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text(
+                                                    text = weightStr,
+                                                    color = TextOnSurface,
+                                                    fontSize = 36.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    text = "KG",
+                                                    color = TextOnSurfaceVariant,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 2.sp
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(20.dp))
+
+                                        // Goal progress label row
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
                                             Text(
-                                                text = "$deltaStr kg since last week",
-                                                color = deltaColor,
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.SemiBold
+                                                text = "GOAL PROGRESS",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Text(
+                                                text = "TARGET: ${String.format("%.1f", targetWeight)} KG",
+                                                color = ElectricIndigo,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.sp
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        // Progress bar
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(8.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(SurfaceHighest)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth(animatedProgress)
+                                                    .fillMaxHeight()
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(
+                                                        Brush.linearGradient(
+                                                            listOf(ElectricIndigo, VibrantMagenta)
+                                                        )
+                                                    )
                                             )
                                         }
                                     }
                                 }
                             }
 
-                            // 2x2 Body Composition Grid
+                            // ── 2. COMPOSITION MATRIX header ──
                             item {
-                                val bodyFatPct = healthData.bodyFat.percentage?.let { String.format("%.1f", it) + "%" } ?: "--"
-                                val bmrVal = healthData.basalMetabolicRate.caloriesPerDay?.let { String.format("%.0f", it) + " kcal" } ?: "--"
-                                val bodyWaterVal = healthData.bodyWaterMass.kilograms?.let { String.format("%.1f", it) + " kg" } ?: "--"
-                                val leanMassVal = healthData.leanBodyMass.kilograms?.let {
-                                    val totalW = healthData.weight.kilograms
-                                    if (totalW != null && totalW > 0) {
-                                        String.format("%.0f", (it / totalW) * 100) + "%"
-                                    } else String.format("%.1f", it) + " kg"
-                                } ?: "--"
+                                Text(
+                                    text = "COMPOSITION MATRIX",
+                                    color = ElectricIndigo,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 2.sp,
+                                    modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp)
+                                )
+                            }
 
-                                // Status helpers for each metric
-                                val bodyFatStatus = healthData.bodyFat.percentage?.let {
-                                    if (it < 20) "OPTIMAL" else if (it < 25) "NORMAL" else "HIGH"
-                                } ?: "--"
-                                val bmrStatus = healthData.basalMetabolicRate.caloriesPerDay?.let {
-                                    if (it >= 1200) "OPTIMAL" else "LOW"
-                                } ?: "--"
-                                val bodyWaterStatus = healthData.bodyWaterMass.kilograms?.let {
-                                    val totalW = healthData.weight.kilograms
-                                    if (totalW != null && totalW > 0) {
-                                        val pct = (it / totalW) * 100
-                                        if (pct >= 50) "OPTIMAL" else "LOW"
-                                    } else "NORMAL"
-                                } ?: "--"
-                                val leanMassStatus = healthData.leanBodyMass.kilograms?.let {
-                                    val totalW = healthData.weight.kilograms
-                                    if (totalW != null && totalW > 0) {
-                                        val pct = (it / totalW) * 100
-                                        if (pct >= 70) "OPTIMAL" else if (pct >= 60) "NORMAL" else "LOW"
-                                    } else "NORMAL"
-                                } ?: "--"
+                            // ── 3. 2x2 Composition Grid ──
+                            item {
+                                val bodyFatVal = healthData.bodyFat.percentage
+                                val bodyFatStr = bodyFatVal?.let { String.format("%.1f %%", it) } ?: "-- %"
+                                val bmrRaw = healthData.basalMetabolicRate.caloriesPerDay
+                                val bmrStr = bmrRaw?.let { String.format("%.0f KCAL", it) } ?: "-- KCAL"
+                                val waterKg = healthData.bodyWaterMass.kilograms
+                                val waterPct = if (waterKg != null && healthData.weight.kilograms != null && healthData.weight.kilograms!! > 0) {
+                                    String.format("%.1f %%", (waterKg / healthData.weight.kilograms!!) * 100)
+                                } else waterKg?.let { String.format("%.1f KG", it) } ?: "-- %"
+                                val boneMassVal = healthData.boneMass.kilograms
+                                val boneMassStr = boneMassVal?.let { String.format("%.1f KG", it) } ?: "-- KG"
 
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        // Body Fat card
+                                        // Body Fat
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
+                                                .height(120.dp)
                                                 .clip(RoundedCornerShape(20.dp))
                                                 .background(SurfaceLow)
                                                 .padding(16.dp)
                                         ) {
-                                            Column {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
+                                            Column(
+                                                modifier = Modifier.fillMaxSize(),
+                                                verticalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .background(VibrantMagenta.copy(alpha = 0.15f), CircleShape),
+                                                    contentAlignment = Alignment.Center
                                                 ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(32.dp)
-                                                            .background(CardBodyFat.copy(alpha = 0.15f), CircleShape),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Favorite,
-                                                            contentDescription = null,
-                                                            tint = CardBodyFat,
-                                                            modifier = Modifier.size(16.dp)
-                                                        )
-                                                    }
-                                                    Text(
-                                                        text = bodyFatStatus,
-                                                        color = CardBodyFat,
-                                                        fontSize = 9.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        letterSpacing = 1.sp
+                                                    Icon(
+                                                        imageVector = Icons.Default.WaterDrop,
+                                                        contentDescription = null,
+                                                        tint = VibrantMagenta,
+                                                        modifier = Modifier.size(18.dp)
                                                     )
                                                 }
-                                                Spacer(modifier = Modifier.height(12.dp))
-                                                Text(bodyFatPct, color = CardBodyFat, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text("Body Fat", color = TextOnSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                                Column {
+                                                    Text(
+                                                        text = "BODY FAT",
+                                                        color = TextSubtle,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        letterSpacing = 1.5.sp
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = bodyFatStr,
+                                                        color = TextOnSurface,
+                                                        fontSize = 20.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
                                             }
                                         }
-                                        // BMR card
+                                        // BMR
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
+                                                .height(120.dp)
                                                 .clip(RoundedCornerShape(20.dp))
                                                 .background(SurfaceLow)
                                                 .padding(16.dp)
                                         ) {
-                                            Column {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
+                                            Column(
+                                                modifier = Modifier.fillMaxSize(),
+                                                verticalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .background(ElectricIndigo.copy(alpha = 0.15f), CircleShape),
+                                                    contentAlignment = Alignment.Center
                                                 ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(32.dp)
-                                                            .background(CardBMR.copy(alpha = 0.15f), CircleShape),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.LocalFireDepartment,
-                                                            contentDescription = null,
-                                                            tint = CardBMR,
-                                                            modifier = Modifier.size(16.dp)
-                                                        )
-                                                    }
-                                                    Text(
-                                                        text = bmrStatus,
-                                                        color = CardBMR,
-                                                        fontSize = 9.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        letterSpacing = 1.sp
+                                                    Icon(
+                                                        imageVector = Icons.Default.Bolt,
+                                                        contentDescription = null,
+                                                        tint = ElectricIndigo,
+                                                        modifier = Modifier.size(18.dp)
                                                     )
                                                 }
-                                                Spacer(modifier = Modifier.height(12.dp))
-                                                Text(bmrVal, color = CardBMR, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text("BMR", color = TextOnSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                                Column {
+                                                    Text(
+                                                        text = "BMR",
+                                                        color = TextSubtle,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        letterSpacing = 1.5.sp
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = bmrStr,
+                                                        color = TextOnSurface,
+                                                        fontSize = 20.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -1041,166 +1120,89 @@ fun MetricDetailScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        // Muscle Mass card
+                                        // Water
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
+                                                .height(120.dp)
                                                 .clip(RoundedCornerShape(20.dp))
                                                 .background(SurfaceLow)
                                                 .padding(16.dp)
                                         ) {
-                                            Column {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
+                                            Column(
+                                                modifier = Modifier.fillMaxSize(),
+                                                verticalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .background(SoftLavender.copy(alpha = 0.15f), CircleShape),
+                                                    contentAlignment = Alignment.Center
                                                 ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(32.dp)
-                                                            .background(CardLeanBodyMass.copy(alpha = 0.15f), CircleShape),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.FitnessCenter,
-                                                            contentDescription = null,
-                                                            tint = CardLeanBodyMass,
-                                                            modifier = Modifier.size(16.dp)
-                                                        )
-                                                    }
-                                                    Text(
-                                                        text = leanMassStatus,
-                                                        color = CardLeanBodyMass,
-                                                        fontSize = 9.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        letterSpacing = 1.sp
+                                                    Icon(
+                                                        imageVector = Icons.Default.WaterDrop,
+                                                        contentDescription = null,
+                                                        tint = SoftLavender,
+                                                        modifier = Modifier.size(18.dp)
                                                     )
                                                 }
-                                                Spacer(modifier = Modifier.height(12.dp))
-                                                Text(leanMassVal, color = CardLeanBodyMass, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text("Muscle Mass", color = TextOnSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                                            }
-                                        }
-                                        // Body Water card
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
-                                                .padding(16.dp)
-                                        ) {
-                                            Column {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(32.dp)
-                                                            .background(CardBodyWater.copy(alpha = 0.15f), CircleShape),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.WaterDrop,
-                                                            contentDescription = null,
-                                                            tint = CardBodyWater,
-                                                            modifier = Modifier.size(16.dp)
-                                                        )
-                                                    }
+                                                Column {
                                                     Text(
-                                                        text = bodyWaterStatus,
-                                                        color = CardBodyWater,
-                                                        fontSize = 9.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        letterSpacing = 1.sp
-                                                    )
-                                                }
-                                                Spacer(modifier = Modifier.height(12.dp))
-                                                Text(bodyWaterVal, color = CardBodyWater, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text("Hydration", color = TextOnSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Weight Trend — mini line chart (last 7 days)
-                            if (metricHistory?.allHistoricalData?.isNotEmpty() == true) {
-                                item {
-                                    val last7Days = metricHistory.allHistoricalData.takeLast(7)
-                                    val values = last7Days.map { it.value.toFloat() }
-                                    val minVal = (values.minOrNull() ?: 0f) - 1f
-                                    val maxVal = (values.maxOrNull() ?: 100f) + 1f
-                                    val range = (maxVal - minVal).coerceAtLeast(1f)
-
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(24.dp))
-                                            .background(SurfaceLow)
-                                            .padding(20.dp)
-                                    ) {
-                                        Column {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text("Weight Trend", style = MaterialTheme.typography.titleSmall, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                                                Text("LAST 7 DAYS", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                                            }
-                                            Spacer(modifier = Modifier.height(16.dp))
-
-                                            val lineColor = CardWeight
-                                            val fillColor = CardWeight.copy(alpha = 0.15f)
-                                            Canvas(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(120.dp)
-                                            ) {
-                                                if (values.size < 2) return@Canvas
-                                                val w = size.width
-                                                val h = size.height
-                                                val stepX = w / (values.size - 1).coerceAtLeast(1)
-
-                                                val fillPath = Path().apply {
-                                                    moveTo(0f, h)
-                                                    values.forEachIndexed { i, v ->
-                                                        val x = i * stepX
-                                                        val y = h - ((v - minVal) / range) * h
-                                                        lineTo(x, y)
-                                                    }
-                                                    lineTo((values.size - 1) * stepX, h)
-                                                    close()
-                                                }
-                                                drawPath(fillPath, fillColor)
-
-                                                val linePath = Path().apply {
-                                                    values.forEachIndexed { i, v ->
-                                                        val x = i * stepX
-                                                        val y = h - ((v - minVal) / range) * h
-                                                        if (i == 0) moveTo(x, y) else lineTo(x, y)
-                                                    }
-                                                }
-                                                drawPath(linePath, lineColor, style = Stroke(width = 3f, cap = StrokeCap.Round))
-
-                                                values.forEachIndexed { i, v ->
-                                                    val x = i * stepX
-                                                    val y = h - ((v - minVal) / range) * h
-                                                    drawCircle(lineColor, radius = 4f, center = Offset(x, y))
-                                                }
-                                            }
-
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                                last7Days.forEach { dp ->
-                                                    Text(
-                                                        text = dp.date.format(DateTimeFormatter.ofPattern("E", Locale.getDefault())).take(1),
+                                                        text = "WATER",
                                                         color = TextSubtle,
-                                                        fontSize = 10.sp,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        letterSpacing = 1.5.sp
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = waterPct,
+                                                        color = TextOnSurface,
+                                                        fontSize = 20.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        // Bone Mass
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(120.dp)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.fillMaxSize(),
+                                                verticalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .background(VibrantMagenta.copy(alpha = 0.15f), CircleShape),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.AutoAwesome,
+                                                        contentDescription = null,
+                                                        tint = VibrantMagenta,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                                Column {
+                                                    Text(
+                                                        text = "BONE MASS",
+                                                        color = TextSubtle,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        letterSpacing = 1.5.sp
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = boneMassStr,
+                                                        color = TextOnSurface,
+                                                        fontSize = 20.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
                                                 }
@@ -1210,21 +1212,215 @@ fun MetricDetailScreen(
                                 }
                             }
 
-                            // AI Insight for Body Composition
+                            // ── 4. Lean Muscle Mass wide card ──
+                            item {
+                                val leanMassKg = healthData.leanBodyMass.kilograms
+                                val leanMassStr = leanMassKg?.let { String.format("%.1f KG", it) } ?: "-- KG"
+
+                                // Calculate monthly delta from history
+                                val monthlyDelta = metricHistory?.allHistoricalData?.let { data ->
+                                    if (data.size >= 2) {
+                                        val recent = data.last().value
+                                        val oldest = data.first().value
+                                        recent - oldest
+                                    } else null
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(SurfaceHigh)
+                                        .padding(20.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .background(ElectricIndigo.copy(alpha = 0.15f), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.FitnessCenter,
+                                                contentDescription = null,
+                                                tint = ElectricIndigo,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "LEAN MUSCLE MASS",
+                                                color = TextSubtle,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = leanMassStr,
+                                                color = TextOnSurface,
+                                                fontSize = 24.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        if (monthlyDelta != null) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(20.dp))
+                                                    .background(ElectricIndigo.copy(alpha = 0.15f))
+                                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                                            ) {
+                                                Text(
+                                                    text = "${String.format("%+.1f", monthlyDelta)}kg this month",
+                                                    color = ElectricIndigo,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── 5. 7-DAY VELOCITY bar chart ──
+                            if (metricHistory?.allHistoricalData?.isNotEmpty() == true) {
+                                item {
+                                    val last7Days = metricHistory.allHistoricalData.takeLast(7)
+                                    val values = last7Days.map { it.value.toFloat() }
+                                    val minVal = (values.minOrNull() ?: 0f) - 1f
+                                    val maxVal = (values.maxOrNull() ?: 100f) + 1f
+                                    val range = (maxVal - minVal).coerceAtLeast(1f)
+                                    val todayDow = LocalDate.now().dayOfWeek
+
+                                    Column {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "7-DAY VELOCITY",
+                                                color = ElectricIndigo,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 2.sp
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(20.dp))
+                                                    .background(ElectricIndigo.copy(alpha = 0.12f))
+                                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                                            ) {
+                                                Text(
+                                                    text = "WEIGHT TREND",
+                                                    color = ElectricIndigo,
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 1.sp
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLowest)
+                                                .padding(20.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(140.dp),
+                                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                                verticalAlignment = Alignment.Bottom
+                                            ) {
+                                                last7Days.forEachIndexed { index, dp ->
+                                                    val normalized = ((dp.value.toFloat() - minVal) / range).coerceIn(0.1f, 1f)
+                                                    val isToday = dp.date.dayOfWeek == todayDow
+                                                    val dayLabel = dp.date.format(DateTimeFormatter.ofPattern("EEE", Locale.getDefault())).take(3).uppercase()
+
+                                                    Column(
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                        modifier = Modifier.weight(1f)
+                                                    ) {
+                                                        // Value label on top
+                                                        Text(
+                                                            text = String.format("%.1f", dp.value),
+                                                            color = if (isToday) ElectricIndigo else TextSubtle,
+                                                            fontSize = 8.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                                        // Bar track
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .width(24.dp)
+                                                                .weight(1f)
+                                                                .clip(RoundedCornerShape(12.dp))
+                                                                .background(SurfaceHigh),
+                                                            contentAlignment = Alignment.BottomCenter
+                                                        ) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .fillMaxWidth()
+                                                                    .fillMaxHeight(normalized)
+                                                                    .clip(RoundedCornerShape(12.dp))
+                                                                    .background(
+                                                                        if (isToday) Brush.linearGradient(
+                                                                            listOf(ElectricIndigo, VibrantMagenta),
+                                                                            start = Offset(0f, Float.POSITIVE_INFINITY),
+                                                                            end = Offset(0f, 0f)
+                                                                        )
+                                                                        else Brush.linearGradient(
+                                                                            listOf(ElectricIndigo.copy(alpha = 0.4f), VibrantMagenta.copy(alpha = 0.4f)),
+                                                                            start = Offset(0f, Float.POSITIVE_INFINITY),
+                                                                            end = Offset(0f, 0f)
+                                                                        )
+                                                                    )
+                                                            )
+                                                        }
+
+                                                        Spacer(modifier = Modifier.height(6.dp))
+                                                        Text(
+                                                            text = dayLabel,
+                                                            color = if (isToday) ElectricIndigo else TextSubtle,
+                                                            fontSize = 9.sp,
+                                                            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
+                                                            letterSpacing = 0.5.sp
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── 6. NEURAL ANALYSIS card ──
                             item {
                                 val bodyFat = healthData.bodyFat.percentage
                                 val leanMass = healthData.leanBodyMass.kilograms
                                 val weight = healthData.weight.kilograms
-                                val insightText = when {
-                                    bodyFat != null && leanMass != null && weight != null -> {
+                                val bmrCals = healthData.basalMetabolicRate.caloriesPerDay
+
+                                val analysisText = when {
+                                    bodyFat != null && leanMass != null && weight != null && bmrCals != null -> {
                                         val leanPct = (leanMass / weight * 100).roundToInt()
-                                        "Your body fat is at ${String.format("%.1f", bodyFat)}% with $leanPct% lean mass. " +
-                                        if (bodyFat < 20) "Excellent composition range. Keep maintaining your current routine."
-                                        else if (bodyFat < 25) "Good composition. Consider adding resistance training to shift the ratio further."
-                                        else "Focus on progressive resistance training and protein intake to improve your lean-to-fat ratio."
+                                        "Your lean mass ratio is ${leanPct}% with a metabolic rate of ${String.format("%.0f", bmrCals)} kcal/day. " +
+                                        if (bodyFat < 20) "Excellent body composition. Your metabolic efficiency is high — maintain current training load."
+                                        else if (bodyFat < 25) "Good composition profile. Increasing resistance training volume could shift your lean-to-fat ratio and boost resting metabolism."
+                                        else "Focus on progressive overload and protein timing to improve lean mass. Each kg of muscle gained increases BMR by ~13 kcal/day."
                                     }
-                                    weight != null -> "Tracking your weight consistently is the first step. Add body fat measurements for a complete picture."
-                                    else -> "Start logging body composition data to unlock personalized insights."
+                                    weight != null -> "Begin tracking body fat and lean mass alongside weight to unlock full metabolic analysis and calorie targets."
+                                    else -> "Start logging body composition data to enable neural analysis of your metabolic profile."
                                 }
 
                                 Box(
@@ -1233,10 +1429,7 @@ fun MetricDetailScreen(
                                         .clip(RoundedCornerShape(24.dp))
                                         .background(
                                             Brush.linearGradient(
-                                                listOf(
-                                                    ElectricIndigo.copy(alpha = 0.15f),
-                                                    VibrantMagenta.copy(alpha = 0.15f)
-                                                )
+                                                listOf(SurfaceHigh, SurfaceLow)
                                             )
                                         )
                                         .padding(20.dp)
@@ -1246,36 +1439,28 @@ fun MetricDetailScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .size(44.dp)
-                                                    .background(
-                                                        Brush.linearGradient(
-                                                            listOf(
-                                                                ElectricIndigo.copy(alpha = 0.2f),
-                                                                VibrantMagenta.copy(alpha = 0.2f)
-                                                            )
-                                                        ),
-                                                        CircleShape
-                                                    ),
+                                                    .background(VibrantMagenta.copy(alpha = 0.15f), CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.AutoAwesome,
                                                     contentDescription = null,
-                                                    tint = ElectricIndigo,
+                                                    tint = VibrantMagenta,
                                                     modifier = Modifier.size(22.dp)
                                                 )
                                             }
                                             Spacer(modifier = Modifier.width(12.dp))
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
-                                                    text = "AI INSIGHT",
-                                                    color = ElectricIndigo,
+                                                    text = "NEURAL ANALYSIS",
+                                                    color = VibrantMagenta,
                                                     fontSize = 10.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 1.5.sp
                                                 )
                                                 Spacer(modifier = Modifier.height(6.dp))
                                                 Text(
-                                                    text = insightText,
+                                                    text = analysisText,
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = TextOnSurfaceVariant,
                                                     lineHeight = 18.sp
@@ -1283,18 +1468,23 @@ fun MetricDetailScreen(
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(16.dp))
-                                        // Gradient progress bar accent
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .height(4.dp)
-                                                .clip(RoundedCornerShape(2.dp))
-                                                .background(
-                                                    Brush.linearGradient(
-                                                        listOf(ElectricIndigo, VibrantMagenta)
-                                                    )
-                                                )
-                                        )
+                                                .clip(RoundedCornerShape(50))
+                                                .background(SurfaceHighest)
+                                                .clickable { }
+                                                .padding(vertical = 14.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "VIEW CALORIE TARGETS",
+                                                color = ElectricIndigo,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                        }
                                     }
                                 }
                             }
