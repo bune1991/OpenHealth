@@ -352,7 +352,7 @@ fun MetricDetailScreen(
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(24.dp),
-                                        colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+                                        colors = CardDefaults.cardColors(containerColor = SurfaceLow)
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -362,8 +362,15 @@ fun MetricDetailScreen(
                                         ) {
                                             statsItems.forEach { stat ->
                                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text(text = stat.label, color = TextSubtle, fontSize = 12.sp)
-                                                    Text(text = stat.value, color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                                    Text(
+                                                        text = stat.label.uppercase(),
+                                                        color = TextOnSurfaceVariant,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        letterSpacing = 2.sp
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(text = stat.value, color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                                                 }
                                             }
                                         }
@@ -699,10 +706,11 @@ fun MetricDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (totalRecords > 0) "All History ($totalRecords days)" else "All History",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = TextOnSurface,
+                                    text = if (totalRecords > 0) "RECENT ACTIVITY ($totalRecords)" else "RECENT ACTIVITY",
+                                    color = TextOnSurfaceVariant,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
+                                    letterSpacing = 2.sp,
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
                                 if (isLoading) {
@@ -1329,69 +1337,93 @@ private fun HistoryItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
+            containerColor = SurfaceLow
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left side: Date
-            Column {
-                Text(
-                    text = dayData.date.format(
-                        DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
-                    ),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextOnSurface,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = dayData.date.format(
-                        DateTimeFormatter.ofPattern("EEEE", Locale.getDefault())
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextOnSurfaceVariant
-                )
+            // Left side: Icon circle + Date stacked
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color.copy(alpha = 0.1f),
+                            RoundedCornerShape(20.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = dayData.date.format(
+                            DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
+                        ),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextOnSurface,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = dayData.date.format(
+                            DateTimeFormatter.ofPattern("EEEE", Locale.getDefault())
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextOnSurfaceVariant
+                    )
+                }
             }
 
-            // Right side: Value or Sleep time range
-            if (isSleep) {
-                Column(horizontalAlignment = Alignment.End) {
-                    // Show time range if available
-                    if (dayData.sleepStartTime != null && dayData.sleepEndTime != null) {
-                        val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
-                        val startTimeStr = dayData.sleepStartTime.atZone(java.time.ZoneId.systemDefault()).format(timeFormatter)
-                        val endTimeStr = dayData.sleepEndTime.atZone(java.time.ZoneId.systemDefault()).format(timeFormatter)
-
+            // Right side: Value + trending icon
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isSleep) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        if (dayData.sleepStartTime != null && dayData.sleepEndTime != null) {
+                            val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+                            val startTimeStr = dayData.sleepStartTime.atZone(java.time.ZoneId.systemDefault()).format(timeFormatter)
+                            val endTimeStr = dayData.sleepEndTime.atZone(java.time.ZoneId.systemDefault()).format(timeFormatter)
+                            Text(
+                                text = "$startTimeStr → $endTimeStr",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextOnSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                        }
                         Text(
-                            text = "$startTimeStr → $endTimeStr",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextOnSurface,
-                            fontWeight = FontWeight.Medium
+                            text = formatHoursAndMinutes(dayData.value),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = color,
+                            fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
                     }
-                    // Show duration
+                } else {
+                    val displayValue = formatValue(dayData.value, decimalPlaces)
                     Text(
-                        text = formatHoursAndMinutes(dayData.value),
-                        style = MaterialTheme.typography.titleMedium,
+                        text = displayValue,
+                        style = MaterialTheme.typography.titleLarge,
                         color = color,
                         fontWeight = FontWeight.Bold
                     )
                 }
-            } else {
-                val displayValue = formatValue(dayData.value, decimalPlaces)
-                Text(
-                    text = displayValue,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = color,
-                    fontWeight = FontWeight.Bold
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                    contentDescription = null,
+                    tint = color.copy(alpha = 0.5f),
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
@@ -1626,90 +1658,114 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+        colors = CardDefaults.cardColors(containerColor = SurfaceLow)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header with status
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Insights",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextOnSurface,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .background(dotColor.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
-                ) {
-                    Text(text = insight.status, color = dotColor, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // What it means
-            Text(
-                text = insight.meaning,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextOnSurfaceVariant,
-                lineHeight = 22.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Normal range
-            Text(
-                text = "Normal range: ${insight.normalRange}",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSubtle
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Tips toggle
-            Row(
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Icon circle
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showTips = !showTips },
-                verticalAlignment = Alignment.CenterVertically
+                    .size(48.dp)
+                    .background(
+                        ElectricIndigo.copy(alpha = 0.1f),
+                        RoundedCornerShape(24.dp)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = if (showTips) "Hide Tips" else "Show Tips",
-                    color = ElectricIndigo,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                    contentDescription = null,
+                    tint = ElectricIndigo,
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            if (showTips) {
-                Spacer(modifier = Modifier.height(8.dp))
-                insight.tips.forEach { tip ->
-                    Row(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.Top
+            // Text content
+            Column(modifier = Modifier.weight(1f)) {
+                // Header with status
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Recovery Insight",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextOnSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(dotColor.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
-                        Text(text = "•", color = ElectricIndigo, fontSize = 14.sp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = tip,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextOnSurfaceVariant,
-                            lineHeight = 20.sp
-                        )
+                        Text(text = insight.status, color = dotColor, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                     }
                 }
-            }
 
-            // Learn more
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = insight.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSubtle,
-                lineHeight = 18.sp
-            )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // What it means
+                Text(
+                    text = insight.meaning,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextOnSurfaceVariant,
+                    lineHeight = 22.sp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Normal range
+                Text(
+                    text = "Normal range: ${insight.normalRange}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSubtle
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Tips toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showTips = !showTips },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (showTips) "Hide Tips" else "Show Tips",
+                        color = ElectricIndigo,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp
+                    )
+                }
+
+                if (showTips) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    insight.tips.forEach { tip ->
+                        Row(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Text(text = "•", color = ElectricIndigo, fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = tip,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextOnSurfaceVariant,
+                                lineHeight = 20.sp
+                            )
+                        }
+                    }
+                }
+
+                // Learn more
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = insight.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSubtle,
+                    lineHeight = 18.sp
+                )
+            }
         }
     }
 }
