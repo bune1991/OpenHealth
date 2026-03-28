@@ -3453,60 +3453,77 @@ private fun MiniBarChart(
 // ═══════════════════════════════════════════════════════════
 
 private fun calculateReadinessScore(healthData: HealthData): ReadinessScore {
-    var score = 100
+    // Weighted scoring system — HRV is the dominant factor (like Garmin/Bevel)
+    // Each factor contributes a weighted score out of 100
     val now = java.time.Instant.now()
 
+    // ── HRV Score (40% weight) — most important factor ──
+    val hrvScore = healthData.heartRateVariability.rmssdMs?.let { hrv ->
+        // Scale: 20ms=0, 40ms=50, 60ms=80, 80ms=100
+        ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0)
+    } ?: 30.0 // No data = assume low
+
+    // ── Sleep Score (25% weight) ──
+    val sleepScore = healthData.sleep.totalDuration?.let { duration ->
+        val hours = duration.toMinutes() / 60.0
+        when {
+            hours >= 8 -> 100.0
+            hours >= 7 -> 85.0
+            hours >= 6 -> 65.0
+            hours >= 5 -> 45.0
+            hours >= 4 -> 25.0
+            else -> 10.0
+        }
+    } ?: 20.0
+
+    // ── Awake Time Score (20% weight) ──
     val hoursSinceLastSleep = healthData.sleep.sessions.maxByOrNull { it.endTime }?.endTime?.let { lastWakeTime ->
         java.time.Duration.between(lastWakeTime, now).toHours()
     }
-
-    val awakePenalty = when {
-        hoursSinceLastSleep == null -> 50
-        hoursSinceLastSleep >= 16 -> 90
-        hoursSinceLastSleep >= 14 -> 85
-        hoursSinceLastSleep >= 12 -> 75
-        hoursSinceLastSleep >= 10 -> 65
-        hoursSinceLastSleep >= 8 -> 25
-        hoursSinceLastSleep >= 2 -> 5
-        else -> 0
-    }
-    score -= awakePenalty
-
-    healthData.sleep.totalDuration?.let { sleepDuration ->
-        val sleepHours = sleepDuration.toHours()
-        when {
-            sleepHours >= 7 -> { }
-            sleepHours >= 5 -> score -= 10
-            else -> score -= 20
-        }
-    } ?: run { score -= 15 }
-
-    healthData.restingHeartRate.bpm?.let { rhr ->
-        when {
-            rhr <= 75 -> { }
-            rhr <= 85 -> score -= 5
-            else -> score -= 10
-        }
-    } ?: healthData.heartRate.restingBpm?.let { rhr ->
-        when {
-            rhr <= 75 -> { }
-            rhr <= 85 -> score -= 5
-            else -> score -= 10
-        }
+    val awakeScore = when {
+        hoursSinceLastSleep == null -> 20.0
+        hoursSinceLastSleep >= 18 -> 5.0
+        hoursSinceLastSleep >= 16 -> 10.0
+        hoursSinceLastSleep >= 14 -> 20.0
+        hoursSinceLastSleep >= 12 -> 30.0
+        hoursSinceLastSleep >= 10 -> 45.0
+        hoursSinceLastSleep >= 8 -> 60.0
+        hoursSinceLastSleep >= 4 -> 80.0
+        hoursSinceLastSleep >= 2 -> 90.0
+        else -> 100.0
     }
 
-    healthData.heartRateVariability.rmssdMs?.let { hrv ->
-        when {
-            hrv >= 40 -> { }
-            hrv >= 30 -> score -= 3
-            else -> score -= 8
-        }
+    // ── Resting HR Score (10% weight) ──
+    val rhr = healthData.restingHeartRate.bpm ?: healthData.heartRate.restingBpm ?: 70
+    val rhrScore = when {
+        rhr <= 50 -> 100.0
+        rhr <= 55 -> 90.0
+        rhr <= 60 -> 80.0
+        rhr <= 65 -> 70.0
+        rhr <= 70 -> 55.0
+        rhr <= 75 -> 40.0
+        rhr <= 80 -> 25.0
+        else -> 10.0
     }
 
+    // ── Activity Score (5% weight) ──
     val steps = healthData.steps.count
-    if (steps < 1000) score -= 2
+    val activityScore = when {
+        steps >= 8000 -> 100.0
+        steps >= 5000 -> 75.0
+        steps >= 3000 -> 50.0
+        steps >= 1000 -> 30.0
+        else -> 10.0
+    }
 
-    score = score.coerceIn(5, 100)
+    // ── Weighted total ──
+    val score = (
+        hrvScore * 0.40 +
+        sleepScore * 0.25 +
+        awakeScore * 0.20 +
+        rhrScore * 0.10 +
+        activityScore * 0.05
+    ).toInt().coerceIn(5, 100)
 
     val (label, color) = when {
         score >= 81 -> "Excellent" to SuccessGreen
