@@ -235,8 +235,8 @@ fun MetricDetailScreen(
                                 } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
                             } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
 
-                            // Hero section — skip for sleep (clock is the hero)
-                            if (metricType != HealthViewModel.MetricType.SLEEP) {
+                            // Hero section — skip for sleep (clock is the hero) and steps (ring is the hero)
+                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -292,7 +292,8 @@ fun MetricDetailScreen(
                             } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
 
                             // Skip TodayValueCard for sleep — SleepClockCard is the hero
-                            if (metricType != HealthViewModel.MetricType.SLEEP) {
+                            // Skip TodayValueCard for steps — circular progress ring is the hero
+                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
                                 TodayValueCard(
                                     value = selectedDateValue,
                                     valueFormatted = displayValue,
@@ -304,6 +305,268 @@ fun MetricDetailScreen(
                                     sleepStartTime = null,
                                     sleepEndTime = null
                                 )
+                            }
+                        }
+
+                        // ── Steps Custom Hero: Circular Progress Ring ──
+                        if (metricType == HealthViewModel.MetricType.STEPS) {
+                            item {
+                                val stepsCount = healthData?.steps?.count ?: selectedDateValue.toLong()
+                                val goal = healthData?.steps?.goal ?: stepsGoal.toLong()
+                                val progress = if (goal > 0) (stepsCount.toFloat() / goal.toFloat()).coerceIn(0f, 1.5f) else 0f
+                                val animatedProgress by animateFloatAsState(
+                                    targetValue = progress,
+                                    animationSpec = tween(durationMillis = 1200),
+                                    label = "stepsProgress"
+                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(SurfaceLow)
+                                        .padding(vertical = 32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier.size(240.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        // Background track
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val strokeWidth = 14.dp.toPx()
+                                            val padding = strokeWidth / 2
+                                            drawArc(
+                                                color = SurfaceMid,
+                                                startAngle = -225f,
+                                                sweepAngle = 270f,
+                                                useCenter = false,
+                                                topLeft = Offset(padding, padding),
+                                                size = Size(size.width - strokeWidth, size.height - strokeWidth),
+                                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                                            )
+                                        }
+                                        // Progress arc with gradient
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val strokeWidth = 14.dp.toPx()
+                                            val padding = strokeWidth / 2
+                                            drawArc(
+                                                brush = Brush.sweepGradient(
+                                                    listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
+                                                ),
+                                                startAngle = -225f,
+                                                sweepAngle = 270f * animatedProgress.coerceAtMost(1f),
+                                                useCenter = false,
+                                                topLeft = Offset(padding, padding),
+                                                size = Size(size.width - strokeWidth, size.height - strokeWidth),
+                                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                                            )
+                                        }
+                                        // Center text
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "TOTAL STEPS",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 2.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = "%,d".format(stepsCount),
+                                                color = TextOnSurface,
+                                                fontSize = 44.sp,
+                                                fontWeight = FontWeight.Black
+                                            )
+                                            Text(
+                                                text = "/ %,d".format(goal),
+                                                color = ElectricIndigo,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── Neural Insight Card ──
+                            item {
+                                val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
+                                if (insight != null) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(SurfaceLow)
+                                            .padding(20.dp)
+                                    ) {
+                                        Row(verticalAlignment = Alignment.Top) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(44.dp)
+                                                    .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Lightbulb,
+                                                    contentDescription = null,
+                                                    tint = ElectricIndigo,
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Column {
+                                                Text(
+                                                    text = "NEURAL INSIGHT",
+                                                    color = ElectricIndigo,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 2.sp
+                                                )
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = insight.meaning,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = TextOnSurfaceVariant,
+                                                    lineHeight = 20.sp
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── Stats Grid: Distance / Active Time / Floors ──
+                            item {
+                                val distanceKm = healthData?.distance?.kilometers ?: 0.0
+                                val activeMin = healthData?.exercise?.totalDuration?.toMinutes() ?: 0L
+                                val floorsCount = healthData?.floors?.count ?: 0
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Distance
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                                    contentDescription = null,
+                                                    tint = ElectricIndigo,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "DISTANCE",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = "%.1f km".format(distanceKm),
+                                                color = TextOnSurface,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    // Active Time
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(VibrantMagenta.copy(alpha = 0.12f), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.EmojiEvents,
+                                                    contentDescription = null,
+                                                    tint = VibrantMagenta,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "ACTIVE",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = "${activeMin} min",
+                                                color = TextOnSurface,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    // Floors
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(SuccessGreen.copy(alpha = 0.12f), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                                    contentDescription = null,
+                                                    tint = SuccessGreen,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "FLOORS",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = "$floorsCount",
+                                                color = TextOnSurface,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -441,8 +704,8 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Insights Card (non-sleep — sleep shows insight after stages)
-                        if (metricType != HealthViewModel.MetricType.SLEEP) {
+                        // Insights Card (non-sleep, non-steps — they have custom insight cards)
+                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
                             item {
                                 val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
                                 if (insight != null) {
