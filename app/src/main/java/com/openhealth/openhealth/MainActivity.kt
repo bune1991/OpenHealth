@@ -271,9 +271,11 @@ class MainActivity : ComponentActivity() {
                                             healthData = healthData,
                                             onBackClick = { viewModel.hideReadinessDetail() },
                                             onMetricClick = { metricType ->
+                                                viewModel.hideReadinessDetail()
                                                 viewModel.selectMetric(metricType)
                                             },
                                             onStartSession = {
+                                                viewModel.hideReadinessDetail()
                                                 viewModel.selectMetric(HealthViewModel.MetricType.EXERCISE)
                                             }
                                         )
