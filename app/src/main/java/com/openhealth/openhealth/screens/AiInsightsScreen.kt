@@ -523,22 +523,7 @@ private fun RecommendedActionCard(title: String, content: String) {
                 lineHeight = 22.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
-            // "Log Morning Session" button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(ElectricIndigo),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Log Morning Session",
-                    color = OnIndigo,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
+            // Removed "Log Morning Session" — Health Connect is read-only
         }
     }
 }
