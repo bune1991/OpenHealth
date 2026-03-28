@@ -860,9 +860,9 @@ fun DashboardScreen(
                                         ) {
                                             Box(
                                                 modifier = Modifier
-                                                    .fillMaxWidth(distProgress)
+                                                    .fillMaxWidth(distProgress.coerceAtLeast(0.01f))
                                                     .fillMaxHeight()
-                                                    .background(Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)), RoundedCornerShape(4.dp))
+                                                    .background(if (distProgress > 0f) Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)) else Brush.horizontalGradient(listOf(SurfaceHighest, SurfaceHighest)), RoundedCornerShape(4.dp))
                                             )
                                         }
                                     }
@@ -902,10 +902,10 @@ fun DashboardScreen(
                                     ) {
                                         Box(
                                             modifier = Modifier
-                                                .fillMaxWidth(stepProgress)
+                                                .fillMaxWidth(stepProgress.coerceAtLeast(0.01f))
                                                 .fillMaxHeight()
                                                 .background(
-                                                    Brush.horizontalGradient(listOf(ElectricIndigo, SoftLavender, VibrantMagenta)),
+                                                    if (stepProgress > 0f) Brush.horizontalGradient(listOf(ElectricIndigo, SoftLavender, VibrantMagenta)) else Brush.horizontalGradient(listOf(SurfaceHighest, SurfaceHighest)),
                                                     RoundedCornerShape(16.dp)
                                                 ),
                                             contentAlignment = Alignment.CenterEnd
@@ -2128,7 +2128,7 @@ private fun SleepEfficiencyPill(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(efficiency / 100f)
+                        .fillMaxWidth((efficiency / 100f).coerceAtLeast(0.01f))
                         .height(4.dp)
                         .background(
                             Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
@@ -2335,7 +2335,7 @@ private fun StressEnergyCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(energyPercent / 100f)
+                        .fillMaxWidth((energyPercent / 100f).coerceAtLeast(0.01f))
                         .height(8.dp)
                         .background(
                             Brush.horizontalGradient(listOf(ElectricIndigo, SuccessGreen)),

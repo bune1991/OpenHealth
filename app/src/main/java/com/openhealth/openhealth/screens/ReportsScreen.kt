@@ -298,7 +298,7 @@ private fun TrendCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(progressFraction)
+                        .fillMaxWidth(progressFraction.coerceAtLeast(0.01f))
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(2.dp))
                         .background(GradientBrush)

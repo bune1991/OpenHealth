@@ -1045,7 +1045,7 @@ fun MetricDetailScreen(
                                         ) {
                                             Box(
                                                 modifier = Modifier
-                                                    .fillMaxWidth(progress)
+                                                    .fillMaxWidth(progress.coerceAtLeast(0.01f))
                                                     .fillMaxHeight()
                                                     .clip(RoundedCornerShape(4.dp))
                                                     .background(
