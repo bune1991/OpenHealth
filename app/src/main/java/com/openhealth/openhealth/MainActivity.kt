@@ -215,7 +215,11 @@ class MainActivity : ComponentActivity() {
                                     showStressDetail -> {
                                         StressDetailScreen(
                                             healthData = healthData,
-                                            onBackClick = { viewModel.hideStressDetail() }
+                                            onBackClick = { viewModel.hideStressDetail() },
+                                            onStartExercise = {
+                                                viewModel.hideStressDetail()
+                                                viewModel.selectMetric(HealthViewModel.MetricType.EXERCISE)
+                                            }
                                         )
                                     }
                                     showReports -> {

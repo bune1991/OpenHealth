@@ -4,6 +4,7 @@ import com.openhealth.openhealth.ui.theme.*
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +55,8 @@ import kotlin.math.roundToInt
 @Composable
 fun StressDetailScreen(
     healthData: HealthData,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onStartExercise: () -> Unit = {}
 ) {
     val hrv = healthData.heartRateVariability.rmssdMs ?: 0.0
     val avgHr = healthData.heartRate.currentBpm ?: 0
@@ -378,6 +380,7 @@ fun StressDetailScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50))
                                     .background(ElectricIndigo)
+                                    .clickable { onStartExercise() }
                                     .padding(horizontal = 20.dp, vertical = 8.dp)
                             ) {
                                 Text(
