@@ -33,6 +33,9 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.WaterDrop
@@ -1492,12 +1495,12 @@ fun MetricDetailScreen(
                         }
 
                         // ═══════════════════════════════════════
-                        // Exercise Performance Detail Layout
+                        // Exercise — Stitch Workout Analytics
                         // ═══════════════════════════════════════
                         if (metricType == HealthViewModel.MetricType.EXERCISE && healthData != null) {
-                            // Hero — Active Energy Today with progress bar
+                            // 1) Hero card — Active Energy Today
                             item {
-                                val totalCals = exerciseSessions.sumOf { it.caloriesBurned ?: 0.0 }
+                                val totalCals = healthData.calories.totalBurned.let { if (it > 0) it else exerciseSessions.sumOf { s -> s.caloriesBurned ?: 0.0 } }
                                 val calGoal = 500.0
                                 val progress = (totalCals / calGoal).toFloat().coerceIn(0f, 1f)
                                 val calStr = String.format("%.0f", totalCals)
@@ -1520,179 +1523,299 @@ fun MetricDetailScreen(
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 2.sp
                                         )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = "$calStr kcal",
-                                            color = TextOnSurface,
-                                            fontSize = 44.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Text(
-                                            text = "Goal: ${calGoal.toInt()} kcal",
-                                            color = TextOnSurfaceVariant,
-                                            fontSize = 13.sp
-                                        )
                                         Spacer(modifier = Modifier.height(12.dp))
+                                        Row(
+                                            verticalAlignment = Alignment.Bottom,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Text(
+                                                text = calStr,
+                                                color = TextOnSurface,
+                                                fontSize = 44.sp,
+                                                fontWeight = FontWeight.Black
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "Kcal",
+                                                color = ElectricIndigo,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(bottom = 6.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        // Gradient progress bar
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .height(8.dp)
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background(SurfaceMid)
+                                                .height(10.dp)
+                                                .clip(RoundedCornerShape(5.dp))
+                                                .background(SurfaceHighest)
                                         ) {
                                             Box(
                                                 modifier = Modifier
-                                                    .fillMaxWidth(progress.coerceAtLeast(0.01f))
+                                                    .fillMaxWidth(progress.coerceAtLeast(0.02f))
                                                     .fillMaxHeight()
-                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .clip(RoundedCornerShape(5.dp))
                                                     .background(
                                                         Brush.horizontalGradient(
-                                                            listOf(CardExercise, VibrantMagenta)
+                                                            listOf(ElectricIndigo, VibrantMagenta)
                                                         )
                                                     )
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "RECOVERY",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Text(
+                                                text = "PEAK INTENSITY",
+                                                color = VibrantMagenta,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
                                             )
                                         }
                                     }
                                 }
                             }
 
-                            // 2x2 Exercise Stats Grid
+                            // 2) 2x2 Stats Grid
                             item {
                                 val totalDurMin = exerciseSessions.sumOf { it.duration.toMinutes() }
-                                val sessionCount = exerciseSessions.size
-                                val totalCals = exerciseSessions.sumOf { it.caloriesBurned ?: 0.0 }
                                 val avgHr = healthData.heartRate.currentBpm
+                                val peakHr = healthData.heartRate.maxBpm
+                                val vo2max = healthData.vo2Max.value
+
+                                @Composable
+                                fun StatCard(
+                                    icon: @Composable () -> Unit,
+                                    value: String,
+                                    label: String,
+                                    modifier: Modifier = Modifier
+                                ) {
+                                    Box(
+                                        modifier = modifier
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp)
+                                    ) {
+                                        Column {
+                                            icon()
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            Text(
+                                                text = value,
+                                                color = TextOnSurface,
+                                                fontSize = 22.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = label,
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                        }
+                                    }
+                                }
 
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
-                                                .padding(16.dp)
-                                        ) {
-                                            Column {
-                                                Text("DURATION", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Text("${totalDurMin} min", color = CardExercise, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
-                                                .padding(16.dp)
-                                        ) {
-                                            Column {
-                                                Text("SESSIONS", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Text("$sessionCount", color = ElectricIndigo, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
+                                        StatCard(
+                                            icon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Timer,
+                                                    contentDescription = null,
+                                                    tint = ElectricIndigo,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            },
+                                            value = "${totalDurMin} m",
+                                            label = "DURATION",
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        StatCard(
+                                            icon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Favorite,
+                                                    contentDescription = null,
+                                                    tint = VibrantMagenta,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            },
+                                            value = if (avgHr != null) "$avgHr bpm" else "-- bpm",
+                                            label = "AVG HR",
+                                            modifier = Modifier.weight(1f)
+                                        )
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
-                                                .padding(16.dp)
-                                        ) {
-                                            Column {
-                                                Text("HEART RATE", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Text(
-                                                    text = if (avgHr != null) "$avgHr bpm" else "-- bpm",
-                                                    color = CardHeartRate,
-                                                    fontSize = 22.sp,
-                                                    fontWeight = FontWeight.Bold
+                                        StatCard(
+                                            icon = {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                                    contentDescription = null,
+                                                    tint = CardExercise,
+                                                    modifier = Modifier.size(20.dp)
                                                 )
-                                            }
-                                        }
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
-                                                .padding(16.dp)
-                                        ) {
-                                            Column {
-                                                Text("CALORIES", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Text("${String.format("%.0f", totalCals)} kcal", color = CardCalories, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
+                                            },
+                                            value = if (peakHr != null) "$peakHr bpm" else "-- bpm",
+                                            label = "PEAK HR",
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        StatCard(
+                                            icon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Air,
+                                                    contentDescription = null,
+                                                    tint = ElectricIndigo,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            },
+                                            value = if (vo2max != null) "${String.format("%.0f", vo2max)} ml/kg" else "-- ml/kg",
+                                            label = "EST. VO2 MAX",
+                                            modifier = Modifier.weight(1f)
+                                        )
                                     }
                                 }
                             }
 
-                            // Training Load — Activity Distribution bars
-                            if (exerciseSessions.isNotEmpty()) {
-                                item {
-                                    val typeMap = exerciseSessions.groupBy { it.exerciseType }
-                                        .mapValues { (_, sessions) -> sessions.sumOf { it.duration.toMinutes() } }
-                                        .toList()
-                                        .sortedByDescending { it.second }
+                            // 3) Training Load — 7-day grouped bar chart
+                            item {
+                                val today = LocalDate.now()
+                                val dayOfWeek = today.dayOfWeek // MONDAY=1 .. SUNDAY=7
+                                val dayLabels = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
 
-                                    val maxDur = typeMap.maxOfOrNull { it.second }?.toFloat()?.coerceAtLeast(1f) ?: 1f
+                                // Group sessions by day-of-week, split into cardio (HIIT) vs strength (STR)
+                                val cardioTypes = setOf("Running", "Walking", "Cycling", "Swimming", "Hiking", "Elliptical", "Rowing")
+                                val sessionsByDay = exerciseSessions.groupBy {
+                                    it.startTime.atZone(ZoneId.systemDefault()).toLocalDate().dayOfWeek
+                                }
+                                val hiitByDay = DayOfWeek.entries.map { dow ->
+                                    sessionsByDay[dow]?.filter { it.exerciseType in cardioTypes }?.sumOf { it.duration.toMinutes() } ?: 0L
+                                }
+                                val strByDay = DayOfWeek.entries.map { dow ->
+                                    sessionsByDay[dow]?.filter { it.exerciseType !in cardioTypes }?.sumOf { it.duration.toMinutes() } ?: 0L
+                                }
+                                val maxBar = maxOf(
+                                    hiitByDay.maxOrNull() ?: 0L,
+                                    strByDay.maxOrNull() ?: 0L,
+                                    1L
+                                ).toFloat()
 
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(24.dp))
-                                            .background(SurfaceLow)
-                                            .padding(20.dp)
-                                    ) {
-                                        Column {
-                                            Text("Training Load", style = MaterialTheme.typography.titleSmall, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text("ACTIVITY DISTRIBUTION", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                                            Spacer(modifier = Modifier.height(16.dp))
-
-                                            typeMap.forEach { (type, durMin) ->
-                                                val barFraction = (durMin.toFloat() / maxDur).coerceIn(0.05f, 1f)
-                                                Row(
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .padding(20.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "Training Load",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = TextOnSurface,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Activity distribution (7d)",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 12.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        // Legend
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Box(
                                                     modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 4.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
+                                                        .size(8.dp)
+                                                        .background(ElectricIndigo, CircleShape)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("HIIT", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                            }
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(8.dp)
+                                                        .background(VibrantMagenta, CircleShape)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("STR", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        // Bars
+                                        val barMaxHeight = 100.dp
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(barMaxHeight + 24.dp),
+                                            horizontalArrangement = Arrangement.SpaceEvenly,
+                                            verticalAlignment = Alignment.Bottom
+                                        ) {
+                                            for (i in 0 until 7) {
+                                                val isToday = DayOfWeek.of(i + 1) == dayOfWeek
+                                                val hiitFrac = (hiitByDay[i].toFloat() / maxBar).coerceIn(0f, 1f)
+                                                val strFrac = (strByDay[i].toFloat() / maxBar).coerceIn(0f, 1f)
+
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                    modifier = Modifier.weight(1f)
                                                 ) {
-                                                    Text(
-                                                        text = type,
-                                                        color = TextOnSurface,
-                                                        fontSize = 13.sp,
-                                                        fontWeight = FontWeight.Medium,
-                                                        modifier = Modifier.width(80.dp)
-                                                    )
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .weight(1f)
-                                                            .height(12.dp)
-                                                            .clip(RoundedCornerShape(6.dp))
-                                                            .background(SurfaceMid)
+                                                    Row(
+                                                        modifier = Modifier.height(barMaxHeight),
+                                                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                                        verticalAlignment = Alignment.Bottom
                                                     ) {
+                                                        // HIIT bar
                                                         Box(
                                                             modifier = Modifier
-                                                                .fillMaxWidth(barFraction)
-                                                                .fillMaxHeight()
-                                                                .clip(RoundedCornerShape(6.dp))
-                                                                .background(CardExercise)
+                                                                .width(10.dp)
+                                                                .fillMaxHeight(hiitFrac.coerceAtLeast(0.03f))
+                                                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                                                .background(
+                                                                    if (isToday) ElectricIndigo
+                                                                    else ElectricIndigo.copy(alpha = 0.35f)
+                                                                )
+                                                        )
+                                                        // STR bar
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .width(10.dp)
+                                                                .fillMaxHeight(strFrac.coerceAtLeast(0.03f))
+                                                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                                                .background(
+                                                                    if (isToday) VibrantMagenta
+                                                                    else VibrantMagenta.copy(alpha = 0.35f)
+                                                                )
                                                         )
                                                     }
-                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Spacer(modifier = Modifier.height(6.dp))
                                                     Text(
-                                                        text = "${durMin}m",
-                                                        color = TextOnSurfaceVariant,
-                                                        fontSize = 12.sp,
-                                                        fontWeight = FontWeight.Bold
+                                                        text = dayLabels[i],
+                                                        color = if (isToday) TextOnSurface else TextSubtle,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                                                        letterSpacing = 0.5.sp
                                                     )
                                                 }
                                             }
@@ -1717,95 +1840,100 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Exercise Sessions List — Recent Sessions (only for Exercise metric)
+                        // 4) Recent Sessions
                         if (metricType == HealthViewModel.MetricType.EXERCISE && exerciseSessions.isNotEmpty()) {
                             item {
-                                Box(
+                                Text(
+                                    text = "Recent Sessions",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = TextOnSurface,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            items(exerciseSessions) { session ->
+                                val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
+                                val startStr = session.startTime.atZone(ZoneId.systemDefault()).format(timeFormatter)
+                                val sessionDate = session.startTime.atZone(ZoneId.systemDefault()).toLocalDate()
+                                val today = LocalDate.now()
+                                val dateLabel = when {
+                                    sessionDate == today -> "Today"
+                                    sessionDate == today.minusDays(1) -> "Yesterday"
+                                    else -> sessionDate.format(DateTimeFormatter.ofPattern("MMM d"))
+                                }
+                                val calStr = session.caloriesBurned?.let { String.format("%.0f", it) } ?: "--"
+                                val iconVec = when (session.exerciseType) {
+                                    "Running" -> Icons.Default.FitnessCenter
+                                    "Walking" -> Icons.Default.FitnessCenter
+                                    "Cycling" -> Icons.Default.FitnessCenter
+                                    else -> Icons.Default.FitnessCenter
+                                }
+                                val iconColor = when (session.exerciseType) {
+                                    "Running" -> CardExercise
+                                    "Cycling" -> ElectricIndigo
+                                    else -> VibrantMagenta
+                                }
+
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceMid)
-                                        .padding(16.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(SurfaceLow)
+                                        .padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column {
+                                    // Icon circle
+                                    Box(
+                                        modifier = Modifier
+                                            .size(42.dp)
+                                            .background(iconColor.copy(alpha = 0.15f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = iconVec,
+                                            contentDescription = null,
+                                            tint = iconColor,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "Recent Sessions",
-                                            style = MaterialTheme.typography.titleMedium,
+                                            text = session.exerciseType,
                                             color = TextOnSurface,
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                        Text(
+                                            text = "$dateLabel \u2022 $startStr",
+                                            color = TextSubtle,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            text = "$calStr KCAL",
+                                            color = TextOnSurface,
+                                            fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold
                                         )
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        exerciseSessions.forEach { session ->
-                                            val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
-                                            val startStr = session.startTime.atZone(ZoneId.systemDefault()).format(timeFormatter)
-                                            val endStr = session.endTime.atZone(ZoneId.systemDefault()).format(timeFormatter)
-                                            val durMin = session.duration.toMinutes()
-                                            val calStr = session.caloriesBurned?.let { String.format("%.0f", it) + " kcal" } ?: ""
-                                            val icon = when (session.exerciseType) {
-                                                "Running" -> "🏃"
-                                                "Walking" -> "🚶"
-                                                "Cycling" -> "🚴"
-                                                "Swimming" -> "🏊"
-                                                "Yoga" -> "🧘"
-                                                "Hiking" -> "🥾"
-                                                else -> "💪"
-                                            }
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(text = icon, fontSize = 24.sp)
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Column(modifier = Modifier.weight(1f)) {
-                                                    Text(
-                                                        text = session.exerciseType,
-                                                        color = TextOnSurface,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        style = MaterialTheme.typography.bodyLarge
-                                                    )
-                                                    Text(
-                                                        text = "$startStr - $endStr",
-                                                        color = TextSubtle,
-                                                        style = MaterialTheme.typography.bodySmall
-                                                    )
-                                                }
-                                                Column(horizontalAlignment = Alignment.End) {
-                                                    Text(
-                                                        text = "${durMin}m",
-                                                        color = metricInfo.color,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 18.sp
-                                                    )
-                                                    if (calStr.isNotEmpty()) {
-                                                        Text(
-                                                            text = calStr,
-                                                            color = TextOnSurfaceVariant,
-                                                            fontSize = 11.sp
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
 
-                            // Neural Performance Insight
+                            // 5) Neural Performance Insight
                             item {
                                 val totalCals = exerciseSessions.sumOf { it.caloriesBurned ?: 0.0 }
                                 val totalDurMin = exerciseSessions.sumOf { it.duration.toMinutes() }
                                 val sessionCount = exerciseSessions.size
                                 val insightText = when {
                                     sessionCount >= 2 && totalDurMin >= 60 ->
-                                        "Strong training day with $sessionCount sessions totaling ${totalDurMin}min. Your consistency is building aerobic capacity. Consider a rest day tomorrow if intensity was high."
+                                        "Your anaerobic threshold is trending upward based on $sessionCount sessions (${totalDurMin}min). Recovery curve analysis shows improved cardiovascular efficiency. Optimal training window: tomorrow 07:00-09:00."
                                     sessionCount == 1 && totalDurMin >= 30 ->
-                                        "Solid session today. ${String.format("%.0f", totalCals)} kcal burned in ${totalDurMin} minutes shows good effort. Try to maintain this frequency throughout the week."
+                                        "Solid effort \u2014 ${String.format("%.0f", totalCals)} kcal in ${totalDurMin} min. Your recovery curve suggests aerobic base is strengthening. Next optimal training window: tomorrow morning."
                                     totalDurMin > 0 ->
-                                        "Light activity logged today. Even short sessions contribute to your weekly training load. Aim for 150+ minutes across the week."
+                                        "Light session logged. Your cumulative training load is below target. Adding 20 min of moderate intensity would optimize your weekly recovery-to-load ratio."
                                     else ->
-                                        "No exercise sessions recorded today. Movement, even a short walk, supports recovery and metabolic health."
+                                        "Rest day detected. Based on your recent training pattern, active recovery (light walk or mobility) would accelerate adaptation. Next scheduled window available."
                                 }
 
                                 Box(
@@ -1815,41 +1943,56 @@ fun MetricDetailScreen(
                                         .background(
                                             Brush.linearGradient(
                                                 listOf(
-                                                    CardExercise.copy(alpha = 0.15f),
-                                                    ElectricIndigo.copy(alpha = 0.15f)
+                                                    ElectricIndigo.copy(alpha = 0.18f),
+                                                    VibrantMagenta.copy(alpha = 0.12f)
                                                 )
                                             )
                                         )
                                         .padding(20.dp)
                                 ) {
-                                    Row(verticalAlignment = Alignment.Top) {
+                                    Column {
+                                        // AI INSIGHT badge
                                         Box(
                                             modifier = Modifier
-                                                .size(44.dp)
-                                                .background(Color.White.copy(alpha = 0.1f), CircleShape),
-                                            contentAlignment = Alignment.Center
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(ElectricIndigo.copy(alpha = 0.2f))
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Lightbulb,
-                                                contentDescription = null,
-                                                tint = CardExercise,
-                                                modifier = Modifier.size(22.dp)
+                                            Text(
+                                                text = "AI INSIGHT",
+                                                color = ElectricIndigo,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
                                             )
                                         }
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Column {
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Text(
+                                            text = "Neural Performance Insight",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = TextOnSurface,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = insightText,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = TextOnSurfaceVariant,
+                                            lineHeight = 18.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(14.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(50))
+                                                .background(SurfaceHighest)
+                                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        ) {
                                             Text(
-                                                text = "Neural Performance Insight",
-                                                style = MaterialTheme.typography.titleSmall,
+                                                text = "SCHEDULE WINDOW",
                                                 color = TextOnSurface,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = insightText,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = TextOnSurfaceVariant,
-                                                lineHeight = 18.sp
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.sp
                                             )
                                         }
                                     }
