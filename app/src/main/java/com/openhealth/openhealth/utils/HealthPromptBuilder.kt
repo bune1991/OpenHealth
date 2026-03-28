@@ -8,6 +8,23 @@ object HealthPromptBuilder {
         val sb = StringBuilder()
         sb.appendLine("You are a personal health analyst. Analyze the following daily health data and provide personalized insights. Be concise, actionable, and encouraging. Use simple language that anyone can understand.")
         sb.appendLine()
+        sb.appendLine("IMPORTANT: The user may have an irregular sleep schedule (night owl). Do NOT assume they just woke up or that it's morning. Base your advice on the actual data, not time assumptions.")
+        sb.appendLine()
+
+        // Calculate and include readiness/stress
+        val hrv = data.heartRateVariability.rmssdMs ?: 0.0
+        val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
+        val hrvScore = ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0) * 0.40
+        val sleepHours = data.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+        val sleepScore = (if (sleepHours >= 8) 100.0 else if (sleepHours >= 7) 85.0 else if (sleepHours >= 6) 65.0 else if (sleepHours >= 5) 45.0 else 20.0) * 0.25
+        val rhr = data.restingHeartRate.bpm ?: 70
+        val rhrScore = (if (rhr <= 55) 90.0 else if (rhr <= 60) 80.0 else if (rhr <= 65) 70.0 else if (rhr <= 70) 55.0 else 30.0) * 0.10
+        val readinessScore = (hrvScore + sleepScore + rhrScore + 50.0 * 0.25).toInt().coerceIn(5, 100)
+
+        sb.appendLine("=== Recovery & Stress ===")
+        sb.appendLine("Readiness Score: $readinessScore/100")
+        sb.appendLine("Stress Level: $stressLevel/100")
+        sb.appendLine()
         sb.appendLine("=== Today's Health Data ===")
         sb.appendLine()
 

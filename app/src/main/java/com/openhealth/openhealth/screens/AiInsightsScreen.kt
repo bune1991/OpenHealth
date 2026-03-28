@@ -60,6 +60,7 @@ fun AiInsightsScreen(
     isLoading: Boolean,
     error: String?,
     providerName: String,
+    readinessScore: Int = 0,
     onRefreshClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -353,7 +354,7 @@ fun AiInsightsScreen(
                             contentAlignment = Alignment.CenterEnd
                         ) {
                             Text(
-                                text = "82% RECOVERY",
+                                text = "${readinessScore}% RECOVERY",
                                 color = Color.White,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,

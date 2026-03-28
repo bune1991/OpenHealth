@@ -221,11 +221,20 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                     showAiInsights -> {
+                                        // Calculate readiness for AI screen
+                                        val hrv = healthData.heartRateVariability.rmssdMs ?: 30.0
+                                        val sleepH = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+                                        val rhr = healthData.restingHeartRate.bpm ?: 70
+                                        val hrvS = ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0) * 0.40
+                                        val sleepS = (if (sleepH >= 8) 100.0 else if (sleepH >= 7) 85.0 else if (sleepH >= 6) 65.0 else if (sleepH >= 5) 45.0 else 20.0) * 0.25
+                                        val rhrS = (if (rhr <= 55) 90.0 else if (rhr <= 60) 80.0 else if (rhr <= 65) 70.0 else if (rhr <= 70) 55.0 else 30.0) * 0.10
+                                        val aiReadiness = (hrvS + sleepS + rhrS + 50.0 * 0.25).toInt().coerceIn(5, 100)
                                         AiInsightsScreen(
                                             insightText = aiInsightText,
                                             isLoading = aiInsightLoading,
                                             error = aiInsightError,
                                             providerName = settings.aiProvider.name,
+                                            readinessScore = aiReadiness,
                                             onRefreshClick = { viewModel.refreshAiInsight() },
                                             onBackClick = { viewModel.hideAiInsights() }
                                         )
