@@ -146,6 +146,7 @@ fun DashboardScreen(
     onStressClick: () -> Unit = {},
     onAiInsightsClick: () -> Unit = {},
     onHydrationClick: () -> Unit = {},
+    onPerformanceClick: () -> Unit = {},
     hydrationDailyTotalMl: Int = 0,
     onSessionClick: (com.openhealth.openhealth.model.ExerciseSession) -> Unit = {},
     weatherData: com.openhealth.openhealth.utils.WeatherData = com.openhealth.openhealth.utils.WeatherData(),
@@ -889,7 +890,7 @@ fun DashboardScreen(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(28.dp))
                                     .background(SurfaceLow)
-                                    .clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                                    .clickable { onPerformanceClick() }
                                     .padding(28.dp)
                             ) {
                                 Column(
@@ -1001,7 +1002,7 @@ fun DashboardScreen(
                                         // Center stats
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                                            modifier = Modifier.clickable { onPerformanceClick() }
                                         ) {
                                             Text(
                                                 "ACTIVE ENERGY",
@@ -1048,7 +1049,7 @@ fun DashboardScreen(
                                         // Move
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                                            modifier = Modifier.clickable { onPerformanceClick() }
                                         ) {
                                             Icon(
                                                 Icons.Default.Bolt,
@@ -1084,7 +1085,7 @@ fun DashboardScreen(
                                         // Exercise
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                                            modifier = Modifier.clickable { onPerformanceClick() }
                                         ) {
                                             Icon(
                                                 Icons.Default.FitnessCenter,

@@ -55,6 +55,7 @@ import com.openhealth.openhealth.screens.AiInsightsScreen
 import com.openhealth.openhealth.screens.OnboardingScreen
 import com.openhealth.openhealth.viewmodel.ReportsData
 import com.openhealth.openhealth.screens.SettingsScreen
+import com.openhealth.openhealth.screens.PerformanceScreen
 import com.openhealth.openhealth.screens.WorkoutDetailScreen
 import com.openhealth.openhealth.ui.theme.*
 import com.openhealth.openhealth.viewmodel.HealthViewModel
@@ -98,12 +99,14 @@ class MainActivity : ComponentActivity() {
                 viewModel.showStressDetail.collectAsState().value ||
                 viewModel.showAiInsights.collectAsState().value ||
                 viewModel.showHydration.collectAsState().value ||
+                viewModel.showPerformance.collectAsState().value ||
                 viewModel.showWorkoutDetail.collectAsState().value
             androidx.compose.runtime.LaunchedEffect(hasSubScreen) {
                 onBackPressedDispatcher.addCallback(this@MainActivity) {
                     if (::viewModel.isInitialized) {
                         when {
                             viewModel.showWorkoutDetail.value -> viewModel.hideWorkoutDetail()
+                            viewModel.showPerformance.value -> viewModel.hidePerformance()
                             viewModel.showHydration.value -> viewModel.hideHydration()
                             viewModel.showSettings.value -> viewModel.hideSettings()
                             viewModel.showAiInsights.value -> viewModel.hideAiInsights()
@@ -137,6 +140,7 @@ class MainActivity : ComponentActivity() {
                 val showStressDetail by viewModel.showStressDetail.collectAsState()
                 val showAiInsights by viewModel.showAiInsights.collectAsState()
                 val showHydration by viewModel.showHydration.collectAsState()
+                val showPerformance by viewModel.showPerformance.collectAsState()
                 val showWorkoutDetail by viewModel.showWorkoutDetail.collectAsState()
                 val selectedWorkoutSession by viewModel.selectedWorkoutSession.collectAsState()
                 val hydrationEntries by viewModel.hydrationEntries.collectAsState()
@@ -179,6 +183,14 @@ class MainActivity : ComponentActivity() {
                                             session = selectedWorkoutSession!!,
                                             healthData = healthData,
                                             onBackClick = { viewModel.hideWorkoutDetail() }
+                                        )
+                                    }
+                                    showPerformance -> {
+                                        PerformanceScreen(
+                                            healthData = healthData,
+                                            settings = settings,
+                                            onBackClick = { viewModel.hidePerformance() },
+                                            onSessionClick = { viewModel.showWorkoutDetail(it) }
                                         )
                                     }
                                     showHydration -> {
@@ -285,6 +297,7 @@ class MainActivity : ComponentActivity() {
                                             onStressClick = { viewModel.showStressDetail() },
                                             onAiInsightsClick = { viewModel.showAiInsights() },
                                             onHydrationClick = { viewModel.showHydration() },
+                                            onPerformanceClick = { viewModel.showPerformance() },
                                             hydrationDailyTotalMl = hydrationDailyTotal,
                                             onSessionClick = { viewModel.showWorkoutDetail(it) },
                                             weatherData = weatherData,

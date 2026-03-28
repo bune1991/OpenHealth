@@ -179,6 +179,10 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         context.getSharedPreferences("hydration_prefs", android.content.Context.MODE_PRIVATE)
     }
 
+    // Performance screen navigation
+    private val _showPerformance = MutableStateFlow(false)
+    val showPerformance: StateFlow<Boolean> = _showPerformance.asStateFlow()
+
     // Workout detail navigation
     private val _showWorkoutDetail = MutableStateFlow(false)
     val showWorkoutDetail: StateFlow<Boolean> = _showWorkoutDetail.asStateFlow()
@@ -645,6 +649,15 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun hideHydration() {
         _showHydration.value = false
+    }
+
+    // Performance navigation
+    fun showPerformance() {
+        _showPerformance.value = true
+    }
+
+    fun hidePerformance() {
+        _showPerformance.value = false
     }
 
     // Workout detail navigation
