@@ -227,6 +227,64 @@ fun DashboardScreen(
                     // ─── TAB 0: PULSE (Readiness & Daily Snapshot) ───
                     0 -> {
                         item { ReadinessHeroCard(readinessScore = readinessScore, healthData = healthData, onClick = onReadinessClick) }
+
+                        // Stress & Resilience compact card (Stitch: between hero and recovery)
+                        if (healthData.heartRateVariability.rmssdMs != null) {
+                            item {
+                                val hrv = healthData.heartRateVariability.rmssdMs!!
+                                val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
+                                val stressLabel = when { stressLevel < 25 -> "Low Stress"; stressLevel < 50 -> "Moderate"; stressLevel < 75 -> "High"; else -> "Very High" }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceHigh)
+                                        .clickable { onStressClick() }
+                                        .padding(16.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Mini stress arc gauge
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(64.dp)) {
+                                            Canvas(modifier = Modifier.size(64.dp)) {
+                                                val strokeW = 6.dp.toPx()
+                                                val arcSize = Size(size.width - strokeW, size.height - strokeW)
+                                                val topLeft = Offset(strokeW / 2, strokeW / 2)
+                                                drawArc(color = SurfaceHighest, startAngle = 135f, sweepAngle = 270f, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
+                                                drawArc(
+                                                    brush = Brush.sweepGradient(listOf(VibrantMagenta, ElectricIndigo)),
+                                                    startAngle = 135f, sweepAngle = 270f * (stressLevel / 100f),
+                                                    useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                    topLeft = topLeft, size = arcSize
+                                                )
+                                            }
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("$stressLevel", fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
+                                                Text("/100", fontSize = 8.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.width(16.dp))
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text("Stress & Resilience", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Box(modifier = Modifier.background(ElectricIndigo.copy(alpha = 0.2f), RoundedCornerShape(8.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                                    Text(stressLabel.uppercase(), fontSize = 9.sp, color = ElectricIndigo, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text("Optimal recovery zone", fontSize = 13.sp, color = TextOnSurfaceVariant)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         item { RecoveryStatusCard(readinessScore = readinessScore, healthData = healthData) }
                         if (healthData.heartRateVariability.rmssdMs != null) {
                             item { HrvChartCard(healthData = healthData, onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }) }
