@@ -146,23 +146,12 @@ fun MetricDetailScreen(
                     }
                 },
                 navigationIcon = {
-                    Row {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = ElectricIndigo
-                            )
-                        }
-                        if (onHomeClick != null) {
-                            IconButton(onClick = onHomeClick) {
-                                Icon(
-                                    imageVector = Icons.Default.Home,
-                                    contentDescription = "Home",
-                                    tint = TextOnSurfaceVariant
-                                )
-                            }
-                        }
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = ElectricIndigo
+                        )
                     }
                 },
                 actions = {
@@ -228,6 +217,59 @@ fun MetricDetailScreen(
                             }
                         } else {
                             Pair(null, null)
+                        }
+
+                        // Hero Section
+                        item {
+                            val dateLabel = if (isToday) "Today" else selectedDate.format(
+                                DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
+                            )
+
+                            // Blood pressure: show systolic/diastolic format
+                            val displayValue = if (metricType == HealthViewModel.MetricType.BLOOD_PRESSURE && healthData != null) {
+                                val bp = healthData.bloodPressure
+                                if (bp.systolicMmHg != null && bp.diastolicMmHg != null) {
+                                    "${String.format("%.0f", bp.systolicMmHg)}/${String.format("%.0f", bp.diastolicMmHg)}"
+                                } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
+                            } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "LAST 7 DAYS",
+                                        color = TextOnSurfaceVariant,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 2.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Vitals Trend",
+                                        color = TextOnSurface,
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "$displayValue ${metricHistory?.unit ?: ""}",
+                                        color = VibrantMagenta,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "CURRENT",
+                                        color = TextOnSurfaceVariant,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 2.sp
+                                    )
+                                }
+                            }
                         }
 
                         // Today's Value Card
@@ -719,7 +761,7 @@ private fun LineChartCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
+            containerColor = SurfaceLow
         )
     ) {
         Column(
@@ -848,16 +890,18 @@ private fun LineChart(
                 drawPath(
                     path = fillPath,
                     brush = Brush.verticalGradient(
-                        colors = listOf(fillColor, fillColor.copy(alpha = 0.0f)),
+                        colors = listOf(VibrantMagenta.copy(alpha = 0.2f), ElectricIndigo.copy(alpha = 0.0f)),
                         startY = padding,
                         endY = height - padding
                     )
                 )
 
-                // Draw line
+                // Draw line with gradient
                 drawPath(
                     path = path,
-                    color = lineColor,
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(VibrantMagenta, ElectricIndigo)
+                    ),
                     style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
                 )
 
@@ -1231,54 +1275,47 @@ private fun StatCard(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
+            containerColor = SurfaceLow
         )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 20.dp, horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextOnSurfaceVariant
+                text = title.uppercase(),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextOnSurfaceVariant,
+                letterSpacing = 2.sp
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                verticalAlignment = Alignment.Bottom
-            ) {
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .width(80.dp)
-                            .height(28.dp)
-                            .background(
-                                color = color.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                    )
-                } else {
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TextOnSurface,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(28.dp)
+                        .background(
+                            color = color.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                )
+            } else {
                 Text(
-                    text = unit,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextOnSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 2.dp)
+                    text = value,
+                    color = TextOnSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
                 )
             }
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = unit,
+                fontSize = 12.sp,
+                color = TextOnSurfaceVariant
+            )
         }
     }
 }
