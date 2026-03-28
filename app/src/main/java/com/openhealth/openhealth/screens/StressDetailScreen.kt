@@ -20,6 +20,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -501,26 +506,33 @@ private fun StressFactorRow(
     label: String,
     status: String
 ) {
-    val iconEmoji = when (iconType) {
-        "sleep" -> "\uD83D\uDE34"
-        "hrv" -> "\uD83D\uDCC8"
-        "heart" -> "\u2764\uFE0F"
-        "activity" -> "\uD83C\uDFC3"
-        else -> "\uD83D\uDCA1"
+    val icon = when (iconType) {
+        "sleep" -> Icons.Default.Bedtime
+        "hrv" -> Icons.Default.FavoriteBorder
+        "heart" -> Icons.Default.Favorite
+        "activity" -> Icons.Default.FitnessCenter
+        else -> Icons.Default.Lightbulb
+    }
+    val iconColor = when (iconType) {
+        "sleep" -> ElectricIndigo
+        "hrv" -> SoftLavender
+        "heart" -> VibrantMagenta
+        "activity" -> SoftLavender
+        else -> ElectricIndigo
     }
 
-    val (badgeBg, badgeText) = when (status) {
-        "Positive" -> Pair(SuccessGreen.copy(alpha = 0.15f), SuccessGreen)
-        "High" -> Pair(VibrantMagenta.copy(alpha = 0.15f), VibrantMagenta)
-        else -> Pair(SurfaceHighest, TextOnSurfaceVariant)
+    val (badgeBg, badgeText, badgeLabel) = when (status) {
+        "Positive" -> Triple(ElectricIndigo.copy(alpha = 0.12f), ElectricIndigo, "POSITIVE")
+        "High" -> Triple(VibrantMagenta.copy(alpha = 0.12f), VibrantMagenta, "HIGH")
+        else -> Triple(SurfaceHighest, TextOnSurfaceVariant, "BALANCED")
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(50))
-            .background(SurfaceLow)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .background(SurfaceHigh.copy(alpha = 0.5f))
+            .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -529,39 +541,43 @@ private fun StressFactorRow(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Icon circle
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
-                        .background(SurfaceHighest),
+                        .background(iconColor.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = iconEmoji, fontSize = 16.sp)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
 
                 Text(
                     text = label,
                     color = TextOnSurface,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            // Status badge
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
                     .background(badgeBg)
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .padding(horizontal = 14.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = status,
+                    text = badgeLabel,
                     color = badgeText,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp
                 )
             }
         }
