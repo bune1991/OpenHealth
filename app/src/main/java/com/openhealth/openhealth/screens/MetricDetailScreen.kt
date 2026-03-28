@@ -235,41 +235,44 @@ fun MetricDetailScreen(
                                 } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
                             } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "LAST 7 DAYS",
-                                        color = TextOnSurfaceVariant,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 2.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Vitals Trend",
-                                        color = TextOnSurface,
-                                        fontSize = 24.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        text = "$displayValue ${metricHistory?.unit ?: ""}",
-                                        color = VibrantMagenta,
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "CURRENT",
-                                        color = TextOnSurfaceVariant,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 2.sp
-                                    )
+                            // Hero section — skip for sleep (clock is the hero)
+                            if (metricType != HealthViewModel.MetricType.SLEEP) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "LAST 7 DAYS",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 2.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Vitals Trend",
+                                            color = TextOnSurface,
+                                            fontSize = 24.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "$displayValue ${metricHistory?.unit ?: ""}",
+                                            color = VibrantMagenta,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "CURRENT",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 2.sp
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -550,20 +553,7 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Sleep Stages + Sleep Bank — BEFORE stats for sleep metric (Stitch order)
-                        // Sleep Stages Chart (only for Sleep metric — per selected day)
-                        if (metricType == HealthViewModel.MetricType.SLEEP) {
-                            val dayStages = metricHistory?.allHistoricalData
-                                ?.find { it.date == selectedDate }?.sleepStages
-                                ?: if (isToday) metricHistory?.sleepStages else null
-
-                            if (dayStages != null) {
-                                item {
-                                    SleepStagesChart(sleepStages = dayStages)
-                                }
-                            }
-                        }
-
+                        // Sleep Bank FIRST, then Stages (Stitch order)
                         // Sleep Bank (only for Sleep metric)
                         if (metricType == HealthViewModel.MetricType.SLEEP && metricHistory?.allHistoricalData?.isNotEmpty() == true) {
                             item {
@@ -616,6 +606,19 @@ fun MetricDetailScreen(
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
+                                }
+                            }
+                        }
+
+                        // Sleep Stages Chart (after Sleep Bank — Stitch order)
+                        if (metricType == HealthViewModel.MetricType.SLEEP) {
+                            val dayStages = metricHistory?.allHistoricalData
+                                ?.find { it.date == selectedDate }?.sleepStages
+                                ?: if (isToday) metricHistory?.sleepStages else null
+
+                            if (dayStages != null) {
+                                item {
+                                    SleepStagesChart(sleepStages = dayStages)
                                 }
                             }
                         }
