@@ -58,6 +58,7 @@ fun StressDetailScreen(
     onBackClick: () -> Unit,
     onStartExercise: () -> Unit = {}
 ) {
+    val c = LocalAppColors.current
     val hrv = healthData.heartRateVariability.rmssdMs ?: 0.0
     val avgHr = healthData.heartRate.currentBpm ?: 0
     val rhr = healthData.restingHeartRate.bpm ?: 0
@@ -125,20 +126,20 @@ fun StressDetailScreen(
                 title = {
                     Text(
                         "Stress Analysis",
-                        color = ElectricIndigo,
+                        color = c.primary,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = ElectricIndigo)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = c.primary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceLowest)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = c.background)
             )
         },
-        containerColor = SurfaceLowest
+        containerColor = c.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -159,8 +160,8 @@ fun StressDetailScreen(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier.size(220.dp)
                     ) {
-                        val gradientColors = listOf(VibrantMagenta, ElectricIndigo)
-                        val bgArcColor = SurfaceHighest
+                        val gradientColors = listOf(c.secondary, c.primary)
+                        val bgArcColor = c.surfaceHighest
                         Canvas(modifier = Modifier.size(220.dp)) {
                             val strokeW = 16.dp.toPx()
                             val arcSize = Size(size.width - strokeW, size.height - strokeW)
@@ -193,13 +194,13 @@ fun StressDetailScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = stressLevel.toString(),
-                                color = TextOnSurface,
+                                color = c.onSurface,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 56.sp
                             )
                             Text(
                                 text = stressLabel.uppercase(),
-                                color = VibrantMagenta,
+                                color = c.secondary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 2.sp
@@ -213,12 +214,12 @@ fun StressDetailScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .padding(horizontal = 20.dp, vertical = 8.dp)
                     ) {
                         Text(
                             text = "Optimal Recovery Zone",
-                            color = TextOnSurfaceVariant,
+                            color = c.onSurfaceVariant,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -237,7 +238,7 @@ fun StressDetailScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .padding(20.dp)
                     ) {
                         Column(
@@ -246,7 +247,7 @@ fun StressDetailScreen(
                         ) {
                             Text(
                                 text = "HRV",
-                                color = ElectricIndigo,
+                                color = c.primary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 2.sp
@@ -255,21 +256,21 @@ fun StressDetailScreen(
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
                                     text = if (hrv > 0) String.format("%.0f", hrv) else "--",
-                                    color = TextOnSurface,
+                                    color = c.onSurface,
                                     fontWeight = FontWeight.Black,
                                     fontSize = 32.sp
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "ms",
-                                    color = TextOnSurfaceVariant,
+                                    color = c.onSurfaceVariant,
                                     fontSize = 14.sp,
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             val hrvTrend = if (hrv > 50) "+12%" else if (hrv > 30) "Stable" else "-8%"
-                            val hrvTrendColor = if (hrv > 50) SuccessGreen else if (hrv > 30) TextOnSurfaceVariant else ErrorRed
+                            val hrvTrendColor = if (hrv > 50) c.success else if (hrv > 30) c.onSurfaceVariant else c.error
                             Text(
                                 text = hrvTrend,
                                 color = hrvTrendColor,
@@ -284,7 +285,7 @@ fun StressDetailScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .padding(20.dp)
                     ) {
                         Column(
@@ -293,7 +294,7 @@ fun StressDetailScreen(
                         ) {
                             Text(
                                 text = "RESTING HR",
-                                color = VibrantMagenta,
+                                color = c.secondary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 2.sp
@@ -302,21 +303,21 @@ fun StressDetailScreen(
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
                                     text = if (rhr > 0) rhr.toString() else "--",
-                                    color = TextOnSurface,
+                                    color = c.onSurface,
                                     fontWeight = FontWeight.Black,
                                     fontSize = 32.sp
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "bpm",
-                                    color = TextOnSurfaceVariant,
+                                    color = c.onSurfaceVariant,
                                     fontSize = 14.sp,
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             val rhrTrend = if (rhr in 50..65) "Stable" else if (rhr in 66..75) "Stable" else "+4%"
-                            val rhrTrendColor = if (rhr <= 75) TextOnSurfaceVariant else ErrorRed
+                            val rhrTrendColor = if (rhr <= 75) c.onSurfaceVariant else c.error
                             Text(
                                 text = rhrTrend,
                                 color = rhrTrendColor,
@@ -334,7 +335,7 @@ fun StressDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
-                        .background(SurfaceHigh)
+                        .background(c.surfaceHigh)
                         .padding(20.dp)
                 ) {
                     Row(
@@ -348,7 +349,7 @@ fun StressDetailScreen(
                                 .clip(CircleShape)
                                 .background(
                                     Brush.linearGradient(
-                                        listOf(ElectricIndigo, VibrantMagenta)
+                                        listOf(c.primary, c.secondary)
                                     )
                                 ),
                             contentAlignment = Alignment.Center
@@ -362,14 +363,14 @@ fun StressDetailScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Resilience Coaching",
-                                color = TextOnSurface,
+                                color = c.onSurface,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = coaching,
-                                color = TextOnSurfaceVariant,
+                                color = c.onSurfaceVariant,
                                 fontSize = 14.sp,
                                 lineHeight = 20.sp
                             )
@@ -379,13 +380,13 @@ fun StressDetailScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50))
-                                    .background(ElectricIndigo)
+                                    .background(c.primary)
                                     .clickable { onStartExercise() }
                                     .padding(horizontal = 20.dp, vertical = 8.dp)
                             ) {
                                 Text(
                                     text = "Start Exercise",
-                                    color = OnIndigo,
+                                    color = c.onPrimary,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -401,7 +402,7 @@ fun StressDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
-                        .background(SurfaceLow)
+                        .background(c.surfaceLow)
                         .padding(20.dp)
                 ) {
                     Column {
@@ -412,13 +413,13 @@ fun StressDetailScreen(
                         ) {
                             Text(
                                 text = "Stress Intensity",
-                                color = TextOnSurface,
+                                color = c.onSurface,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "LAST 6 HOURS",
-                                color = TextSubtle,
+                                color = c.outline,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -450,12 +451,12 @@ fun StressDetailScreen(
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(
                                                 if (isMax) Brush.verticalGradient(
-                                                    listOf(VibrantMagenta, ElectricIndigo)
+                                                    listOf(c.secondary, c.primary)
                                                 )
                                                 else Brush.verticalGradient(
                                                     listOf(
-                                                        ElectricIndigo.copy(alpha = 0.4f),
-                                                        VibrantMagenta.copy(alpha = 0.6f)
+                                                        c.primary.copy(alpha = 0.4f),
+                                                        c.secondary.copy(alpha = 0.6f)
                                                     )
                                                 )
                                             )
@@ -463,7 +464,7 @@ fun StressDetailScreen(
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
                                         text = hours[index],
-                                        color = TextSubtle,
+                                        color = c.outline,
                                         fontSize = 11.sp,
                                         textAlign = TextAlign.Center
                                     )
@@ -482,7 +483,7 @@ fun StressDetailScreen(
                 ) {
                     Text(
                         text = "Contributing Factors",
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 4.dp)
@@ -509,6 +510,7 @@ private fun StressFactorRow(
     label: String,
     status: String
 ) {
+    val c = LocalAppColors.current
     val icon = when (iconType) {
         "sleep" -> Icons.Default.Bedtime
         "hrv" -> Icons.Default.FavoriteBorder
@@ -517,24 +519,24 @@ private fun StressFactorRow(
         else -> Icons.Default.Lightbulb
     }
     val iconColor = when (iconType) {
-        "sleep" -> ElectricIndigo
-        "hrv" -> SoftLavender
-        "heart" -> VibrantMagenta
-        "activity" -> SoftLavender
-        else -> ElectricIndigo
+        "sleep" -> c.primary
+        "hrv" -> c.tertiary
+        "heart" -> c.secondary
+        "activity" -> c.tertiary
+        else -> c.primary
     }
 
     val (badgeBg, badgeText, badgeLabel) = when (status) {
-        "Positive" -> Triple(ElectricIndigo.copy(alpha = 0.12f), ElectricIndigo, "POSITIVE")
-        "High" -> Triple(VibrantMagenta.copy(alpha = 0.12f), VibrantMagenta, "HIGH")
-        else -> Triple(SurfaceHighest, TextOnSurfaceVariant, "BALANCED")
+        "Positive" -> Triple(c.primary.copy(alpha = 0.12f), c.primary, "POSITIVE")
+        "High" -> Triple(c.secondary.copy(alpha = 0.12f), c.secondary, "HIGH")
+        else -> Triple(c.surfaceHighest, c.onSurfaceVariant, "BALANCED")
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(50))
-            .background(SurfaceHigh.copy(alpha = 0.5f))
+            .background(c.surfaceHigh.copy(alpha = 0.5f))
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
@@ -563,7 +565,7 @@ private fun StressFactorRow(
 
                 Text(
                     text = label,
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )

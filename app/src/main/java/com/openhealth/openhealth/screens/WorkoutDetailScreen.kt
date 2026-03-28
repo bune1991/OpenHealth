@@ -1,6 +1,7 @@
 package com.openhealth.openhealth.screens
 
 import com.openhealth.openhealth.ui.theme.*
+import com.openhealth.openhealth.ui.theme.LocalAppColors
 import com.openhealth.openhealth.model.ExerciseSession
 import com.openhealth.openhealth.model.HealthData
 
@@ -58,6 +59,7 @@ fun WorkoutDetailScreen(
     healthData: HealthData,
     onBackClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     val zone = ZoneId.systemDefault()
     val startZoned = session.startTime.atZone(zone)
     val endZoned = session.endTime.atZone(zone)
@@ -98,13 +100,13 @@ fun WorkoutDetailScreen(
         }
 
     Scaffold(
-        containerColor = SurfaceLowest,
+        containerColor = c.background,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         "Workout Detail",
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
@@ -115,7 +117,7 @@ fun WorkoutDetailScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextOnSurface
+                            tint = c.onSurface
                         )
                     }
                 },
@@ -124,7 +126,7 @@ fun WorkoutDetailScreen(
                     Spacer(modifier = Modifier.size(48.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceLowest
+                    containerColor = c.background
                 )
             )
         }
@@ -132,7 +134,7 @@ fun WorkoutDetailScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SurfaceLowest)
+                .background(c.background)
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -142,12 +144,12 @@ fun WorkoutDetailScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(VibrantMagenta.copy(alpha = 0.15f))
+                        .background(c.secondary.copy(alpha = 0.15f))
                         .padding(horizontal = 16.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = session.exerciseType.uppercase(),
-                        color = VibrantMagenta,
+                        color = c.secondary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp
@@ -161,7 +163,7 @@ fun WorkoutDetailScreen(
                     text = session.exerciseType,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextOnSurface
+                    color = c.onSurface
                 )
             }
 
@@ -171,13 +173,13 @@ fun WorkoutDetailScreen(
                     Text(
                         text = dateStr,
                         fontSize = 14.sp,
-                        color = TextOnSurfaceVariant
+                        color = c.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = timeStr,
                         fontSize = 13.sp,
-                        color = TextSubtle
+                        color = c.outline
                     )
                 }
             }
@@ -188,20 +190,20 @@ fun WorkoutDetailScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(ElectricIndigo.copy(alpha = 0.12f))
+                            .background(c.primary.copy(alpha = 0.12f))
                             .padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Speed,
                                 contentDescription = null,
-                                tint = ElectricIndigo,
+                                tint = c.primary,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = paceStr,
-                                color = ElectricIndigo,
+                                color = c.primary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -241,7 +243,7 @@ fun WorkoutDetailScreen(
                         StatCard(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.Timer,
-                            iconColor = SoftLavender,
+                            iconColor = c.tertiary,
                             label = "Duration",
                             value = durationStr,
                             unit = ""
@@ -265,7 +267,7 @@ fun WorkoutDetailScreen(
                     text = "Vitals & Trends",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextOnSurface
+                    color = c.onSurface
                 )
             }
 
@@ -275,14 +277,14 @@ fun WorkoutDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
-                        .background(SurfaceHigh)
+                        .background(c.surfaceHigh)
                         .padding(20.dp)
                 ) {
                     Column {
                         Text(
                             text = "AVERAGE HEART RATE",
                             fontSize = 11.sp,
-                            color = TextSubtle,
+                            color = c.outline,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.5.sp
                         )
@@ -294,13 +296,13 @@ fun WorkoutDetailScreen(
                                 text = avgHr?.toString() ?: "--",
                                 fontSize = 40.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = VibrantMagenta
+                                color = c.secondary
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "BPM",
                                 fontSize = 14.sp,
-                                color = TextSubtle,
+                                color = c.outline,
                                 modifier = Modifier.padding(bottom = 6.dp)
                             )
                         }
@@ -327,8 +329,8 @@ fun WorkoutDetailScreen(
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(
-                                    ElectricIndigo.copy(alpha = 0.2f),
-                                    VibrantMagenta.copy(alpha = 0.15f)
+                                    c.primary.copy(alpha = 0.2f),
+                                    c.secondary.copy(alpha = 0.15f)
                                 )
                             )
                         )
@@ -339,14 +341,14 @@ fun WorkoutDetailScreen(
                             Icon(
                                 Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                tint = ElectricIndigo,
+                                tint = c.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "AI HEALTH INSIGHT",
                                 fontSize = 11.sp,
-                                color = ElectricIndigo,
+                                color = c.primary,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.5.sp
                             )
@@ -355,7 +357,7 @@ fun WorkoutDetailScreen(
                         Text(
                             text = insightText,
                             fontSize = 14.sp,
-                            color = TextOnSurfaceVariant,
+                            color = c.onSurfaceVariant,
                             lineHeight = 22.sp
                         )
                     }
@@ -379,10 +381,11 @@ private fun StatCard(
     value: String,
     unit: String
 ) {
+    val c = LocalAppColors.current
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(16.dp)
     ) {
         Column {
@@ -403,7 +406,7 @@ private fun StatCard(
             Text(
                 text = label,
                 fontSize = 12.sp,
-                color = TextSubtle,
+                color = c.outline,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -412,14 +415,14 @@ private fun StatCard(
                     text = value,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextOnSurface
+                    color = c.onSurface
                 )
                 if (unit.isNotEmpty()) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = unit,
                         fontSize = 12.sp,
-                        color = TextSubtle,
+                        color = c.outline,
                         modifier = Modifier.padding(bottom = 2.dp)
                     )
                 }
@@ -433,6 +436,7 @@ private fun HeartRateBarChart(
     readings: List<Int>,
     avgBpm: Int?
 ) {
+    val c = LocalAppColors.current
     // If we have real readings, bucket them; otherwise generate a sample visualization
     val bars = if (readings.size >= 2) {
         val bucketCount = 12.coerceAtMost(readings.size)
@@ -469,8 +473,8 @@ private fun HeartRateBarChart(
                     .fillMaxHeight(fraction)
                     .clip(RoundedCornerShape(50))
                     .background(
-                        if (fraction > 0.75f) VibrantMagenta
-                        else VibrantMagenta.copy(alpha = 0.4f)
+                        if (fraction > 0.75f) c.secondary
+                        else c.secondary.copy(alpha = 0.4f)
                     )
             )
         }

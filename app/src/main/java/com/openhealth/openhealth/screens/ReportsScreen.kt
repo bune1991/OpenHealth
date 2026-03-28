@@ -58,11 +58,11 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 private val GradientBrush = Brush.horizontalGradient(
-    colors = listOf(ElectricIndigo, VibrantMagenta)
+    colors = listOf(Color(0xFFB89FFF), Color(0xFFFF51FA))
 )
 
-private val TrendUp = SuccessGreen
-private val TrendDown = ErrorRed
+private val TrendUp = Color(0xFF5BF5A0)
+private val TrendDown = Color(0xFFFF5252)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,13 +71,14 @@ fun ReportsScreen(
     onBackClick: () -> Unit,
     onMetricClick: (com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType) -> Unit = {}
 ) {
+    val c = LocalAppColors.current
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = "Weekly Summary",
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -87,16 +88,16 @@ fun ReportsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextOnSurfaceVariant
+                            tint = c.onSurfaceVariant
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceLowest
+                    containerColor = c.background
                 )
             )
         },
-        containerColor = SurfaceLowest
+        containerColor = c.background
     ) { paddingValues ->
         if (reportsData.isLoading) {
             Box(
@@ -105,7 +106,7 @@ fun ReportsScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = ElectricIndigo)
+                CircularProgressIndicator(color = c.primary)
             }
         } else {
             LazyColumn(
@@ -121,7 +122,7 @@ fun ReportsScreen(
                     Text(
                         text = "WEEKLY TRENDS VS LAST WEEK",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextOnSurfaceVariant,
+                        color = c.onSurfaceVariant,
                         letterSpacing = 1.5.sp,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold
@@ -166,7 +167,7 @@ fun ReportsScreen(
                     Text(
                         text = "MONTHLY TOTALS",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextOnSurfaceVariant,
+                        color = c.onSurfaceVariant,
                         letterSpacing = 1.5.sp,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold
@@ -184,7 +185,7 @@ fun ReportsScreen(
                     Text(
                         text = "KEY METRICS COMPARISON",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextOnSurfaceVariant,
+                        color = c.onSurfaceVariant,
                         letterSpacing = 1.5.sp,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold
@@ -216,6 +217,7 @@ private fun TrendCard(
     title: String,
     summary: MetricSummary
 ) {
+    val c = LocalAppColors.current
     val change = if (summary.lastWeekValue > 0) {
         ((summary.thisWeekValue - summary.lastWeekValue) / summary.lastWeekValue * 100).roundToInt()
     } else 0
@@ -223,7 +225,7 @@ private fun TrendCard(
     val isPositive = change > 0
     val isBetter = if (summary.isBetterWhenHigher) isPositive else !isPositive
     val trendColor = when {
-        change == 0 -> TextSubtle
+        change == 0 -> c.outline
         isBetter -> TrendUp
         else -> TrendDown
     }
@@ -238,7 +240,7 @@ private fun TrendCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(24.dp)
     ) {
         Column {
@@ -251,7 +253,7 @@ private fun TrendCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextOnSurfaceVariant,
+                    color = c.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
 
@@ -285,7 +287,7 @@ private fun TrendCard(
                 text = "$formattedValue ${summary.unit}",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = TextOnSurface
+                color = c.onSurface
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -296,7 +298,7 @@ private fun TrendCard(
                     .fillMaxWidth()
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(SurfaceHighest)
+                    .background(c.surfaceHighest)
             ) {
                 Box(
                     modifier = Modifier
@@ -316,6 +318,7 @@ private fun TrendCard(
 
 @Composable
 private fun StepsBreakdownChart(data: List<com.openhealth.openhealth.model.DailyDataPoint>) {
+    val c = LocalAppColors.current
     val maxValue = data.maxOfOrNull { it.value } ?: 1.0
     val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
 
@@ -323,14 +326,14 @@ private fun StepsBreakdownChart(data: List<com.openhealth.openhealth.model.Daily
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(28.dp)
     ) {
         Column {
             Text(
                 text = "Steps Breakdown",
                 style = MaterialTheme.typography.titleMedium,
-                color = TextOnSurface,
+                color = c.onSurface,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -374,7 +377,7 @@ private fun StepsBreakdownChart(data: List<com.openhealth.openhealth.model.Daily
                                 .width(32.dp)
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(SurfaceHighest),
+                                .background(c.surfaceHighest),
                             contentAlignment = Alignment.BottomCenter
                         ) {
                             if (heightFraction > 0f) {
@@ -394,7 +397,7 @@ private fun StepsBreakdownChart(data: List<com.openhealth.openhealth.model.Daily
                         Text(
                             text = label,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextSubtle,
+                            color = c.outline,
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center
                         )
@@ -411,6 +414,7 @@ private fun StepsBreakdownChart(data: List<com.openhealth.openhealth.model.Daily
 
 @Composable
 private fun MonthlyTotalsCard(summaries: List<MetricSummary>, onMetricClick: (com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType) -> Unit = {}) {
+    val c = LocalAppColors.current
     val caloriesSummary = summaries.find { it.label == "Calories" }
     val exerciseSummary = summaries.find { it.label == "Exercise" }
     val stepsSummary = summaries.find { it.label == "Steps" }
@@ -457,7 +461,7 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>, onMetricClick: (co
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(vertical = 8.dp)
     ) {
         Column {
@@ -491,7 +495,7 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>, onMetricClick: (co
                     Text(
                         text = row.label,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         modifier = Modifier.weight(1f)
                     )
 
@@ -499,7 +503,7 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>, onMetricClick: (co
                     Text(
                         text = row.value,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextOnSurfaceVariant,
+                        color = c.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
                     )
 
@@ -509,7 +513,7 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>, onMetricClick: (co
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = TextSubtle,
+                        tint = c.outline,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -520,7 +524,7 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>, onMetricClick: (co
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp)
                             .height(1.dp)
-                            .background(SurfaceHighest)
+                            .background(c.surfaceHighest)
                     )
                 }
             }
@@ -534,6 +538,7 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>, onMetricClick: (co
 
 @Composable
 private fun KeyMetricPill(summary: MetricSummary) {
+    val c = LocalAppColors.current
     val formattedValue = formatMetricValue(summary.thisWeekValue, summary.unit)
 
     // Determine status based on week-over-week change
@@ -549,15 +554,15 @@ private fun KeyMetricPill(summary: MetricSummary) {
         else -> "Normal"
     }
     val statusColor = when (statusLabel) {
-        "Optimal" -> SuccessGreen
-        else -> TextOnSurfaceVariant
+        "Optimal" -> c.success
+        else -> c.onSurfaceVariant
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
         Row(
@@ -568,7 +573,7 @@ private fun KeyMetricPill(summary: MetricSummary) {
             Text(
                 text = summary.label,
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextOnSurface,
+                color = c.onSurface,
                 modifier = Modifier.weight(1f)
             )
 
@@ -576,7 +581,7 @@ private fun KeyMetricPill(summary: MetricSummary) {
             Text(
                 text = "$formattedValue ${summary.unit}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextOnSurfaceVariant,
+                color = c.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
 

@@ -1,6 +1,7 @@
 package com.openhealth.openhealth.screens
 
 import com.openhealth.openhealth.ui.theme.*
+import com.openhealth.openhealth.ui.theme.LocalAppColors
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -65,13 +66,14 @@ fun CustomCalendarDialog(
     data: List<DailyDataPoint> = emptyList(),
     goal: Int = 10000
 ) {
+    val c = LocalAppColors.current
     val today = LocalDate.now(ZoneId.systemDefault())
     var displayedMonth by remember { mutableStateOf(YearMonth.from(initialDate)) }
     var selectedDate by remember { mutableStateOf(initialDate) }
     val dataMap = remember(data) { data.associateBy { it.date } }
 
     val gradientBrush = Brush.horizontalGradient(
-        colors = listOf(ElectricIndigo, VibrantMagenta)
+        colors = listOf(c.primary, c.secondary)
     )
 
     Dialog(
@@ -82,7 +84,7 @@ fun CustomCalendarDialog(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .clip(RoundedCornerShape(24.dp))
-                .background(SurfaceLowest)
+                .background(c.background)
                 .padding(20.dp)
         ) {
             Column {
@@ -99,7 +101,7 @@ fun CustomCalendarDialog(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = TextOnSurfaceVariant,
+                            tint = c.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -110,7 +112,7 @@ fun CustomCalendarDialog(
                     Text(
                         text = "Health Pulse",
                         style = MaterialTheme.typography.titleMedium,
-                        color = ElectricIndigo,
+                        color = c.primary,
                         fontWeight = FontWeight.Bold
                     )
 
@@ -125,7 +127,7 @@ fun CustomCalendarDialog(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                                 contentDescription = "Previous Month",
-                                tint = TextOnSurfaceVariant,
+                                tint = c.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -135,7 +137,7 @@ fun CustomCalendarDialog(
                                 DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault())
                             ).uppercase(),
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextOnSurface,
+                            color = c.onSurface,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 1.sp
                         )
@@ -152,8 +154,8 @@ fun CustomCalendarDialog(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = "Next Month",
-                                tint = if (canGoForward) TextOnSurfaceVariant
-                                else TextSubtle.copy(alpha = 0.3f),
+                                tint = if (canGoForward) c.onSurfaceVariant
+                                else c.outline.copy(alpha = 0.3f),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -168,7 +170,7 @@ fun CustomCalendarDialog(
                         Text(
                             text = day,
                             fontSize = 10.sp,
-                            color = TextOnSurfaceVariant,
+                            color = c.onSurfaceVariant,
                             fontWeight = FontWeight.Medium,
                             letterSpacing = 1.2.sp,
                             modifier = Modifier.weight(1f),
@@ -204,7 +206,7 @@ fun CustomCalendarDialog(
                                 val progress = (steps / goal).toFloat().coerceIn(0f, 1f)
 
                                 // Alternate ring color: even days indigo, odd days magenta
-                                val ringColor = if (dayNum % 2 == 0) ElectricIndigo else VibrantMagenta
+                                val ringColor = if (dayNum % 2 == 0) c.primary else c.secondary
 
                                 Box(
                                     modifier = Modifier
@@ -224,7 +226,7 @@ fun CustomCalendarDialog(
                                         if (isSelected) {
                                             Canvas(modifier = Modifier.size(44.dp)) {
                                                 drawCircle(
-                                                    color = ElectricIndigo.copy(alpha = 0.20f),
+                                                    color = c.primary.copy(alpha = 0.20f),
                                                     radius = size.minDimension / 2f
                                                 )
                                             }
@@ -240,7 +242,7 @@ fun CustomCalendarDialog(
 
                                             // Background track ring
                                             drawArc(
-                                                color = SurfaceHighest,
+                                                color = c.surfaceHighest,
                                                 startAngle = -90f,
                                                 sweepAngle = 360f,
                                                 useCenter = false,
@@ -268,10 +270,10 @@ fun CustomCalendarDialog(
                                                 )
                                             }
 
-                                            // Selected: full ElectricIndigo ring on top
+                                            // Selected: full c.primary ring on top
                                             if (isSelected) {
                                                 drawArc(
-                                                    color = ElectricIndigo,
+                                                    color = c.primary,
                                                     startAngle = -90f,
                                                     sweepAngle = 360f,
                                                     useCenter = false,
@@ -291,9 +293,9 @@ fun CustomCalendarDialog(
                                         text = dayNum.toString(),
                                         fontSize = if (isSelected) 13.sp else 12.sp,
                                         color = when {
-                                            isSelected -> ElectricIndigo
-                                            isFuture -> TextSubtle.copy(alpha = 0.3f)
-                                            else -> TextOnSurface
+                                            isSelected -> c.primary
+                                            isFuture -> c.outline.copy(alpha = 0.3f)
+                                            else -> c.onSurface
                                         },
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         textAlign = TextAlign.Center
@@ -315,7 +317,7 @@ fun CustomCalendarDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(SurfaceMid)
+                        .background(c.surface)
                         .padding(16.dp)
                 ) {
                     Column {
@@ -335,7 +337,7 @@ fun CustomCalendarDialog(
                             Text(
                                 text = "$dayName $monthDay",
                                 fontSize = 10.sp,
-                                color = TextSubtle,
+                                color = c.outline,
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = 1.2.sp
                             )
@@ -351,7 +353,7 @@ fun CustomCalendarDialog(
                                     Text(
                                         text = "ACTIVE",
                                         fontSize = 9.sp,
-                                        color = TextOnSurface,
+                                        color = c.onSurface,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 1.sp
                                     )
@@ -365,7 +367,7 @@ fun CustomCalendarDialog(
                         Text(
                             text = "Daily Recap",
                             style = MaterialTheme.typography.titleLarge,
-                            color = TextOnSurface,
+                            color = c.onSurface,
                             fontWeight = FontWeight.Bold
                         )
 
@@ -378,19 +380,19 @@ fun CustomCalendarDialog(
                         ) {
                             RecapStatItem(
                                 icon = Icons.Default.DirectionsWalk,
-                                iconColor = CardSteps,
+                                iconColor = c.primary,
                                 label = "Steps",
                                 value = formatStepCount(selectedSteps)
                             )
                             RecapStatItem(
                                 icon = Icons.Default.LocalFireDepartment,
-                                iconColor = CardCalories,
+                                iconColor = c.secondary,
                                 label = "Calories",
                                 value = "${(selectedSteps * 0.04).toInt()} kcal"
                             )
                             RecapStatItem(
                                 icon = Icons.Default.Bedtime,
-                                iconColor = CardSleep,
+                                iconColor = c.tertiary,
                                 label = "Sleep",
                                 value = "--"
                             )
@@ -412,7 +414,7 @@ fun CustomCalendarDialog(
                 ) {
                     Text(
                         text = "Confirm Date",
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )
@@ -429,6 +431,7 @@ private fun RecapStatItem(
     label: String,
     value: String
 ) {
+    val c = LocalAppColors.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         // Icon circle
         Box(
@@ -448,14 +451,14 @@ private fun RecapStatItem(
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = value,
-            color = TextOnSurface,
+            color = c.onSurface,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = label,
-            color = TextSubtle,
+            color = c.outline,
             fontSize = 10.sp,
             letterSpacing = 0.5.sp
         )

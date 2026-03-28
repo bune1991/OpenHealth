@@ -75,6 +75,7 @@ fun PerformanceScreen(
     onMetricClick: (com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType) -> Unit = {},
     onSessionClick: (ExerciseSession) -> Unit = {}
 ) {
+    val c = LocalAppColors.current
     // Derive data
     val activeCalories = healthData.calories.activeBurned
     val totalCalories = healthData.calories.totalBurned
@@ -137,7 +138,7 @@ fun PerformanceScreen(
                 title = {
                     Text(
                         text = "Performance",
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -146,16 +147,16 @@ fun PerformanceScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = ElectricIndigo
+                            tint = c.primary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceLowest
+                    containerColor = c.background
                 )
             )
         },
-        containerColor = SurfaceLowest
+        containerColor = c.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -194,7 +195,7 @@ fun PerformanceScreen(
                                 // Outer ring glow (Move — magenta)
                                 if (moveProgress > 0f) {
                                     drawCircle(
-                                        color = VibrantMagenta.copy(alpha = 0.12f),
+                                        color = c.secondary.copy(alpha = 0.12f),
                                         radius = outerRadius + 12.dp.toPx(),
                                         center = Offset(centerX, centerY)
                                     )
@@ -202,7 +203,7 @@ fun PerformanceScreen(
                                 // Middle ring glow (Exercise — indigo)
                                 if (exerciseProgress > 0f) {
                                     drawCircle(
-                                        color = ElectricIndigo.copy(alpha = 0.10f),
+                                        color = c.primary.copy(alpha = 0.10f),
                                         radius = middleRadius + 10.dp.toPx(),
                                         center = Offset(centerX, centerY)
                                     )
@@ -210,7 +211,7 @@ fun PerformanceScreen(
                                 // Inner ring glow (Stand — lavender)
                                 if (stepsProgress > 0f) {
                                     drawCircle(
-                                        color = SoftLavender.copy(alpha = 0.08f),
+                                        color = c.tertiary.copy(alpha = 0.08f),
                                         radius = innerRadius + 8.dp.toPx(),
                                         center = Offset(centerX, centerY)
                                     )
@@ -219,7 +220,7 @@ fun PerformanceScreen(
                                 // === TRACK BACKGROUNDS ===
                                 // Outer track
                                 drawArc(
-                                    color = SurfaceHigh,
+                                    color = c.surfaceHigh,
                                     startAngle = -90f,
                                     sweepAngle = 360f,
                                     useCenter = false,
@@ -229,7 +230,7 @@ fun PerformanceScreen(
                                 )
                                 // Middle track
                                 drawArc(
-                                    color = SurfaceHigh,
+                                    color = c.surfaceHigh,
                                     startAngle = -90f,
                                     sweepAngle = 360f,
                                     useCenter = false,
@@ -239,7 +240,7 @@ fun PerformanceScreen(
                                 )
                                 // Inner track
                                 drawArc(
-                                    color = SurfaceHigh,
+                                    color = c.surfaceHigh,
                                     startAngle = -90f,
                                     sweepAngle = 360f,
                                     useCenter = false,
@@ -255,7 +256,7 @@ fun PerformanceScreen(
                                         brush = Brush.sweepGradient(
                                             colors = listOf(
                                                 CardHeartRate,
-                                                VibrantMagenta,
+                                                c.secondary,
                                                 CardHeartRate
                                             )
                                         ),
@@ -271,7 +272,7 @@ fun PerformanceScreen(
                                     val glowX = centerX + outerRadius * cos(endAngle).toFloat()
                                     val glowY = centerY + outerRadius * sin(endAngle).toFloat()
                                     drawCircle(
-                                        color = VibrantMagenta.copy(alpha = 0.35f),
+                                        color = c.secondary.copy(alpha = 0.35f),
                                         radius = outerStroke * 1.2f,
                                         center = Offset(glowX, glowY)
                                     )
@@ -282,9 +283,9 @@ fun PerformanceScreen(
                                     drawArc(
                                         brush = Brush.sweepGradient(
                                             colors = listOf(
-                                                ElectricIndigo,
-                                                ElectricIndigoDim,
-                                                ElectricIndigo
+                                                c.primary,
+                                                c.primaryDim,
+                                                c.primary
                                             )
                                         ),
                                         startAngle = -90f,
@@ -298,7 +299,7 @@ fun PerformanceScreen(
                                     val glowX = centerX + middleRadius * cos(endAngle).toFloat()
                                     val glowY = centerY + middleRadius * sin(endAngle).toFloat()
                                     drawCircle(
-                                        color = ElectricIndigo.copy(alpha = 0.35f),
+                                        color = c.primary.copy(alpha = 0.35f),
                                         radius = middleStroke * 1.2f,
                                         center = Offset(glowX, glowY)
                                     )
@@ -309,9 +310,9 @@ fun PerformanceScreen(
                                     drawArc(
                                         brush = Brush.sweepGradient(
                                             colors = listOf(
-                                                SoftLavender,
+                                                c.tertiary,
                                                 Tertiary,
-                                                SoftLavender
+                                                c.tertiary
                                             )
                                         ),
                                         startAngle = -90f,
@@ -325,7 +326,7 @@ fun PerformanceScreen(
                                     val glowX = centerX + innerRadius * cos(endAngle).toFloat()
                                     val glowY = centerY + innerRadius * sin(endAngle).toFloat()
                                     drawCircle(
-                                        color = SoftLavender.copy(alpha = 0.35f),
+                                        color = c.tertiary.copy(alpha = 0.35f),
                                         radius = innerStroke * 1.2f,
                                         center = Offset(glowX, glowY)
                                     )
@@ -338,13 +339,13 @@ fun PerformanceScreen(
                                     text = "$overallPercent%",
                                     fontSize = 48.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextOnSurface
+                                    color = c.onSurface
                                 )
                                 Text(
                                     text = "DAILY GOAL",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = TextSubtle,
+                                    color = c.outline,
                                     letterSpacing = 2.sp
                                 )
                             }
@@ -357,9 +358,9 @@ fun PerformanceScreen(
                             horizontalArrangement = Arrangement.spacedBy(24.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            LegendDot(color = VibrantMagenta, label = "MOVE")
-                            LegendDot(color = ElectricIndigo, label = "EXERCISE")
-                            LegendDot(color = SoftLavender, label = "STAND")
+                            LegendDot(color = c.secondary, label = "MOVE")
+                            LegendDot(color = c.primary, label = "EXERCISE")
+                            LegendDot(color = c.tertiary, label = "STAND")
                         }
                     }
                 }
@@ -371,7 +372,7 @@ fun PerformanceScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
-                        .background(SurfaceHigh)
+                        .background(c.surfaceHigh)
                         .clickable { onMetricClick(com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.EXERCISE) }
                         .padding(20.dp)
                 ) {
@@ -385,7 +386,7 @@ fun PerformanceScreen(
                                 text = "ACTIVE ENERGY",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextSubtle,
+                                color = c.outline,
                                 letterSpacing = 1.sp
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -396,14 +397,14 @@ fun PerformanceScreen(
                                     text = "${activeCalories.roundToInt()}",
                                     fontSize = 36.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextOnSurface
+                                    color = c.onSurface
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "Kcal",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = ElectricIndigo,
+                                    color = c.primary,
                                     modifier = Modifier.padding(bottom = 6.dp)
                                 )
                             }
@@ -414,7 +415,7 @@ fun PerformanceScreen(
                             // Glow behind icon
                             Canvas(modifier = Modifier.size(56.dp)) {
                                 drawCircle(
-                                    color = ElectricIndigo.copy(alpha = 0.15f),
+                                    color = c.primary.copy(alpha = 0.15f),
                                     radius = size.width / 2
                                 )
                             }
@@ -422,13 +423,13 @@ fun PerformanceScreen(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .background(ElectricIndigo.copy(alpha = 0.2f)),
+                                    .background(c.primary.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Bolt,
                                     contentDescription = null,
-                                    tint = ElectricIndigo,
+                                    tint = c.primary,
                                     modifier = Modifier.size(26.dp)
                                 )
                             }
@@ -448,7 +449,7 @@ fun PerformanceScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceHigh)
+                            .background(c.surfaceHigh)
                             .clickable { onMetricClick(com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.EXERCISE) }
                             .padding(20.dp)
                     ) {
@@ -457,7 +458,7 @@ fun PerformanceScreen(
                                 text = "EXERCISE",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextSubtle,
+                                color = c.outline,
                                 letterSpacing = 1.sp
                             )
                             Spacer(modifier = Modifier.height(10.dp))
@@ -465,19 +466,19 @@ fun PerformanceScreen(
                                 text = "${exerciseMinutes}",
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextOnSurface
+                                color = c.onSurface
                             )
                             Text(
                                 text = "min",
                                 fontSize = 13.sp,
-                                color = TextOnSurfaceVariant
+                                color = c.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             // Progress bar with glow
                             GlowProgressBar(
                                 progress = exerciseProgress,
-                                color = VibrantMagenta,
-                                glowColor = VibrantMagenta.copy(alpha = 0.3f)
+                                color = c.secondary,
+                                glowColor = c.secondary.copy(alpha = 0.3f)
                             )
                         }
                     }
@@ -487,7 +488,7 @@ fun PerformanceScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceHigh)
+                            .background(c.surfaceHigh)
                             .clickable { onMetricClick(com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.STEPS) }
                             .padding(20.dp)
                     ) {
@@ -496,7 +497,7 @@ fun PerformanceScreen(
                                 text = "STEPS",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextSubtle,
+                                color = c.outline,
                                 letterSpacing = 1.sp
                             )
                             Spacer(modifier = Modifier.height(10.dp))
@@ -504,19 +505,19 @@ fun PerformanceScreen(
                                 text = "${steps}",
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextOnSurface
+                                color = c.onSurface
                             )
                             Text(
                                 text = "steps",
                                 fontSize = 13.sp,
-                                color = TextOnSurfaceVariant
+                                color = c.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             // Progress bar with glow
                             GlowProgressBar(
                                 progress = stepsProgress,
-                                color = ElectricIndigo,
-                                glowColor = ElectricIndigo.copy(alpha = 0.3f)
+                                color = c.primary,
+                                glowColor = c.primary.copy(alpha = 0.3f)
                             )
                         }
                     }
@@ -532,8 +533,8 @@ fun PerformanceScreen(
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(
-                                    ElectricIndigo.copy(alpha = 0.10f),
-                                    VibrantMagenta.copy(alpha = 0.10f)
+                                    c.primary.copy(alpha = 0.10f),
+                                    c.secondary.copy(alpha = 0.10f)
                                 )
                             )
                         )
@@ -544,7 +545,7 @@ fun PerformanceScreen(
                             // Glow behind icon
                             Canvas(modifier = Modifier.size(48.dp)) {
                                 drawCircle(
-                                    color = ElectricIndigo.copy(alpha = 0.12f),
+                                    color = c.primary.copy(alpha = 0.12f),
                                     radius = size.width / 2
                                 )
                             }
@@ -552,13 +553,13 @@ fun PerformanceScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(ElectricIndigo.copy(alpha = 0.2f)),
+                                    .background(c.primary.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = null,
-                                    tint = ElectricIndigo,
+                                    tint = c.primary,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -569,13 +570,13 @@ fun PerformanceScreen(
                                 text = "Neural Insight",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextOnSurface
+                                color = c.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = insightText,
                                 fontSize = 13.sp,
-                                color = TextOnSurfaceVariant,
+                                color = c.onSurfaceVariant,
                                 lineHeight = 18.sp
                             )
                         }
@@ -595,13 +596,13 @@ fun PerformanceScreen(
                             text = "Intensity Flow",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextOnSurface
+                            color = c.onSurface
                         )
                         Text(
                             text = "LAST 12 HOURS",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextSubtle,
+                            color = c.outline,
                             letterSpacing = 1.sp
                         )
                     }
@@ -610,7 +611,7 @@ fun PerformanceScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .padding(horizontal = 16.dp, vertical = 20.dp)
                     ) {
                         Row(
@@ -638,7 +639,7 @@ fun PerformanceScreen(
                                                         .height(barHeight.dp + 4.dp)
                                                 ) {
                                                     drawRoundRect(
-                                                        color = ElectricIndigo.copy(alpha = 0.2f),
+                                                        color = c.primary.copy(alpha = 0.2f),
                                                         size = Size(size.width + 4.dp.toPx(), size.height),
                                                         cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
                                                     )
@@ -652,11 +653,11 @@ fun PerformanceScreen(
                                                     .background(
                                                         if (isActive)
                                                             Brush.verticalGradient(
-                                                                colors = listOf(ElectricIndigo, ElectricIndigoDim)
+                                                                colors = listOf(c.primary, c.primaryDim)
                                                             )
                                                         else
                                                             Brush.verticalGradient(
-                                                                colors = listOf(SurfaceHigh, SurfaceHigh)
+                                                                colors = listOf(c.surfaceHigh, c.surfaceHigh)
                                                             )
                                                     )
                                             )
@@ -669,7 +670,7 @@ fun PerformanceScreen(
                                             Text(
                                                 text = "${hourLabel}h",
                                                 fontSize = 9.sp,
-                                                color = TextSubtle
+                                                color = c.outline
                                             )
                                         } else {
                                             Text(
@@ -697,13 +698,13 @@ fun PerformanceScreen(
                             text = "Latest Sessions",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextOnSurface
+                            color = c.onSurface
                         )
                         Text(
                             text = "VIEW ALL",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = ElectricIndigo,
+                            color = c.primary,
                             letterSpacing = 1.sp
                         )
                     }
@@ -728,6 +729,7 @@ fun PerformanceScreen(
 
 @Composable
 private fun LegendDot(color: Color, label: String) {
+    val c = LocalAppColors.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -742,7 +744,7 @@ private fun LegendDot(color: Color, label: String) {
             text = label,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = TextSubtle,
+            color = c.outline,
             letterSpacing = 0.5.sp
         )
     }
@@ -755,6 +757,7 @@ private fun GlowProgressBar(
     glowColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val c = LocalAppColors.current
     Box(modifier = modifier.fillMaxWidth()) {
         Canvas(
             modifier = Modifier
@@ -766,7 +769,7 @@ private fun GlowProgressBar(
 
             // Track background
             drawRoundRect(
-                color = SurfaceLow,
+                color = c.surfaceLow,
                 size = Size(size.width, barHeight),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius)
             )
@@ -800,6 +803,7 @@ private fun SessionRow(
     session: ExerciseSession,
     onClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     val durationMin = session.duration.toMinutes()
     val calories = session.caloriesBurned?.roundToInt() ?: 0
     val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
@@ -816,17 +820,17 @@ private fun SessionRow(
     }
 
     val iconColor = when {
-        session.exerciseType.contains("run", ignoreCase = true) -> VibrantMagenta
-        session.exerciseType.contains("walk", ignoreCase = true) -> SuccessGreen
-        session.exerciseType.contains("yoga", ignoreCase = true) -> SoftLavender
-        else -> ElectricIndigo
+        session.exerciseType.contains("run", ignoreCase = true) -> c.secondary
+        session.exerciseType.contains("walk", ignoreCase = true) -> c.success
+        session.exerciseType.contains("yoga", ignoreCase = true) -> c.tertiary
+        else -> c.primary
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceHigh)
+            .background(c.surfaceHigh)
             .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
@@ -868,7 +872,7 @@ private fun SessionRow(
                         text = session.exerciseType,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -876,7 +880,7 @@ private fun SessionRow(
                     Text(
                         text = "${durationMin}min • $sessionTime",
                         fontSize = 12.sp,
-                        color = TextSubtle
+                        color = c.outline
                     )
                 }
             }
@@ -890,13 +894,13 @@ private fun SessionRow(
                         text = "${calories} kcal",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = ElectricIndigo
+                        color = c.primary
                     )
                 }
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = TextSubtle,
+                    tint = c.outline,
                     modifier = Modifier.size(20.dp)
                 )
             }

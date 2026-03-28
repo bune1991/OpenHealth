@@ -104,13 +104,14 @@ private val pages = listOf(
 fun OnboardingScreen(
     onGetStarted: () -> Unit
 ) {
+    val c = LocalAppColors.current
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SurfaceLowest)
+            .background(c.background)
     ) {
         Column(
             modifier = Modifier
@@ -127,13 +128,13 @@ fun OnboardingScreen(
                     Icon(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = null,
-                        tint = ElectricIndigo,
+                        tint = c.primary,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "OpenHealth",
-                        color = ElectricIndigo,
+                        color = c.primary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -142,7 +143,7 @@ fun OnboardingScreen(
                     TextButton(onClick = onGetStarted) {
                         Text(
                             text = "Skip",
-                            color = TextOnSurfaceVariant,
+                            color = c.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -179,10 +180,10 @@ fun OnboardingScreen(
                             .clip(CircleShape)
                             .background(
                                 if (isActive) Brush.horizontalGradient(
-                                    listOf(ElectricIndigo, VibrantMagenta)
+                                    listOf(c.primary, c.secondary)
                                 )
                                 else Brush.horizontalGradient(
-                                    listOf(SurfaceHighest, SurfaceHighest)
+                                    listOf(c.surfaceHighest, c.surfaceHighest)
                                 )
                             )
                     )
@@ -216,7 +217,7 @@ fun OnboardingScreen(
                         .fillMaxSize()
                         .background(
                             Brush.horizontalGradient(
-                                listOf(ElectricIndigo, VibrantMagenta)
+                                listOf(c.primary, c.secondary)
                             ),
                             RoundedCornerShape(28.dp)
                         ),
@@ -238,6 +239,7 @@ fun OnboardingScreen(
 
 @Composable
 private fun OnboardingPageContent(pageData: OnboardingPage) {
+    val c = LocalAppColors.current
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
@@ -293,7 +295,7 @@ private fun OnboardingPageContent(pageData: OnboardingPage) {
         // Title with highlighted word
         Text(
             text = pageData.title,
-            color = TextOnSurface,
+            color = c.onSurface,
             fontSize = 36.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
@@ -302,7 +304,7 @@ private fun OnboardingPageContent(pageData: OnboardingPage) {
         )
         Text(
             text = pageData.highlight,
-            color = ElectricIndigo,
+            color = c.primary,
             fontSize = 36.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
@@ -315,7 +317,7 @@ private fun OnboardingPageContent(pageData: OnboardingPage) {
         // Description
         Text(
             text = pageData.description,
-            color = TextOnSurfaceVariant,
+            color = c.onSurfaceVariant,
             fontSize = 15.sp,
             textAlign = TextAlign.Center,
             lineHeight = 24.sp,

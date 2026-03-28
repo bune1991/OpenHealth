@@ -106,6 +106,7 @@ fun MetricDetailScreen(
     healthData: com.openhealth.openhealth.model.HealthData? = null,
     onSessionClick: (com.openhealth.openhealth.model.ExerciseSession) -> Unit = {}
 ) {
+    val c = LocalAppColors.current
     val metricInfo = getMetricInfo(metricType)
 
     var selectedDate by remember { mutableStateOf(LocalDate.now(ZoneId.systemDefault())) }
@@ -148,7 +149,7 @@ fun MetricDetailScreen(
                     ) {
                         Text(
                             text = metricInfo.title,
-                            color = TextOnSurface,
+                            color = c.onSurface,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -157,7 +158,7 @@ fun MetricDetailScreen(
                                 DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextOnSurfaceVariant
+                            color = c.onSurfaceVariant
                         )
                     }
                 },
@@ -166,7 +167,7 @@ fun MetricDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = ElectricIndigo
+                            tint = c.primary
                         )
                     }
                 },
@@ -180,7 +181,7 @@ fun MetricDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
                             contentDescription = "Previous Day",
-                            tint = TextOnSurfaceVariant
+                            tint = c.onSurfaceVariant
                         )
                     }
                     IconButton(
@@ -200,16 +201,16 @@ fun MetricDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceLowest
+                    containerColor = c.background
                 )
             )
         },
-        containerColor = SurfaceLowest
+        containerColor = c.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SurfaceLowest)
+                .background(c.background)
                 .padding(paddingValues)
         ) {
             when {
@@ -267,7 +268,7 @@ fun MetricDetailScreen(
                                     Column {
                                         Text(
                                             text = "LAST 7 DAYS",
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 2.sp
@@ -275,7 +276,7 @@ fun MetricDetailScreen(
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = "Vitals Trend",
-                                            color = TextOnSurface,
+                                            color = c.onSurface,
                                             fontSize = 24.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -283,13 +284,13 @@ fun MetricDetailScreen(
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(
                                             text = "$displayValue ${metricHistory?.unit ?: ""}",
-                                            color = VibrantMagenta,
+                                            color = c.secondary,
                                             fontSize = 20.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
                                             text = "CURRENT",
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 2.sp
@@ -345,13 +346,13 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(16.dp)
                                 ) {
                                     LineChart(
                                         data = chartData,
-                                        lineColor = VibrantMagenta,
-                                        fillColor = VibrantMagenta.copy(alpha = 0.15f),
+                                        lineColor = c.secondary,
+                                        fillColor = c.secondary.copy(alpha = 0.15f),
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(160.dp)
@@ -376,9 +377,9 @@ fun MetricDetailScreen(
                                     else -> "LOW"
                                 }
                                 val qualityColor = when {
-                                    currentHrv >= 60 -> SuccessGreen
-                                    currentHrv >= 30 -> WarningOrange
-                                    else -> VibrantMagenta
+                                    currentHrv >= 60 -> c.success
+                                    currentHrv >= 30 -> c.warning
+                                    else -> c.secondary
                                 }
 
                                 // 7-day trend from history
@@ -399,13 +400,13 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(28.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(24.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
                                         text = "HEART RATE VARIABILITY",
-                                        color = TextSubtle,
+                                        color = c.outline,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 2.sp
@@ -416,14 +417,14 @@ fun MetricDetailScreen(
                                     ) {
                                         Text(
                                             text = String.format("%.0f", currentHrv),
-                                            color = TextOnSurface,
+                                            color = c.onSurface,
                                             fontSize = 48.sp,
                                             fontWeight = FontWeight.Black
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = "ms",
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Medium,
                                             modifier = Modifier.padding(bottom = 8.dp)
@@ -434,12 +435,12 @@ fun MetricDetailScreen(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(50))
-                                            .background(SurfaceHighest)
+                                            .background(c.surfaceHighest)
                                             .padding(horizontal = 16.dp, vertical = 6.dp)
                                     ) {
                                         Text(
                                             text = "7-DAY TREND: $trendLabel",
-                                            color = ElectricIndigo,
+                                            color = c.primary,
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 1.5.sp
@@ -466,16 +467,16 @@ fun MetricDetailScreen(
                                     else -> "Low Recovery"
                                 }
                                 val qualityColor = when {
-                                    currentHrv >= 60 -> SuccessGreen
-                                    currentHrv >= 30 -> WarningOrange
-                                    else -> VibrantMagenta
+                                    currentHrv >= 60 -> c.success
+                                    currentHrv >= 30 -> c.warning
+                                    else -> c.secondary
                                 }
 
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(28.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(vertical = 24.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -488,7 +489,7 @@ fun MetricDetailScreen(
                                             val strokeWidth = 12.dp.toPx()
                                             val padding = strokeWidth / 2
                                             drawArc(
-                                                color = SurfaceMid,
+                                                color = c.surface,
                                                 startAngle = -225f,
                                                 sweepAngle = 270f,
                                                 useCenter = false,
@@ -503,7 +504,7 @@ fun MetricDetailScreen(
                                             val padding = strokeWidth / 2
                                             drawArc(
                                                 brush = Brush.sweepGradient(
-                                                    listOf(VibrantMagenta, ElectricIndigo, SoftLavender)
+                                                    listOf(c.secondary, c.primary, c.tertiary)
                                                 ),
                                                 startAngle = -225f,
                                                 sweepAngle = 270f * animatedProgress,
@@ -524,7 +525,7 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(2.dp))
                                             Text(
                                                 text = "${(normalizedHrv * 100).roundToInt()}%",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
@@ -552,14 +553,14 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 text = "PREVIOUS",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -567,13 +568,13 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(6.dp))
                                             Text(
                                                 text = String.format("%.0f", previousValue),
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
                                                 text = "ms",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp
                                             )
                                         }
@@ -583,14 +584,14 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 text = "HIGH",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -598,13 +599,13 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(6.dp))
                                             Text(
                                                 text = String.format("%.0f", maxHrv),
-                                                color = SuccessGreen,
+                                                color = c.success,
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
                                                 text = "ms",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp
                                             )
                                         }
@@ -614,14 +615,14 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 text = "LOW",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -629,13 +630,13 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(6.dp))
                                             Text(
                                                 text = String.format("%.0f", minHrv),
-                                                color = VibrantMagenta,
+                                                color = c.secondary,
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
                                                 text = "ms",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp
                                             )
                                         }
@@ -654,9 +655,9 @@ fun MetricDetailScreen(
                                     else -> "LOW"
                                 }
                                 val insightColor = when {
-                                    currentHrv >= 60 -> SuccessGreen
-                                    currentHrv >= 30 -> WarningOrange
-                                    else -> VibrantMagenta
+                                    currentHrv >= 60 -> c.success
+                                    currentHrv >= 30 -> c.warning
+                                    else -> c.secondary
                                 }
                                 val insightText = when {
                                     currentHrv >= 60 -> "Your autonomic nervous system shows strong recovery. This is a great day for intense training or challenging activities."
@@ -668,20 +669,20 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(20.dp)
                                 ) {
                                     Row(verticalAlignment = Alignment.Top) {
                                         Box(
                                             modifier = Modifier
                                                 .size(44.dp)
-                                                .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                                .background(c.primary.copy(alpha = 0.12f), CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Favorite,
                                                 contentDescription = null,
-                                                tint = ElectricIndigo,
+                                                tint = c.primary,
                                                 modifier = Modifier.size(22.dp)
                                             )
                                         }
@@ -689,7 +690,7 @@ fun MetricDetailScreen(
                                         Column {
                                             Text(
                                                 text = "Recovery Insight",
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -712,20 +713,20 @@ fun MetricDetailScreen(
                                             Text(
                                                 text = insightText,
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 lineHeight = 20.sp
                                             )
                                             Spacer(modifier = Modifier.height(12.dp))
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
-                                                    .background(SurfaceHighest)
+                                                    .background(c.surfaceHighest)
                                                     .clickable { }
                                                     .padding(horizontal = 20.dp, vertical = 10.dp)
                                             ) {
                                                 Text(
                                                     text = "View Sleep Coach",
-                                                    color = ElectricIndigo,
+                                                    color = c.primary,
                                                     fontSize = 13.sp,
                                                     fontWeight = FontWeight.SemiBold
                                                 )
@@ -742,7 +743,7 @@ fun MetricDetailScreen(
                                     Column {
                                         Text(
                                             text = "HISTORY",
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 2.sp
@@ -753,7 +754,7 @@ fun MetricDetailScreen(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .clip(RoundedCornerShape(16.dp))
-                                                    .background(SurfaceLow)
+                                                    .background(c.surfaceLow)
                                                     .padding(16.dp)
                                             ) {
                                                 Row(
@@ -765,13 +766,13 @@ fun MetricDetailScreen(
                                                         text = point.date.format(
                                                             DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault())
                                                         ),
-                                                        color = TextOnSurface,
+                                                        color = c.onSurface,
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.Medium
                                                     )
                                                     Text(
                                                         text = "${String.format("%.0f", point.value)} ms",
-                                                        color = ElectricIndigo,
+                                                        color = c.primary,
                                                         fontSize = 16.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -800,9 +801,9 @@ fun MetricDetailScreen(
                                     else -> "ELEVATED"
                                 }
                                 val stabilityColor = when {
-                                    maxRr - minRr <= 4 -> SuccessGreen
-                                    maxRr - minRr <= 8 -> WarningOrange
-                                    else -> VibrantMagenta
+                                    maxRr - minRr <= 4 -> c.success
+                                    maxRr - minRr <= 8 -> c.warning
+                                    else -> c.secondary
                                 }
 
                                 // Custom Hero
@@ -810,13 +811,13 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(28.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(24.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
                                         text = "RESPIRATORY RATE",
-                                        color = TextSubtle,
+                                        color = c.outline,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 2.sp
@@ -827,14 +828,14 @@ fun MetricDetailScreen(
                                     ) {
                                         Text(
                                             text = String.format("%.0f", currentRr),
-                                            color = TextOnSurface,
+                                            color = c.onSurface,
                                             fontSize = 48.sp,
                                             fontWeight = FontWeight.Black
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = "br/min",
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Medium,
                                             modifier = Modifier.padding(bottom = 8.dp)
@@ -845,7 +846,7 @@ fun MetricDetailScreen(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(50))
-                                            .background(SurfaceHighest)
+                                            .background(c.surfaceHighest)
                                             .padding(horizontal = 16.dp, vertical = 6.dp)
                                     ) {
                                         Text(
@@ -877,16 +878,16 @@ fun MetricDetailScreen(
                                     else -> "Elevated"
                                 }
                                 val qualityColor = when {
-                                    currentRr in 12.0..20.0 -> SuccessGreen
-                                    currentRr < 12 -> WarningOrange
-                                    else -> VibrantMagenta
+                                    currentRr in 12.0..20.0 -> c.success
+                                    currentRr < 12 -> c.warning
+                                    else -> c.secondary
                                 }
 
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(28.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(vertical = 24.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -899,7 +900,7 @@ fun MetricDetailScreen(
                                             val strokeWidth = 12.dp.toPx()
                                             val padding = strokeWidth / 2
                                             drawArc(
-                                                color = SurfaceMid,
+                                                color = c.surface,
                                                 startAngle = -225f,
                                                 sweepAngle = 270f,
                                                 useCenter = false,
@@ -914,7 +915,7 @@ fun MetricDetailScreen(
                                             val padding = strokeWidth / 2
                                             drawArc(
                                                 brush = Brush.sweepGradient(
-                                                    listOf(ElectricIndigo, SoftLavender, VibrantMagenta)
+                                                    listOf(c.primary, c.tertiary, c.secondary)
                                                 ),
                                                 startAngle = -225f,
                                                 sweepAngle = 270f * animatedProgress,
@@ -935,7 +936,7 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(2.dp))
                                             Text(
                                                 text = "${String.format("%.0f", currentRr)} br/min",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
@@ -961,14 +962,14 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 text = "AVG",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -976,13 +977,13 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(6.dp))
                                             Text(
                                                 text = String.format("%.0f", avgRr),
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
                                                 text = "br/min",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp
                                             )
                                         }
@@ -992,14 +993,14 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 text = "HIGH",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -1007,13 +1008,13 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(6.dp))
                                             Text(
                                                 text = String.format("%.0f", maxRr),
-                                                color = WarningOrange,
+                                                color = c.warning,
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
                                                 text = "br/min",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp
                                             )
                                         }
@@ -1023,14 +1024,14 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 text = "LOW",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -1038,13 +1039,13 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(6.dp))
                                             Text(
                                                 text = String.format("%.0f", minRr),
-                                                color = ElectricIndigo,
+                                                color = c.primary,
                                                 fontSize = 20.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
                                                 text = "br/min",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp
                                             )
                                         }
@@ -1065,9 +1066,9 @@ fun MetricDetailScreen(
                                     else -> "ELEVATED"
                                 }
                                 val insightColor = when {
-                                    currentRr in 12.0..20.0 -> SuccessGreen
-                                    currentRr < 12 -> WarningOrange
-                                    else -> VibrantMagenta
+                                    currentRr in 12.0..20.0 -> c.success
+                                    currentRr < 12 -> c.warning
+                                    else -> c.secondary
                                 }
                                 val insightText = when {
                                     currentRr in 12.0..20.0 -> "Your breathing rate is within the normal range, indicating good respiratory health and a relaxed state."
@@ -1079,20 +1080,20 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(20.dp)
                                 ) {
                                     Row(verticalAlignment = Alignment.Top) {
                                         Box(
                                             modifier = Modifier
                                                 .size(44.dp)
-                                                .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                                .background(c.primary.copy(alpha = 0.12f), CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Air,
                                                 contentDescription = null,
-                                                tint = ElectricIndigo,
+                                                tint = c.primary,
                                                 modifier = Modifier.size(22.dp)
                                             )
                                         }
@@ -1100,7 +1101,7 @@ fun MetricDetailScreen(
                                         Column {
                                             Text(
                                                 text = "Recovery Insight",
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -1123,20 +1124,20 @@ fun MetricDetailScreen(
                                             Text(
                                                 text = insightText,
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 lineHeight = 20.sp
                                             )
                                             Spacer(modifier = Modifier.height(12.dp))
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
-                                                    .background(SurfaceHighest)
+                                                    .background(c.surfaceHighest)
                                                     .clickable { }
                                                     .padding(horizontal = 20.dp, vertical = 10.dp)
                                             ) {
                                                 Text(
                                                     text = "View Sleep Coach",
-                                                    color = ElectricIndigo,
+                                                    color = c.primary,
                                                     fontSize = 13.sp,
                                                     fontWeight = FontWeight.SemiBold
                                                 )
@@ -1153,7 +1154,7 @@ fun MetricDetailScreen(
                                     Column {
                                         Text(
                                             text = "RECENT ACTIVITY",
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 2.sp
@@ -1164,7 +1165,7 @@ fun MetricDetailScreen(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .clip(RoundedCornerShape(16.dp))
-                                                    .background(SurfaceLow)
+                                                    .background(c.surfaceLow)
                                                     .padding(16.dp)
                                             ) {
                                                 Row(
@@ -1176,13 +1177,13 @@ fun MetricDetailScreen(
                                                         text = point.date.format(
                                                             DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault())
                                                         ),
-                                                        color = TextOnSurface,
+                                                        color = c.onSurface,
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.Medium
                                                     )
                                                     Text(
                                                         text = "${String.format("%.0f", point.value)} br/min",
-                                                        color = ElectricIndigo,
+                                                        color = c.primary,
                                                         fontSize = 16.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -1211,7 +1212,7 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(28.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(vertical = 32.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -1224,7 +1225,7 @@ fun MetricDetailScreen(
                                             val strokeWidth = 14.dp.toPx()
                                             val padding = strokeWidth / 2
                                             drawArc(
-                                                color = SurfaceMid,
+                                                color = c.surface,
                                                 startAngle = -225f,
                                                 sweepAngle = 270f,
                                                 useCenter = false,
@@ -1239,7 +1240,7 @@ fun MetricDetailScreen(
                                             val padding = strokeWidth / 2
                                             drawArc(
                                                 brush = Brush.sweepGradient(
-                                                    listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
+                                                    listOf(c.primary, c.secondary, c.primary)
                                                 ),
                                                 startAngle = -225f,
                                                 sweepAngle = 270f * animatedProgress.coerceAtMost(1f),
@@ -1253,7 +1254,7 @@ fun MetricDetailScreen(
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 text = "TOTAL STEPS",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 2.sp
@@ -1261,13 +1262,13 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 text = "%,d".format(stepsCount),
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 44.sp,
                                                 fontWeight = FontWeight.Black
                                             )
                                             Text(
                                                 text = "/ %,d".format(goal),
-                                                color = ElectricIndigo,
+                                                color = c.primary,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.SemiBold
                                             )
@@ -1284,20 +1285,20 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(24.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(20.dp)
                                     ) {
                                         Row(verticalAlignment = Alignment.Top) {
                                             Box(
                                                 modifier = Modifier
                                                     .size(44.dp)
-                                                    .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                                    .background(c.primary.copy(alpha = 0.12f), CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.Lightbulb,
                                                     contentDescription = null,
-                                                    tint = ElectricIndigo,
+                                                    tint = c.primary,
                                                     modifier = Modifier.size(22.dp)
                                                 )
                                             }
@@ -1305,7 +1306,7 @@ fun MetricDetailScreen(
                                             Column {
                                                 Text(
                                                     text = "NEURAL INSIGHT",
-                                                    color = ElectricIndigo,
+                                                    color = c.primary,
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 2.sp
@@ -1314,7 +1315,7 @@ fun MetricDetailScreen(
                                                 Text(
                                                     text = insight.meaning,
                                                     style = MaterialTheme.typography.bodyMedium,
-                                                    color = TextOnSurfaceVariant,
+                                                    color = c.onSurfaceVariant,
                                                     lineHeight = 20.sp
                                                 )
                                             }
@@ -1338,7 +1339,7 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -1346,20 +1347,20 @@ fun MetricDetailScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .size(36.dp)
-                                                    .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                                    .background(c.primary.copy(alpha = 0.12f), CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                                                     contentDescription = null,
-                                                    tint = ElectricIndigo,
+                                                    tint = c.primary,
                                                     modifier = Modifier.size(18.dp)
                                                 )
                                             }
                                             Spacer(modifier = Modifier.height(8.dp))
                                             Text(
                                                 text = "DISTANCE",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -1367,7 +1368,7 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 text = "%.1f km".format(distanceKm),
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -1378,7 +1379,7 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -1386,20 +1387,20 @@ fun MetricDetailScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .size(36.dp)
-                                                    .background(VibrantMagenta.copy(alpha = 0.12f), CircleShape),
+                                                    .background(c.secondary.copy(alpha = 0.12f), CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.EmojiEvents,
                                                     contentDescription = null,
-                                                    tint = VibrantMagenta,
+                                                    tint = c.secondary,
                                                     modifier = Modifier.size(18.dp)
                                                 )
                                             }
                                             Spacer(modifier = Modifier.height(8.dp))
                                             Text(
                                                 text = "ACTIVE",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -1407,7 +1408,7 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 text = "${activeMin} min",
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -1418,7 +1419,7 @@ fun MetricDetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -1426,20 +1427,20 @@ fun MetricDetailScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .size(36.dp)
-                                                    .background(SuccessGreen.copy(alpha = 0.12f), CircleShape),
+                                                    .background(c.success.copy(alpha = 0.12f), CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                                                     contentDescription = null,
-                                                    tint = SuccessGreen,
+                                                    tint = c.success,
                                                     modifier = Modifier.size(18.dp)
                                                 )
                                             }
                                             Spacer(modifier = Modifier.height(8.dp))
                                             Text(
                                                 text = "FLOORS",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -1447,7 +1448,7 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 text = "$floorsCount",
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -1482,7 +1483,7 @@ fun MetricDetailScreen(
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(24.dp),
-                                        colors = CardDefaults.cardColors(containerColor = SurfaceLow)
+                                        colors = CardDefaults.cardColors(containerColor = c.surfaceLow)
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -1494,13 +1495,13 @@ fun MetricDetailScreen(
                                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                                     Text(
                                                         text = stat.label.uppercase(),
-                                                        color = TextOnSurfaceVariant,
+                                                        color = c.onSurfaceVariant,
                                                         fontSize = 10.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         letterSpacing = 2.sp
                                                     )
                                                     Spacer(modifier = Modifier.height(4.dp))
-                                                    Text(text = stat.value, color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                                    Text(text = stat.value, color = c.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                                                 }
                                             }
                                         }
@@ -1539,7 +1540,7 @@ fun MetricDetailScreen(
                                                         modifier = Modifier
                                                             .weight(1f)
                                                             .clip(RoundedCornerShape(24.dp))
-                                                            .background(SurfaceLow)
+                                                            .background(c.surfaceLow)
                                                             .padding(vertical = 20.dp, horizontal = 16.dp),
                                                         contentAlignment = Alignment.Center
                                                     ) {
@@ -1548,7 +1549,7 @@ fun MetricDetailScreen(
                                                             Spacer(modifier = Modifier.height(8.dp))
                                                             Text(
                                                                 text = stat.label,
-                                                                color = TextOnSurfaceVariant,
+                                                                color = c.onSurfaceVariant,
                                                                 fontSize = 10.sp,
                                                                 fontWeight = FontWeight.Bold,
                                                                 letterSpacing = 2.sp
@@ -1560,14 +1561,14 @@ fun MetricDetailScreen(
                                                             ) {
                                                                 Text(
                                                                     text = stat.value,
-                                                                    color = TextOnSurface,
+                                                                    color = c.onSurface,
                                                                     fontSize = 18.sp,
                                                                     fontWeight = FontWeight.Bold
                                                                 )
                                                                 Spacer(modifier = Modifier.width(4.dp))
                                                                 Text(
                                                                     text = stat.unit,
-                                                                    color = TextOnSurfaceVariant,
+                                                                    color = c.onSurfaceVariant,
                                                                     fontSize = 12.sp
                                                                 )
                                                             }
@@ -1601,29 +1602,29 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(28.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(horizontal = 24.dp, vertical = 28.dp)
                                 ) {
                                     Column {
-                                        Text("DAILY INTAKE", color = TextSubtle, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                        Text("DAILY INTAKE", color = c.outline, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Row(verticalAlignment = Alignment.Bottom) {
-                                            Text(String.format("%,.0f", calories), color = TextOnSurface, fontSize = 44.sp, fontWeight = FontWeight.Black)
+                                            Text(String.format("%,.0f", calories), color = c.onSurface, fontSize = 44.sp, fontWeight = FontWeight.Black)
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Column(modifier = Modifier.padding(bottom = 6.dp)) {
-                                                Text("/ ${String.format("%,.0f", calGoal)}", color = ElectricIndigo, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                                                Text("kcal", color = TextOnSurfaceVariant, fontSize = 12.sp)
+                                                Text("/ ${String.format("%,.0f", calGoal)}", color = c.primary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                                                Text("kcal", color = c.onSurfaceVariant, fontSize = 12.sp)
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(16.dp))
                                         // Gradient progress bar
-                                        Box(modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(6.dp)).background(SurfaceHighest)) {
-                                            Box(modifier = Modifier.fillMaxWidth(calProgress.coerceAtLeast(0.01f)).fillMaxHeight().background(Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)), RoundedCornerShape(6.dp)))
+                                        Box(modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(6.dp)).background(c.surfaceHighest)) {
+                                            Box(modifier = Modifier.fillMaxWidth(calProgress.coerceAtLeast(0.01f)).fillMaxHeight().background(Brush.horizontalGradient(listOf(c.primary, c.secondary)), RoundedCornerShape(6.dp)))
                                         }
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                            Text("${(calProgress * 100).roundToInt()}% ACHIEVED", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
-                                            Text("$calRemaining KCAL LEFT", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                            Text("${(calProgress * 100).roundToInt()}% ACHIEVED", fontSize = 10.sp, color = c.onSurfaceVariant, letterSpacing = 1.sp)
+                                            Text("$calRemaining KCAL LEFT", fontSize = 10.sp, color = c.onSurfaceVariant, letterSpacing = 1.sp)
                                         }
                                     }
                                 }
@@ -1632,43 +1633,43 @@ fun MetricDetailScreen(
                             // ── Each Macro in SEPARATE card (Stitch design) ──
                             // Protein
                             item {
-                                NutritionMacroCard(label = "Protein", grams = protein, goal = 120.0, color = ElectricIndigo)
+                                NutritionMacroCard(label = "Protein", grams = protein, goal = 120.0, color = c.primary)
                             }
                             // Carbs
                             item {
-                                NutritionMacroCard(label = "Carbs", grams = carbs, goal = 300.0, color = VibrantMagenta)
+                                NutritionMacroCard(label = "Carbs", grams = carbs, goal = 300.0, color = c.secondary)
                             }
                             // Fat
                             item {
-                                NutritionMacroCard(label = "Fats", grams = fat, goal = 50.0, color = SoftLavender)
+                                NutritionMacroCard(label = "Fats", grams = fat, goal = 50.0, color = c.tertiary)
                             }
 
                             // ── Metabolic Fuel Insight Card ──
                             item {
                                 Box(
-                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(20.dp)
+                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).padding(20.dp)
                                 ) {
                                     Column {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(ElectricIndigo.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                                                Icon(Icons.Default.Bolt, null, tint = ElectricIndigo, modifier = Modifier.size(20.dp))
+                                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(c.primary.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+                                                Icon(Icons.Default.Bolt, null, tint = c.primary, modifier = Modifier.size(20.dp))
                                             }
                                             Spacer(modifier = Modifier.width(12.dp))
-                                            Text("Metabolic Fuel", color = TextOnSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                            Text("Metabolic Fuel", color = c.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                         }
                                         Spacer(modifier = Modifier.height(10.dp))
                                         val dominantMacro = when { protein >= carbs && protein >= fat -> "Hypertrophy"; carbs >= protein && carbs >= fat -> "Endurance"; else -> "Hormone Balance" }
                                         Text(
                                             "Your current macro split is highly optimized for $dominantMacro. High protein intake detected. Consider adding complex carbs before your 6 PM session to maintain peak intensity.",
-                                            color = TextOnSurfaceVariant, fontSize = 13.sp, lineHeight = 20.sp
+                                            color = c.onSurfaceVariant, fontSize = 13.sp, lineHeight = 20.sp
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            Box(modifier = Modifier.background(ElectricIndigo.copy(alpha = 0.15f), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                                                Text("PEAK RECOVERY", fontSize = 9.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                            Box(modifier = Modifier.background(c.primary.copy(alpha = 0.15f), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                                                Text("PEAK RECOVERY", fontSize = 9.sp, color = c.primary, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                                             }
-                                            Box(modifier = Modifier.background(VibrantMagenta.copy(alpha = 0.15f), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                                                Text("MUSCLE SPARING", fontSize = 9.sp, color = VibrantMagenta, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                            Box(modifier = Modifier.background(c.secondary.copy(alpha = 0.15f), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                                                Text("MUSCLE SPARING", fontSize = 9.sp, color = c.secondary, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                                             }
                                         }
                                     }
@@ -1710,7 +1711,7 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(24.dp)
                                 ) {
                                     Column(
@@ -1731,7 +1732,7 @@ fun MetricDetailScreen(
 
                                                 // Track
                                                 drawArc(
-                                                    color = SurfaceHighest,
+                                                    color = c.surfaceHighest,
                                                     startAngle = startAngle,
                                                     sweepAngle = sweepTotal,
                                                     useCenter = false,
@@ -1743,7 +1744,7 @@ fun MetricDetailScreen(
                                                 // Gradient arc
                                                 drawArc(
                                                     brush = Brush.sweepGradient(
-                                                        listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
+                                                        listOf(c.primary, c.secondary, c.primary)
                                                     ),
                                                     startAngle = startAngle,
                                                     sweepAngle = sweepTotal * animatedProgress,
@@ -1757,13 +1758,13 @@ fun MetricDetailScreen(
                                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                                 Text(
                                                     text = weightStr,
-                                                    color = TextOnSurface,
+                                                    color = c.onSurface,
                                                     fontSize = 36.sp,
                                                     fontWeight = FontWeight.Bold
                                                 )
                                                 Text(
                                                     text = "KG",
-                                                    color = TextOnSurfaceVariant,
+                                                    color = c.onSurfaceVariant,
                                                     fontSize = 13.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 2.sp
@@ -1781,14 +1782,14 @@ fun MetricDetailScreen(
                                         ) {
                                             Text(
                                                 text = "GOAL PROGRESS",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
                                             )
                                             Text(
                                                 text = "TARGET: ${String.format("%.1f", targetWeight)} KG",
-                                                color = ElectricIndigo,
+                                                color = c.primary,
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.sp
@@ -1803,7 +1804,7 @@ fun MetricDetailScreen(
                                                 .fillMaxWidth()
                                                 .height(8.dp)
                                                 .clip(RoundedCornerShape(4.dp))
-                                                .background(SurfaceHighest)
+                                                .background(c.surfaceHighest)
                                         ) {
                                             Box(
                                                 modifier = Modifier
@@ -1812,7 +1813,7 @@ fun MetricDetailScreen(
                                                     .clip(RoundedCornerShape(4.dp))
                                                     .background(
                                                         Brush.linearGradient(
-                                                            listOf(ElectricIndigo, VibrantMagenta)
+                                                            listOf(c.primary, c.secondary)
                                                         )
                                                     )
                                             )
@@ -1825,7 +1826,7 @@ fun MetricDetailScreen(
                             item {
                                 Text(
                                     text = "COMPOSITION MATRIX",
-                                    color = ElectricIndigo,
+                                    color = c.primary,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 2.sp,
@@ -1857,7 +1858,7 @@ fun MetricDetailScreen(
                                                 .weight(1f)
                                                 .height(120.dp)
                                                 .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
+                                                .background(c.surfaceLow)
                                                 .padding(16.dp)
                                         ) {
                                             Column(
@@ -1867,20 +1868,20 @@ fun MetricDetailScreen(
                                                 Box(
                                                     modifier = Modifier
                                                         .size(36.dp)
-                                                        .background(VibrantMagenta.copy(alpha = 0.15f), CircleShape),
+                                                        .background(c.secondary.copy(alpha = 0.15f), CircleShape),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.WaterDrop,
                                                         contentDescription = null,
-                                                        tint = VibrantMagenta,
+                                                        tint = c.secondary,
                                                         modifier = Modifier.size(18.dp)
                                                     )
                                                 }
                                                 Column {
                                                     Text(
                                                         text = "BODY FAT",
-                                                        color = TextSubtle,
+                                                        color = c.outline,
                                                         fontSize = 9.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         letterSpacing = 1.5.sp
@@ -1888,7 +1889,7 @@ fun MetricDetailScreen(
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                     Text(
                                                         text = bodyFatStr,
-                                                        color = TextOnSurface,
+                                                        color = c.onSurface,
                                                         fontSize = 20.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -1901,7 +1902,7 @@ fun MetricDetailScreen(
                                                 .weight(1f)
                                                 .height(120.dp)
                                                 .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
+                                                .background(c.surfaceLow)
                                                 .padding(16.dp)
                                         ) {
                                             Column(
@@ -1911,20 +1912,20 @@ fun MetricDetailScreen(
                                                 Box(
                                                     modifier = Modifier
                                                         .size(36.dp)
-                                                        .background(ElectricIndigo.copy(alpha = 0.15f), CircleShape),
+                                                        .background(c.primary.copy(alpha = 0.15f), CircleShape),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.Bolt,
                                                         contentDescription = null,
-                                                        tint = ElectricIndigo,
+                                                        tint = c.primary,
                                                         modifier = Modifier.size(18.dp)
                                                     )
                                                 }
                                                 Column {
                                                     Text(
                                                         text = "BMR",
-                                                        color = TextSubtle,
+                                                        color = c.outline,
                                                         fontSize = 9.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         letterSpacing = 1.5.sp
@@ -1932,7 +1933,7 @@ fun MetricDetailScreen(
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                     Text(
                                                         text = bmrStr,
-                                                        color = TextOnSurface,
+                                                        color = c.onSurface,
                                                         fontSize = 20.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -1950,7 +1951,7 @@ fun MetricDetailScreen(
                                                 .weight(1f)
                                                 .height(120.dp)
                                                 .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
+                                                .background(c.surfaceLow)
                                                 .padding(16.dp)
                                         ) {
                                             Column(
@@ -1960,20 +1961,20 @@ fun MetricDetailScreen(
                                                 Box(
                                                     modifier = Modifier
                                                         .size(36.dp)
-                                                        .background(SoftLavender.copy(alpha = 0.15f), CircleShape),
+                                                        .background(c.tertiary.copy(alpha = 0.15f), CircleShape),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.WaterDrop,
                                                         contentDescription = null,
-                                                        tint = SoftLavender,
+                                                        tint = c.tertiary,
                                                         modifier = Modifier.size(18.dp)
                                                     )
                                                 }
                                                 Column {
                                                     Text(
                                                         text = "WATER",
-                                                        color = TextSubtle,
+                                                        color = c.outline,
                                                         fontSize = 9.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         letterSpacing = 1.5.sp
@@ -1981,7 +1982,7 @@ fun MetricDetailScreen(
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                     Text(
                                                         text = waterPct,
-                                                        color = TextOnSurface,
+                                                        color = c.onSurface,
                                                         fontSize = 20.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -1994,7 +1995,7 @@ fun MetricDetailScreen(
                                                 .weight(1f)
                                                 .height(120.dp)
                                                 .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLow)
+                                                .background(c.surfaceLow)
                                                 .padding(16.dp)
                                         ) {
                                             Column(
@@ -2004,20 +2005,20 @@ fun MetricDetailScreen(
                                                 Box(
                                                     modifier = Modifier
                                                         .size(36.dp)
-                                                        .background(VibrantMagenta.copy(alpha = 0.15f), CircleShape),
+                                                        .background(c.secondary.copy(alpha = 0.15f), CircleShape),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.AutoAwesome,
                                                         contentDescription = null,
-                                                        tint = VibrantMagenta,
+                                                        tint = c.secondary,
                                                         modifier = Modifier.size(18.dp)
                                                     )
                                                 }
                                                 Column {
                                                     Text(
                                                         text = "BONE MASS",
-                                                        color = TextSubtle,
+                                                        color = c.outline,
                                                         fontSize = 9.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         letterSpacing = 1.5.sp
@@ -2025,7 +2026,7 @@ fun MetricDetailScreen(
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                     Text(
                                                         text = boneMassStr,
-                                                        color = TextOnSurface,
+                                                        color = c.onSurface,
                                                         fontSize = 20.sp,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -2054,7 +2055,7 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(20.dp))
-                                        .background(SurfaceHigh)
+                                        .background(c.surfaceHigh)
                                         .padding(20.dp)
                                 ) {
                                     Row(
@@ -2064,13 +2065,13 @@ fun MetricDetailScreen(
                                         Box(
                                             modifier = Modifier
                                                 .size(48.dp)
-                                                .background(ElectricIndigo.copy(alpha = 0.15f), CircleShape),
+                                                .background(c.primary.copy(alpha = 0.15f), CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.FitnessCenter,
                                                 contentDescription = null,
-                                                tint = ElectricIndigo,
+                                                tint = c.primary,
                                                 modifier = Modifier.size(24.dp)
                                             )
                                         }
@@ -2078,7 +2079,7 @@ fun MetricDetailScreen(
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = "LEAN MUSCLE MASS",
-                                                color = TextSubtle,
+                                                color = c.outline,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -2086,7 +2087,7 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 text = leanMassStr,
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 24.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -2095,12 +2096,12 @@ fun MetricDetailScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(20.dp))
-                                                    .background(ElectricIndigo.copy(alpha = 0.15f))
+                                                    .background(c.primary.copy(alpha = 0.15f))
                                                     .padding(horizontal = 12.dp, vertical = 6.dp)
                                             ) {
                                                 Text(
                                                     text = "${String.format("%+.1f", monthlyDelta)}kg this month",
-                                                    color = ElectricIndigo,
+                                                    color = c.primary,
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold
                                                 )
@@ -2128,7 +2129,7 @@ fun MetricDetailScreen(
                                         ) {
                                             Text(
                                                 text = "7-DAY VELOCITY",
-                                                color = ElectricIndigo,
+                                                color = c.primary,
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 2.sp
@@ -2136,12 +2137,12 @@ fun MetricDetailScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(20.dp))
-                                                    .background(ElectricIndigo.copy(alpha = 0.12f))
+                                                    .background(c.primary.copy(alpha = 0.12f))
                                                     .padding(horizontal = 10.dp, vertical = 4.dp)
                                             ) {
                                                 Text(
                                                     text = "WEIGHT TREND",
-                                                    color = ElectricIndigo,
+                                                    color = c.primary,
                                                     fontSize = 9.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 1.sp
@@ -2155,7 +2156,7 @@ fun MetricDetailScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(20.dp))
-                                                .background(SurfaceLowest)
+                                                .background(c.background)
                                                 .padding(20.dp)
                                         ) {
                                             Row(
@@ -2177,7 +2178,7 @@ fun MetricDetailScreen(
                                                         // Value label on top
                                                         Text(
                                                             text = String.format("%.1f", dp.value),
-                                                            color = if (isToday) ElectricIndigo else TextSubtle,
+                                                            color = if (isToday) c.primary else c.outline,
                                                             fontSize = 8.sp,
                                                             fontWeight = FontWeight.Bold
                                                         )
@@ -2189,7 +2190,7 @@ fun MetricDetailScreen(
                                                                 .width(24.dp)
                                                                 .weight(1f)
                                                                 .clip(RoundedCornerShape(12.dp))
-                                                                .background(SurfaceHigh),
+                                                                .background(c.surfaceHigh),
                                                             contentAlignment = Alignment.BottomCenter
                                                         ) {
                                                             Box(
@@ -2199,12 +2200,12 @@ fun MetricDetailScreen(
                                                                     .clip(RoundedCornerShape(12.dp))
                                                                     .background(
                                                                         if (isToday) Brush.linearGradient(
-                                                                            listOf(ElectricIndigo, VibrantMagenta),
+                                                                            listOf(c.primary, c.secondary),
                                                                             start = Offset(0f, Float.POSITIVE_INFINITY),
                                                                             end = Offset(0f, 0f)
                                                                         )
                                                                         else Brush.linearGradient(
-                                                                            listOf(ElectricIndigo.copy(alpha = 0.4f), VibrantMagenta.copy(alpha = 0.4f)),
+                                                                            listOf(c.primary.copy(alpha = 0.4f), c.secondary.copy(alpha = 0.4f)),
                                                                             start = Offset(0f, Float.POSITIVE_INFINITY),
                                                                             end = Offset(0f, 0f)
                                                                         )
@@ -2215,7 +2216,7 @@ fun MetricDetailScreen(
                                                         Spacer(modifier = Modifier.height(6.dp))
                                                         Text(
                                                             text = dayLabel,
-                                                            color = if (isToday) ElectricIndigo else TextSubtle,
+                                                            color = if (isToday) c.primary else c.outline,
                                                             fontSize = 9.sp,
                                                             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
                                                             letterSpacing = 0.5.sp
@@ -2253,7 +2254,7 @@ fun MetricDetailScreen(
                                         .clip(RoundedCornerShape(24.dp))
                                         .background(
                                             Brush.linearGradient(
-                                                listOf(SurfaceHigh, SurfaceLow)
+                                                listOf(c.surfaceHigh, c.surfaceLow)
                                             )
                                         )
                                         .padding(20.dp)
@@ -2263,13 +2264,13 @@ fun MetricDetailScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .size(44.dp)
-                                                    .background(VibrantMagenta.copy(alpha = 0.15f), CircleShape),
+                                                    .background(c.secondary.copy(alpha = 0.15f), CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.AutoAwesome,
                                                     contentDescription = null,
-                                                    tint = VibrantMagenta,
+                                                    tint = c.secondary,
                                                     modifier = Modifier.size(22.dp)
                                                 )
                                             }
@@ -2277,7 +2278,7 @@ fun MetricDetailScreen(
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = "NEURAL ANALYSIS",
-                                                    color = VibrantMagenta,
+                                                    color = c.secondary,
                                                     fontSize = 10.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 1.5.sp
@@ -2286,7 +2287,7 @@ fun MetricDetailScreen(
                                                 Text(
                                                     text = analysisText,
                                                     style = MaterialTheme.typography.bodySmall,
-                                                    color = TextOnSurfaceVariant,
+                                                    color = c.onSurfaceVariant,
                                                     lineHeight = 18.sp
                                                 )
                                             }
@@ -2296,14 +2297,14 @@ fun MetricDetailScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(50))
-                                                .background(SurfaceHighest)
+                                                .background(c.surfaceHighest)
                                                 .clickable { }
                                                 .padding(vertical = 14.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
                                                 text = "VIEW CALORIE TARGETS",
-                                                color = ElectricIndigo,
+                                                color = c.primary,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -2329,7 +2330,7 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(24.dp)
                                 ) {
                                     Column(
@@ -2338,7 +2339,7 @@ fun MetricDetailScreen(
                                     ) {
                                         Text(
                                             text = "ACTIVE ENERGY TODAY",
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 2.sp
@@ -2350,14 +2351,14 @@ fun MetricDetailScreen(
                                         ) {
                                             Text(
                                                 text = calStr,
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 44.sp,
                                                 fontWeight = FontWeight.Black
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
                                                 text = "Kcal",
-                                                color = ElectricIndigo,
+                                                color = c.primary,
                                                 fontSize = 18.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.padding(bottom = 6.dp)
@@ -2370,7 +2371,7 @@ fun MetricDetailScreen(
                                                 .fillMaxWidth()
                                                 .height(10.dp)
                                                 .clip(RoundedCornerShape(5.dp))
-                                                .background(SurfaceHighest)
+                                                .background(c.surfaceHighest)
                                         ) {
                                             Box(
                                                 modifier = Modifier
@@ -2379,7 +2380,7 @@ fun MetricDetailScreen(
                                                     .clip(RoundedCornerShape(5.dp))
                                                     .background(
                                                         Brush.horizontalGradient(
-                                                            listOf(ElectricIndigo, VibrantMagenta)
+                                                            listOf(c.primary, c.secondary)
                                                         )
                                                     )
                                             )
@@ -2391,14 +2392,14 @@ fun MetricDetailScreen(
                                         ) {
                                             Text(
                                                 text = "RECOVERY",
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
                                             )
                                             Text(
                                                 text = "PEAK INTENSITY",
-                                                color = VibrantMagenta,
+                                                color = c.secondary,
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -2422,10 +2423,11 @@ fun MetricDetailScreen(
                                     label: String,
                                     modifier: Modifier = Modifier
                                 ) {
+                                    val c = LocalAppColors.current
                                     Box(
                                         modifier = modifier
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .padding(16.dp)
                                     ) {
                                         Column {
@@ -2433,14 +2435,14 @@ fun MetricDetailScreen(
                                             Spacer(modifier = Modifier.height(10.dp))
                                             Text(
                                                 text = value,
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 22.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
                                             Text(
                                                 text = label,
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -2459,7 +2461,7 @@ fun MetricDetailScreen(
                                                 Icon(
                                                     imageVector = Icons.Default.Timer,
                                                     contentDescription = null,
-                                                    tint = ElectricIndigo,
+                                                    tint = c.primary,
                                                     modifier = Modifier.size(20.dp)
                                                 )
                                             },
@@ -2472,7 +2474,7 @@ fun MetricDetailScreen(
                                                 Icon(
                                                     imageVector = Icons.Default.Favorite,
                                                     contentDescription = null,
-                                                    tint = VibrantMagenta,
+                                                    tint = c.secondary,
                                                     modifier = Modifier.size(20.dp)
                                                 )
                                             },
@@ -2503,7 +2505,7 @@ fun MetricDetailScreen(
                                                 Icon(
                                                     imageVector = Icons.Default.Air,
                                                     contentDescription = null,
-                                                    tint = ElectricIndigo,
+                                                    tint = c.primary,
                                                     modifier = Modifier.size(20.dp)
                                                 )
                                             },
@@ -2542,20 +2544,20 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(20.dp)
                                 ) {
                                     Column {
                                         Text(
                                             text = "Training Load",
                                             style = MaterialTheme.typography.titleSmall,
-                                            color = TextOnSurface,
+                                            color = c.onSurface,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = "Activity distribution (7d)",
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             fontSize = 12.sp
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
@@ -2567,19 +2569,19 @@ fun MetricDetailScreen(
                                                 Box(
                                                     modifier = Modifier
                                                         .size(8.dp)
-                                                        .background(ElectricIndigo, CircleShape)
+                                                        .background(c.primary, CircleShape)
                                                 )
                                                 Spacer(modifier = Modifier.width(6.dp))
-                                                Text("HIIT", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                                Text("HIIT", color = c.onSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                                             }
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Box(
                                                     modifier = Modifier
                                                         .size(8.dp)
-                                                        .background(VibrantMagenta, CircleShape)
+                                                        .background(c.secondary, CircleShape)
                                                 )
                                                 Spacer(modifier = Modifier.width(6.dp))
-                                                Text("STR", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                                Text("STR", color = c.onSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(16.dp))
@@ -2613,8 +2615,8 @@ fun MetricDetailScreen(
                                                                 .fillMaxHeight(hiitFrac.coerceAtLeast(0.03f))
                                                                 .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                                                 .background(
-                                                                    if (isToday) ElectricIndigo
-                                                                    else ElectricIndigo.copy(alpha = 0.35f)
+                                                                    if (isToday) c.primary
+                                                                    else c.primary.copy(alpha = 0.35f)
                                                                 )
                                                         )
                                                         // STR bar
@@ -2624,15 +2626,15 @@ fun MetricDetailScreen(
                                                                 .fillMaxHeight(strFrac.coerceAtLeast(0.03f))
                                                                 .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                                                 .background(
-                                                                    if (isToday) VibrantMagenta
-                                                                    else VibrantMagenta.copy(alpha = 0.35f)
+                                                                    if (isToday) c.secondary
+                                                                    else c.secondary.copy(alpha = 0.35f)
                                                                 )
                                                         )
                                                     }
                                                     Spacer(modifier = Modifier.height(6.dp))
                                                     Text(
                                                         text = dayLabels[i],
-                                                        color = if (isToday) TextOnSurface else TextSubtle,
+                                                        color = if (isToday) c.onSurface else c.outline,
                                                         fontSize = 9.sp,
                                                         fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                                                         letterSpacing = 0.5.sp
@@ -2667,7 +2669,7 @@ fun MetricDetailScreen(
                                 Text(
                                     text = "Recent Sessions",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = TextOnSurface,
+                                    color = c.onSurface,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -2690,15 +2692,15 @@ fun MetricDetailScreen(
                                 }
                                 val iconColor = when (session.exerciseType) {
                                     "Running" -> CardExercise
-                                    "Cycling" -> ElectricIndigo
-                                    else -> VibrantMagenta
+                                    "Cycling" -> c.primary
+                                    else -> c.secondary
                                 }
 
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .clickable { onSessionClick(session) }
                                         .padding(14.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -2721,20 +2723,20 @@ fun MetricDetailScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = session.exerciseType,
-                                            color = TextOnSurface,
+                                            color = c.onSurface,
                                             fontWeight = FontWeight.SemiBold,
                                             style = MaterialTheme.typography.bodyLarge
                                         )
                                         Text(
                                             text = "$dateLabel \u2022 $startStr",
-                                            color = TextSubtle,
+                                            color = c.outline,
                                             style = MaterialTheme.typography.bodySmall
                                         )
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
                                             text = "$calStr KCAL",
-                                            color = TextOnSurface,
+                                            color = c.onSurface,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -2765,8 +2767,8 @@ fun MetricDetailScreen(
                                         .background(
                                             Brush.linearGradient(
                                                 listOf(
-                                                    ElectricIndigo.copy(alpha = 0.18f),
-                                                    VibrantMagenta.copy(alpha = 0.12f)
+                                                    c.primary.copy(alpha = 0.18f),
+                                                    c.secondary.copy(alpha = 0.12f)
                                                 )
                                             )
                                         )
@@ -2777,12 +2779,12 @@ fun MetricDetailScreen(
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(8.dp))
-                                                .background(ElectricIndigo.copy(alpha = 0.2f))
+                                                .background(c.primary.copy(alpha = 0.2f))
                                                 .padding(horizontal = 8.dp, vertical = 3.dp)
                                         ) {
                                             Text(
                                                 text = "AI INSIGHT",
-                                                color = ElectricIndigo,
+                                                color = c.primary,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.5.sp
@@ -2792,26 +2794,26 @@ fun MetricDetailScreen(
                                         Text(
                                             text = "Neural Performance Insight",
                                             style = MaterialTheme.typography.titleSmall,
-                                            color = TextOnSurface,
+                                            color = c.onSurface,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(
                                             text = insightText,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             lineHeight = 18.sp
                                         )
                                         Spacer(modifier = Modifier.height(14.dp))
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(50))
-                                                .background(SurfaceHighest)
+                                                .background(c.surfaceHighest)
                                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                                         ) {
                                             Text(
                                                 text = "SCHEDULE WINDOW",
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 letterSpacing = 1.sp
@@ -2852,7 +2854,7 @@ fun MetricDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .padding(20.dp)
                                 ) {
                                     Column {
@@ -2865,14 +2867,14 @@ fun MetricDetailScreen(
                                             Text(
                                                 text = "Sleep Bank",
                                                 style = MaterialTheme.typography.titleSmall,
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
                                                 text = bankText,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = if (isDebt) ErrorRed else VibrantMagenta
+                                                color = if (isDebt) c.error else c.secondary
                                             )
                                         }
 
@@ -2890,9 +2892,9 @@ fun MetricDetailScreen(
                                                 val barHeight = (day.value / maxSleep).toFloat().coerceIn(0.1f, 1f)
                                                 val isGood = day.value >= 7.0
                                                 val barColor = when {
-                                                    day.value >= 8.0 -> VibrantMagenta
-                                                    day.value >= 7.0 -> ElectricIndigo
-                                                    else -> ErrorRed
+                                                    day.value >= 8.0 -> c.secondary
+                                                    day.value >= 7.0 -> c.primary
+                                                    else -> c.error
                                                 }
                                                 Column(
                                                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2910,7 +2912,7 @@ fun MetricDetailScreen(
                                                         text = dayLabels.getOrElse(index) { "" },
                                                         fontSize = 9.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurfaceVariant
+                                                        color = c.onSurfaceVariant
                                                     )
                                                 }
                                             }
@@ -2945,8 +2947,8 @@ fun MetricDetailScreen(
                                             .background(
                                                 Brush.linearGradient(
                                                     listOf(
-                                                        ElectricIndigo.copy(alpha = 0.2f),
-                                                        VibrantMagenta.copy(alpha = 0.2f)
+                                                        c.primary.copy(alpha = 0.2f),
+                                                        c.secondary.copy(alpha = 0.2f)
                                                     )
                                                 )
                                             )
@@ -2962,7 +2964,7 @@ fun MetricDetailScreen(
                                                 Icon(
                                                     imageVector = Icons.Default.Lightbulb,
                                                     contentDescription = null,
-                                                    tint = ElectricIndigo,
+                                                    tint = c.primary,
                                                     modifier = Modifier.size(22.dp)
                                                 )
                                             }
@@ -2971,14 +2973,14 @@ fun MetricDetailScreen(
                                                 Text(
                                                     text = "Pulse Insight",
                                                     style = MaterialTheme.typography.titleSmall,
-                                                    color = TextOnSurface,
+                                                    color = c.onSurface,
                                                     fontWeight = FontWeight.Bold
                                                 )
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text(
                                                     text = insight.meaning,
                                                     style = MaterialTheme.typography.bodySmall,
-                                                    color = TextOnSurfaceVariant,
+                                                    color = c.onSurfaceVariant,
                                                     lineHeight = 18.sp
                                                 )
                                             }
@@ -3015,7 +3017,7 @@ fun MetricDetailScreen(
                             ) {
                                 Text(
                                     text = if (totalRecords > 0) "RECENT ACTIVITY ($totalRecords)" else "RECENT ACTIVITY",
-                                    color = TextOnSurfaceVariant,
+                                    color = c.onSurfaceVariant,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 2.sp,
@@ -3056,7 +3058,7 @@ fun MetricDetailScreen(
                     ) {
                         Text(
                             text = "No data available",
-                            color = TextOnSurfaceVariant,
+                            color = c.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -3073,11 +3075,12 @@ private fun LineChartCard(
     title: String,
     @Suppress("UNUSED_PARAMETER") isSleep: Boolean = false
 ) {
+    val c = LocalAppColors.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceLow
+            containerColor = c.surfaceLow
         )
     ) {
         Column(
@@ -3086,7 +3089,7 @@ private fun LineChartCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = TextOnSurface,
+                color = c.onSurface,
                 fontWeight = FontWeight.Bold
             )
 
@@ -3120,7 +3123,7 @@ private fun LineChartCard(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSubtle
+                        color = c.outline
                     )
                 }
             }
@@ -3136,6 +3139,7 @@ private fun LineChart(
     modifier: Modifier = Modifier,
     @Suppress("UNUSED_PARAMETER") isSleep: Boolean = false
 ) {
+    val c = LocalAppColors.current
     if (data.size < 2) return
 
     val values = data.map { it.value }
@@ -3206,7 +3210,7 @@ private fun LineChart(
                 drawPath(
                     path = fillPath,
                     brush = Brush.verticalGradient(
-                        colors = listOf(VibrantMagenta.copy(alpha = 0.2f), ElectricIndigo.copy(alpha = 0.0f)),
+                        colors = listOf(c.secondary.copy(alpha = 0.2f), c.primary.copy(alpha = 0.0f)),
                         startY = padding,
                         endY = height - padding
                     )
@@ -3216,7 +3220,7 @@ private fun LineChart(
                 drawPath(
                     path = path,
                     brush = Brush.horizontalGradient(
-                        colors = listOf(VibrantMagenta, ElectricIndigo)
+                        colors = listOf(c.secondary, c.primary)
                     ),
                     style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
                 )
@@ -3252,11 +3256,12 @@ private fun BarChartCard(
     @Suppress("UNUSED_PARAMETER") isSleep: Boolean = false,
     decimalPlaces: Int = 0
 ) {
+    val c = LocalAppColors.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
+            containerColor = c.surface
         )
     ) {
         Column(
@@ -3265,7 +3270,7 @@ private fun BarChartCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = TextOnSurface,
+                color = c.onSurface,
                 fontWeight = FontWeight.Bold
             )
 
@@ -3293,6 +3298,7 @@ private fun BarChart(
     @Suppress("UNUSED_PARAMETER") isSleep: Boolean = false,
     decimalPlaces: Int = 0
 ) {
+    val c = LocalAppColors.current
     if (data.isEmpty()) return
 
     // FIX: Sort data by date (oldest first → today last) to ensure correct bar order
@@ -3356,7 +3362,7 @@ private fun BarChart(
                 Text(
                     text = displayValue,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextOnSurfaceVariant,
+                    color = c.onSurfaceVariant,
                     fontSize = 10.sp
                 )
 
@@ -3395,7 +3401,7 @@ private fun BarChart(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSubtle,
+                    color = c.outline,
                     fontSize = 10.sp
                 )
             }
@@ -3405,6 +3411,7 @@ private fun BarChart(
 
 @Composable
 private fun SkeletonLoadingContent(color: Color) {
+    val c = LocalAppColors.current
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -3465,11 +3472,12 @@ private fun SkeletonCard(
     modifier: Modifier = Modifier,
     color: Color
 ) {
+    val c = LocalAppColors.current
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
+            containerColor = c.surface
         )
     ) {
         Box(
@@ -3501,11 +3509,12 @@ private fun TodayValueCard(
     sleepStartTime: java.time.Instant? = null,
     sleepEndTime: java.time.Instant? = null
 ) {
+    val c = LocalAppColors.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceMid
+            containerColor = c.surface
         )
     ) {
         Column(
@@ -3517,7 +3526,7 @@ private fun TodayValueCard(
             Text(
                 text = dateLabel,
                 style = MaterialTheme.typography.titleMedium,
-                color = TextOnSurfaceVariant
+                color = c.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -3530,7 +3539,7 @@ private fun TodayValueCard(
                 Text(
                     text = "$startTimeStr → $endTimeStr",
                     style = MaterialTheme.typography.titleLarge,
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -3560,7 +3569,7 @@ private fun TodayValueCard(
                         Text(
                             text = valueFormatted,
                             style = MaterialTheme.typography.displayMedium,
-                            color = TextOnSurface,
+                            color = c.onSurface,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -3568,7 +3577,7 @@ private fun TodayValueCard(
                     Text(
                         text = unit,
                         style = MaterialTheme.typography.titleLarge,
-                        color = TextOnSurfaceVariant,
+                        color = c.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -3587,11 +3596,12 @@ private fun StatCard(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false
 ) {
+    val c = LocalAppColors.current
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceLow
+            containerColor = c.surfaceLow
         )
     ) {
         Column(
@@ -3604,7 +3614,7 @@ private fun StatCard(
                 text = title.uppercase(),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextOnSurfaceVariant,
+                color = c.onSurfaceVariant,
                 letterSpacing = 2.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -3621,7 +3631,7 @@ private fun StatCard(
             } else {
                 Text(
                     text = value,
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -3630,7 +3640,7 @@ private fun StatCard(
             Text(
                 text = unit,
                 fontSize = 12.sp,
-                color = TextOnSurfaceVariant
+                color = c.onSurfaceVariant
             )
         }
     }
@@ -3643,11 +3653,12 @@ private fun HistoryItem(
     decimalPlaces: Int,
     isSleep: Boolean = false
 ) {
+    val c = LocalAppColors.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceLow
+            containerColor = c.surfaceLow
         )
     ) {
         Row(
@@ -3682,7 +3693,7 @@ private fun HistoryItem(
                             DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
                         ),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
@@ -3690,7 +3701,7 @@ private fun HistoryItem(
                             DateTimeFormatter.ofPattern("EEEE", Locale.getDefault())
                         ),
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextOnSurfaceVariant
+                        color = c.onSurfaceVariant
                     )
                 }
             }
@@ -3706,7 +3717,7 @@ private fun HistoryItem(
                             Text(
                                 text = "$startTimeStr → $endTimeStr",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextOnSurfaceVariant
+                                color = c.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                         }
@@ -3749,6 +3760,7 @@ private fun formatHoursAndMinutes(hours: Double): String {
 private fun SleepStagesChart(
     sleepStages: SleepStagesData
 ) {
+    val c = LocalAppColors.current
     val totalMinutes = sleepStages.deepSleepMinutes + sleepStages.lightSleepMinutes +
                       sleepStages.remSleepMinutes + sleepStages.awakeMinutes
 
@@ -3764,7 +3776,7 @@ private fun SleepStagesChart(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceHigh)
+            .background(c.surfaceHigh)
             .padding(20.dp)
     ) {
         Column {
@@ -3774,8 +3786,8 @@ private fun SleepStagesChart(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Sleep Stages", style = MaterialTheme.typography.titleSmall, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                Text("Restorative", style = MaterialTheme.typography.labelSmall, color = ElectricIndigo, fontWeight = FontWeight.Bold)
+                Text("Sleep Stages", style = MaterialTheme.typography.titleSmall, color = c.onSurface, fontWeight = FontWeight.Bold)
+                Text("Restorative", style = MaterialTheme.typography.labelSmall, color = c.primary, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -3786,20 +3798,20 @@ private fun SleepStagesChart(
                     .fillMaxWidth()
                     .height(44.dp)
                     .clip(RoundedCornerShape(22.dp))
-                    .background(SurfaceHighest)
+                    .background(c.surfaceHighest)
             ) {
                 Row(modifier = Modifier.fillMaxSize()) {
                     if (awakePercent > 0f) {
-                        Box(modifier = Modifier.fillMaxHeight().weight(awakePercent).background(TextSubtle))
+                        Box(modifier = Modifier.fillMaxHeight().weight(awakePercent).background(c.outline))
                     }
                     if (lightPercent > 0f) {
-                        Box(modifier = Modifier.fillMaxHeight().weight(lightPercent).background(SoftLavender))
+                        Box(modifier = Modifier.fillMaxHeight().weight(lightPercent).background(c.tertiary))
                     }
                     if (deepPercent > 0f) {
-                        Box(modifier = Modifier.fillMaxHeight().weight(deepPercent).background(ElectricIndigo))
+                        Box(modifier = Modifier.fillMaxHeight().weight(deepPercent).background(c.primary))
                     }
                     if (remPercent > 0f) {
-                        Box(modifier = Modifier.fillMaxHeight().weight(remPercent).background(VibrantMagenta))
+                        Box(modifier = Modifier.fillMaxHeight().weight(remPercent).background(c.secondary))
                     }
                 }
             }
@@ -3809,12 +3821,12 @@ private fun SleepStagesChart(
             // Legend — 2x2 grid matching Stitch
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SleepStageLegendItem(color = TextSubtle, label = "Awake", value = sleepStages.awakeHours, percent = (awakePercent * 100).roundToInt())
-                    SleepStageLegendItem(color = ElectricIndigo, label = "Deep", value = sleepStages.deepSleepHours, percent = (deepPercent * 100).roundToInt())
+                    SleepStageLegendItem(color = c.outline, label = "Awake", value = sleepStages.awakeHours, percent = (awakePercent * 100).roundToInt())
+                    SleepStageLegendItem(color = c.primary, label = "Deep", value = sleepStages.deepSleepHours, percent = (deepPercent * 100).roundToInt())
                 }
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SleepStageLegendItem(color = SoftLavender, label = "Light", value = sleepStages.lightSleepHours, percent = (lightPercent * 100).roundToInt())
-                    SleepStageLegendItem(color = VibrantMagenta, label = "REM", value = sleepStages.remSleepHours, percent = (remPercent * 100).roundToInt())
+                    SleepStageLegendItem(color = c.tertiary, label = "Light", value = sleepStages.lightSleepHours, percent = (lightPercent * 100).roundToInt())
+                    SleepStageLegendItem(color = c.secondary, label = "REM", value = sleepStages.remSleepHours, percent = (remPercent * 100).roundToInt())
                 }
             }
         }
@@ -3828,12 +3840,13 @@ private fun SleepStageLegendItem(
     value: String,
     percent: Int
 ) {
+    val c = LocalAppColors.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.size(8.dp).background(color, CircleShape))
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = label, fontSize = 12.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium)
+        Text(text = label, fontSize = 12.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Medium)
         Spacer(modifier = Modifier.weight(1f))
-        Text(text = value, fontSize = 12.sp, color = TextOnSurface, fontWeight = FontWeight.Bold)
+        Text(text = value, fontSize = 12.sp, color = c.onSurface, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -3875,11 +3888,12 @@ private fun getInsightForMetric(metricType: HealthViewModel.MetricType, value: D
 
 @Composable
 private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) {
+    val c = LocalAppColors.current
     val dotColor = when (insight.statusColor) {
-        "green" -> SuccessGreen
-        "yellow" -> WarningOrange
-        "red" -> ErrorRed
-        else -> SuccessGreen
+        "green" -> c.success
+        "yellow" -> c.warning
+        "red" -> c.error
+        else -> c.success
     }
 
     var showTips by remember { mutableStateOf(false) }
@@ -3887,7 +3901,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLow)
+        colors = CardDefaults.cardColors(containerColor = c.surfaceLow)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -3898,7 +3912,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                 modifier = Modifier
                     .size(48.dp)
                     .background(
-                        ElectricIndigo.copy(alpha = 0.1f),
+                        c.primary.copy(alpha = 0.1f),
                         RoundedCornerShape(24.dp)
                     ),
                 contentAlignment = Alignment.Center
@@ -3906,7 +3920,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                     contentDescription = null,
-                    tint = ElectricIndigo,
+                    tint = c.primary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -3918,7 +3932,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                     Text(
                         text = "Recovery Insight",
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -3937,7 +3951,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                 Text(
                     text = insight.meaning,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextOnSurfaceVariant,
+                    color = c.onSurfaceVariant,
                     lineHeight = 22.sp
                 )
 
@@ -3947,7 +3961,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                 Text(
                     text = "Normal range: ${insight.normalRange}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSubtle
+                    color = c.outline
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -3961,7 +3975,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                 ) {
                     Text(
                         text = if (showTips) "Hide Tips" else "Show Tips",
-                        color = ElectricIndigo,
+                        color = c.primary,
                         fontWeight = FontWeight.Medium,
                         fontSize = 14.sp
                     )
@@ -3974,12 +3988,12 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                             modifier = Modifier.padding(vertical = 4.dp),
                             verticalAlignment = Alignment.Top
                         ) {
-                            Text(text = "•", color = ElectricIndigo, fontSize = 14.sp)
+                            Text(text = "•", color = c.primary, fontSize = 14.sp)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = tip,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = TextOnSurfaceVariant,
+                                color = c.onSurfaceVariant,
                                 lineHeight = 20.sp
                             )
                         }
@@ -3991,7 +4005,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
                 Text(
                     text = insight.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSubtle,
+                    color = c.outline,
                     lineHeight = 18.sp
                 )
             }
@@ -4001,6 +4015,7 @@ private fun InsightCard(insight: com.openhealth.openhealth.utils.MetricInsight) 
 
 @Composable
 private fun MacroRow(label: String, grams: Double, percent: Int, color: Color) {
+    val c = LocalAppColors.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -4009,41 +4024,42 @@ private fun MacroRow(label: String, grams: Double, percent: Int, color: Color) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.size(12.dp).background(color, RoundedCornerShape(2.dp)))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = label, color = TextOnSurface, style = MaterialTheme.typography.bodyMedium)
+            Text(text = label, color = c.onSurface, style = MaterialTheme.typography.bodyMedium)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "${grams.roundToInt()}g", color = TextOnSurface, fontWeight = FontWeight.Medium)
+            Text(text = "${grams.roundToInt()}g", color = c.onSurface, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "$percent%", color = TextOnSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            Text(text = "$percent%", color = c.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
 
 @Composable
 private fun NutritionMacroCard(label: String, grams: Double, goal: Double, color: Color) {
+    val c = LocalAppColors.current
     val progress = if (goal > 0) (grams / goal).toFloat().coerceIn(0f, 1f) else 0f
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(20.dp)
     ) {
         Column {
-            Text(label, color = TextOnSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(label, color = c.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.Bottom) {
-                Text("${grams.roundToInt()}", color = TextOnSurface, fontSize = 32.sp, fontWeight = FontWeight.Black)
+                Text("${grams.roundToInt()}", color = c.onSurface, fontSize = 32.sp, fontWeight = FontWeight.Black)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("g", color = TextOnSurfaceVariant, fontSize = 16.sp, modifier = Modifier.padding(bottom = 4.dp))
+                Text("g", color = c.onSurfaceVariant, fontSize = 16.sp, modifier = Modifier.padding(bottom = 4.dp))
             }
             Spacer(modifier = Modifier.height(10.dp))
-            Box(modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(SurfaceHighest)) {
+            Box(modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(c.surfaceHighest)) {
                 Box(modifier = Modifier.fillMaxWidth(progress.coerceAtLeast(0.01f)).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(color))
             }
             Spacer(modifier = Modifier.height(6.dp))
-            Text("GOAL: ${goal.roundToInt()}G", fontSize = 10.sp, color = TextSubtle, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+            Text("GOAL: ${goal.roundToInt()}G", fontSize = 10.sp, color = c.outline, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -4055,6 +4071,7 @@ private fun NutritionMacroBar(
     goal: Double,
     color: Color
 ) {
+    val c = LocalAppColors.current
     val progress = if (goal > 0) (grams / goal).toFloat().coerceIn(0f, 1f) else 0f
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -4070,13 +4087,13 @@ private fun NutritionMacroBar(
         ) {
             Text(
                 text = label,
-                color = TextOnSurface,
+                color = c.onSurface,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "${grams.roundToInt()}g / ${goal.roundToInt()}g",
-                color = TextOnSurfaceVariant,
+                color = c.onSurfaceVariant,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -4086,7 +4103,7 @@ private fun NutritionMacroBar(
                 .fillMaxWidth()
                 .height(10.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(SurfaceHigh)
+                .background(c.surfaceHigh)
         ) {
             Box(
                 modifier = Modifier
@@ -4104,6 +4121,7 @@ private fun SleepClockCard(
     sleepStart: java.time.Instant,
     sleepEnd: java.time.Instant
 ) {
+    val c = LocalAppColors.current
     val zone = ZoneId.systemDefault()
     val startZoned = sleepStart.atZone(zone)
     val endZoned = sleepEnd.atZone(zone)
@@ -4136,7 +4154,7 @@ private fun SleepClockCard(
 
                 // Track ring
                 drawArc(
-                    color = SurfaceHighest.copy(alpha = 0.3f),
+                    color = c.surfaceHighest.copy(alpha = 0.3f),
                     startAngle = 0f, sweepAngle = 360f,
                     useCenter = false,
                     style = Stroke(width = strokeW, cap = StrokeCap.Round),
@@ -4151,7 +4169,7 @@ private fun SleepClockCard(
 
                 drawArc(
                     brush = Brush.sweepGradient(
-                        listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
+                        listOf(c.primary, c.secondary, c.primary)
                     ),
                     startAngle = startAngle,
                     sweepAngle = sweep,
@@ -4167,7 +4185,7 @@ private fun SleepClockCard(
                 Text(
                     text = "TOTAL SLEEP",
                     fontSize = 10.sp,
-                    color = TextOnSurfaceVariant,
+                    color = c.onSurfaceVariant,
                     letterSpacing = 2.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -4176,21 +4194,21 @@ private fun SleepClockCard(
                     text = "${sleepH}h ${sleepM}m",
                     fontSize = 40.sp,
                     fontWeight = FontWeight.Black,
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     letterSpacing = (-1).sp
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.EmojiEvents,
                         contentDescription = null,
-                        tint = ElectricIndigo,
+                        tint = c.primary,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = if (sleepH >= 7) "OPTIMAL RANGE" else "BELOW TARGET",
                         fontSize = 10.sp,
-                        color = ElectricIndigo,
+                        color = c.primary,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
                     )
@@ -4201,14 +4219,14 @@ private fun SleepClockCard(
             Text(
                 text = "12 PM",
                 fontSize = 10.sp,
-                color = TextOnSurfaceVariant,
+                color = c.onSurfaceVariant,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp)
             )
             Text(
                 text = "12 AM",
                 fontSize = 10.sp,
-                color = TextOnSurfaceVariant,
+                color = c.onSurfaceVariant,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)
             )
@@ -4222,14 +4240,14 @@ private fun SleepClockCard(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("BEDTIME", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp)
+                Text("BEDTIME", fontSize = 10.sp, color = c.onSurfaceVariant, letterSpacing = 2.sp)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(startTimeStr, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                Text(startTimeStr, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("WAKE UP", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp)
+                Text("WAKE UP", fontSize = 10.sp, color = c.onSurfaceVariant, letterSpacing = 2.sp)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(endTimeStr, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                Text(endTimeStr, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
             }
         }
 
@@ -4245,15 +4263,15 @@ private fun SleepClockCard(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(SurfaceLow)
+                    .background(c.surfaceLow)
                     .padding(20.dp)
             ) {
                 Column {
-                    Text("EFFICIENCY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                    Text("EFFICIENCY", fontSize = 10.sp, color = c.onSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text("$efficiency", fontSize = 32.sp, fontWeight = FontWeight.Black, color = VibrantMagenta)
-                        Text("%", fontSize = 14.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                        Text("$efficiency", fontSize = 32.sp, fontWeight = FontWeight.Black, color = c.secondary)
+                        Text("%", fontSize = 14.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
                     }
                 }
             }
@@ -4261,15 +4279,15 @@ private fun SleepClockCard(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(SurfaceLow)
+                    .background(c.surfaceLow)
                     .padding(20.dp)
             ) {
                 Column {
-                    Text("CONSISTENCY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                    Text("CONSISTENCY", fontSize = 10.sp, color = c.onSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = if (sleepH >= 7) "High" else if (sleepH >= 5) "Medium" else "Low",
-                        fontSize = 28.sp, fontWeight = FontWeight.Black, color = ElectricIndigo
+                        fontSize = 28.sp, fontWeight = FontWeight.Black, color = c.primary
                     )
                 }
             }
@@ -4284,6 +4302,7 @@ private fun StepRingsCalendar(
     onDateSelected: (LocalDate) -> Unit,
     goal: Int = 10000
 ) {
+    val c = LocalAppColors.current
     val dataMap = remember(data) { data.associateBy { it.date } }
     val currentMonth = remember(selectedDate) { YearMonth.from(selectedDate) }
     val today = LocalDate.now(ZoneId.systemDefault())
@@ -4291,13 +4310,13 @@ private fun StepRingsCalendar(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+        colors = CardDefaults.cardColors(containerColor = c.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
                 style = MaterialTheme.typography.titleMedium,
-                color = TextOnSurface,
+                color = c.onSurface,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -4308,7 +4327,7 @@ private fun StepRingsCalendar(
                     Text(
                         text = day,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSubtle,
+                        color = c.outline,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )

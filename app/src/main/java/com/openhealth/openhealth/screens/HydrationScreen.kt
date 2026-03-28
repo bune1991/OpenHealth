@@ -78,6 +78,7 @@ fun HydrationScreen(
     onClearAll: () -> Unit = {},
     onBackClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     var showAddDialog by remember { mutableStateOf(false) }
 
     val progress = (dailyTotal.toFloat() / goal).coerceIn(0f, 1f)
@@ -112,7 +113,7 @@ fun HydrationScreen(
                 title = {
                     Text(
                         text = "Hydration",
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -121,12 +122,12 @@ fun HydrationScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = ElectricIndigo
+                            tint = c.primary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceLowest
+                    containerColor = c.background
                 )
             )
         },
@@ -137,7 +138,7 @@ fun HydrationScreen(
                     .clip(CircleShape)
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(ElectricIndigo, VibrantMagenta)
+                            colors = listOf(c.primary, c.secondary)
                         )
                     )
                     .clickable { showAddDialog = true },
@@ -146,12 +147,12 @@ fun HydrationScreen(
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Water",
-                    tint = TextOnSurface,
+                    tint = c.onSurface,
                     modifier = Modifier.size(28.dp)
                 )
             }
         },
-        containerColor = SurfaceLowest
+        containerColor = c.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -179,7 +180,7 @@ fun HydrationScreen(
 
                                 // Background track
                                 drawArc(
-                                    color = SurfaceHigh,
+                                    color = c.surfaceHigh,
                                     startAngle = -90f,
                                     sweepAngle = 360f,
                                     useCenter = false,
@@ -192,7 +193,7 @@ fun HydrationScreen(
                                 if (progress > 0f) {
                                     drawArc(
                                         brush = Brush.sweepGradient(
-                                            colors = listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
+                                            colors = listOf(c.primary, c.secondary, c.primary)
                                         ),
                                         startAngle = -90f,
                                         sweepAngle = 360f * progress,
@@ -209,7 +210,7 @@ fun HydrationScreen(
                                 Icon(
                                     imageVector = Icons.Default.WaterDrop,
                                     contentDescription = null,
-                                    tint = ElectricIndigo,
+                                    tint = c.primary,
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -217,12 +218,12 @@ fun HydrationScreen(
                                     text = "%.1fL".format(consumedLiters),
                                     fontSize = 36.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextOnSurface
+                                    color = c.onSurface
                                 )
                                 Text(
                                     text = "/ %.1fL GOAL".format(goalLiters),
                                     fontSize = 14.sp,
-                                    color = TextOnSurfaceVariant
+                                    color = c.onSurfaceVariant
                                 )
                             }
                         }
@@ -236,8 +237,8 @@ fun HydrationScreen(
                                 .background(
                                     Brush.linearGradient(
                                         colors = listOf(
-                                            ElectricIndigo.copy(alpha = 0.2f),
-                                            VibrantMagenta.copy(alpha = 0.2f)
+                                            c.primary.copy(alpha = 0.2f),
+                                            c.secondary.copy(alpha = 0.2f)
                                         )
                                     )
                                 )
@@ -245,7 +246,7 @@ fun HydrationScreen(
                         ) {
                             Text(
                                 text = "$percent% Daily Intake",
-                                color = ElectricIndigo,
+                                color = c.primary,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp
                             )
@@ -265,7 +266,7 @@ fun HydrationScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .padding(20.dp)
                     ) {
                         Column {
@@ -273,7 +274,7 @@ fun HydrationScreen(
                                 text = "LAST ENTRY",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextSubtle,
+                                color = c.outline,
                                 letterSpacing = 1.sp
                             )
                             Spacer(modifier = Modifier.height(12.dp))
@@ -282,24 +283,24 @@ fun HydrationScreen(
                                     text = "${lastEntry.amount}ml",
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextOnSurface
+                                    color = c.onSurface
                                 )
                                 Text(
                                     text = timeFormatter.format(Date(lastEntry.time)),
                                     fontSize = 13.sp,
-                                    color = TextOnSurfaceVariant
+                                    color = c.onSurfaceVariant
                                 )
                             } else {
                                 Text(
                                     text = "--",
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextOnSurface
+                                    color = c.onSurface
                                 )
                                 Text(
                                     text = "No entries",
                                     fontSize = 13.sp,
-                                    color = TextOnSurfaceVariant
+                                    color = c.onSurfaceVariant
                                 )
                             }
                         }
@@ -310,7 +311,7 @@ fun HydrationScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .padding(20.dp)
                     ) {
                         Column {
@@ -318,7 +319,7 @@ fun HydrationScreen(
                                 text = "FREQUENCY",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextSubtle,
+                                color = c.outline,
                                 letterSpacing = 1.sp
                             )
                             Spacer(modifier = Modifier.height(12.dp))
@@ -327,15 +328,15 @@ fun HydrationScreen(
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = when (frequencyLabel) {
-                                    "High" -> SuccessGreen
-                                    "Normal" -> ElectricIndigo
-                                    else -> VibrantMagenta
+                                    "High" -> c.success
+                                    "Normal" -> c.primary
+                                    else -> c.secondary
                                 }
                             )
                             Text(
                                 text = "${hydrationEntries.size} entries today",
                                 fontSize = 13.sp,
-                                color = TextOnSurfaceVariant
+                                color = c.onSurfaceVariant
                             )
                         }
                     }
@@ -351,8 +352,8 @@ fun HydrationScreen(
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(
-                                    ElectricIndigo.copy(alpha = 0.12f),
-                                    VibrantMagenta.copy(alpha = 0.08f)
+                                    c.primary.copy(alpha = 0.12f),
+                                    c.secondary.copy(alpha = 0.08f)
                                 )
                             )
                         )
@@ -363,13 +364,13 @@ fun HydrationScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(ElectricIndigo.copy(alpha = 0.2f)),
+                                .background(c.primary.copy(alpha = 0.2f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Lightbulb,
                                 contentDescription = null,
-                                tint = ElectricIndigo,
+                                tint = c.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -379,13 +380,13 @@ fun HydrationScreen(
                                 text = "Hydration IQ",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextOnSurface
+                                color = c.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = insightText,
                                 fontSize = 13.sp,
-                                color = TextOnSurfaceVariant,
+                                color = c.onSurfaceVariant,
                                 lineHeight = 18.sp
                             )
                         }
@@ -404,7 +405,7 @@ fun HydrationScreen(
                         text = "TODAY'S HISTORY",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = TextSubtle,
+                        color = c.outline,
                         letterSpacing = 1.sp
                     )
                     if (hydrationEntries.isNotEmpty()) {
@@ -412,7 +413,7 @@ fun HydrationScreen(
                             text = "CLEAR ALL",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = VibrantMagenta,
+                            color = c.secondary,
                             letterSpacing = 1.sp,
                             modifier = Modifier.clickable { onClearAll() }
                         )
@@ -427,7 +428,7 @@ fun HydrationScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -435,20 +436,20 @@ fun HydrationScreen(
                             Icon(
                                 imageVector = Icons.Default.WaterDrop,
                                 contentDescription = null,
-                                tint = TextSubtle,
+                                tint = c.outline,
                                 modifier = Modifier.size(40.dp)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = "No entries yet",
                                 fontSize = 16.sp,
-                                color = TextOnSurfaceVariant,
+                                color = c.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
                                 text = "Tap + to log your water intake",
                                 fontSize = 13.sp,
-                                color = TextSubtle
+                                color = c.outline
                             )
                         }
                     }
@@ -459,7 +460,7 @@ fun HydrationScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .padding(horizontal = 20.dp, vertical = 16.dp)
                     ) {
                         Row(
@@ -472,13 +473,13 @@ fun HydrationScreen(
                                     modifier = Modifier
                                         .size(40.dp)
                                         .clip(CircleShape)
-                                        .background(ElectricIndigo.copy(alpha = 0.15f)),
+                                        .background(c.primary.copy(alpha = 0.15f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.WaterDrop,
                                         contentDescription = null,
-                                        tint = ElectricIndigo,
+                                        tint = c.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -488,12 +489,12 @@ fun HydrationScreen(
                                         text = entry.type,
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Medium,
-                                        color = TextOnSurface
+                                        color = c.onSurface
                                     )
                                     Text(
                                         text = timeFormatter.format(Date(entry.time)),
                                         fontSize = 12.sp,
-                                        color = TextSubtle
+                                        color = c.outline
                                     )
                                 }
                             }
@@ -502,13 +503,13 @@ fun HydrationScreen(
                                     text = "${entry.amount}ml",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = ElectricIndigo
+                                    color = c.primary
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Remove",
-                                    tint = TextSubtle,
+                                    tint = c.outline,
                                     modifier = Modifier
                                         .size(20.dp)
                                         .clickable { onRemoveEntry(entry) }
@@ -543,6 +544,7 @@ private fun AddWaterDialog(
     onDismiss: () -> Unit,
     onConfirm: (Int) -> Unit
 ) {
+    val c = LocalAppColors.current
     var customAmount by remember { mutableStateOf("") }
     val presets = listOf(250, 500, 750, 1000)
 
@@ -551,7 +553,7 @@ private fun AddWaterDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(SurfaceMid)
+                .background(c.surface)
                 .padding(24.dp)
         ) {
             Column {
@@ -559,13 +561,13 @@ private fun AddWaterDialog(
                     text = "Add Water",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextOnSurface
+                    color = c.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Select a preset or enter a custom amount",
                     fontSize = 14.sp,
-                    color = TextOnSurfaceVariant
+                    color = c.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -580,7 +582,7 @@ private fun AddWaterDialog(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(SurfaceHigh)
+                                    .background(c.surfaceHigh)
                                     .clickable { onConfirm(amount) }
                                     .padding(vertical = 16.dp),
                                 contentAlignment = Alignment.Center
@@ -589,7 +591,7 @@ private fun AddWaterDialog(
                                     text = if (amount >= 1000) "${amount / 1000}L" else "${amount}ml",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = ElectricIndigo
+                                    color = c.primary
                                 )
                             }
                         }
@@ -603,7 +605,7 @@ private fun AddWaterDialog(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(SurfaceHigh)
+                                    .background(c.surfaceHigh)
                                     .clickable { onConfirm(amount) }
                                     .padding(vertical = 16.dp),
                                 contentAlignment = Alignment.Center
@@ -612,7 +614,7 @@ private fun AddWaterDialog(
                                     text = if (amount >= 1000) "${amount / 1000}L" else "${amount}ml",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = ElectricIndigo
+                                    color = c.primary
                                 )
                             }
                         }
@@ -634,13 +636,13 @@ private fun AddWaterDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = ElectricIndigo,
-                        unfocusedBorderColor = TextSubtle,
-                        focusedLabelColor = ElectricIndigo,
-                        unfocusedLabelColor = TextSubtle,
-                        cursorColor = ElectricIndigo,
-                        focusedTextColor = TextOnSurface,
-                        unfocusedTextColor = TextOnSurface
+                        focusedBorderColor = c.primary,
+                        unfocusedBorderColor = c.outline,
+                        focusedLabelColor = c.primary,
+                        unfocusedLabelColor = c.outline,
+                        cursorColor = c.primary,
+                        focusedTextColor = c.onSurface,
+                        unfocusedTextColor = c.onSurface
                     ),
                     shape = RoundedCornerShape(16.dp)
                 )
@@ -655,7 +657,7 @@ private fun AddWaterDialog(
                     TextButton(onClick = onDismiss) {
                         Text(
                             text = "Cancel",
-                            color = TextOnSurfaceVariant,
+                            color = c.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -665,9 +667,9 @@ private fun AddWaterDialog(
                             .clip(RoundedCornerShape(16.dp))
                             .background(
                                 if (customAmount.isNotBlank() && (customAmount.toIntOrNull() ?: 0) > 0)
-                                    Brush.linearGradient(listOf(ElectricIndigo, VibrantMagenta))
+                                    Brush.linearGradient(listOf(c.primary, c.secondary))
                                 else
-                                    Brush.linearGradient(listOf(SurfaceHigh, SurfaceHigh))
+                                    Brush.linearGradient(listOf(c.surfaceHigh, c.surfaceHigh))
                             )
                             .clickable(enabled = customAmount.isNotBlank() && (customAmount.toIntOrNull() ?: 0) > 0) {
                                 customAmount.toIntOrNull()?.let { if (it > 0) onConfirm(it) }
@@ -677,7 +679,7 @@ private fun AddWaterDialog(
                         Text(
                             text = "Add",
                             color = if (customAmount.isNotBlank() && (customAmount.toIntOrNull() ?: 0) > 0)
-                                TextOnSurface else TextSubtle,
+                                c.onSurface else c.outline,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )

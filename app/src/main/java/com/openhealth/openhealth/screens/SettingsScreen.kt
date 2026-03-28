@@ -40,31 +40,32 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onExportClick: (() -> Unit)? = null
 ) {
+    val c = LocalAppColors.current
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = "Settings",
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Medium
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = ElectricIndigo)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = c.primary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceLowest)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = c.background)
             )
         },
-        containerColor = SurfaceLowest
+        containerColor = c.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SurfaceLowest)
+                .background(c.background)
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -81,7 +82,7 @@ fun SettingsScreen(
             item {
                 FeatureTogglePill(
                     icon = Icons.Default.AutoAwesome,
-                    iconColor = ElectricIndigo,
+                    iconColor = c.primary,
                     title = "AI Insights",
                     subtitle = "Predictive health analysis",
                     isEnabled = settings.aiProvider != com.openhealth.openhealth.model.AiProvider.NONE,
@@ -96,7 +97,7 @@ fun SettingsScreen(
             item {
                 FeatureTogglePill(
                     icon = Icons.Default.Cloud,
-                    iconColor = VibrantMagenta,
+                    iconColor = c.secondary,
                     title = "Weather",
                     subtitle = "Sync environmental data",
                     isEnabled = settings.weatherEnabled,
@@ -108,7 +109,7 @@ fun SettingsScreen(
             item {
                 FeatureTogglePill(
                     icon = Icons.Default.Bolt,
-                    iconColor = SoftLavender,
+                    iconColor = c.tertiary,
                     title = "Steps Streak",
                     subtitle = "Gamified movement tracking",
                     isEnabled = settings.showStepsStreak,
@@ -120,7 +121,7 @@ fun SettingsScreen(
             item {
                 FeatureTogglePill(
                     icon = Icons.Default.Notifications,
-                    iconColor = ElectricIndigo,
+                    iconColor = c.primary,
                     title = "Daily Summary",
                     subtitle = "Evening notification",
                     isEnabled = settings.dailySummaryNotification,
@@ -155,7 +156,7 @@ fun SettingsScreen(
                                     .weight(1f)
                                     .clip(RoundedCornerShape(20.dp))
                                     .background(
-                                        if (isSelected) ElectricIndigo.copy(alpha = 0.2f) else SurfaceHighest
+                                        if (isSelected) c.primary.copy(alpha = 0.2f) else c.surfaceHighest
                                     )
                                     .clickable { onSettingsChanged(settings.copy(aiProvider = provider)) }
                                     .padding(vertical = 10.dp),
@@ -163,7 +164,7 @@ fun SettingsScreen(
                             ) {
                                 Text(
                                     text = label,
-                                    color = if (isSelected) ElectricIndigo else TextOnSurfaceVariant,
+                                    color = if (isSelected) c.primary else c.onSurfaceVariant,
                                     fontSize = 12.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
@@ -227,7 +228,7 @@ fun SettingsScreen(
                     Text(
                         text = "Coordinates (Google Maps → long press → copy)",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSubtle,
+                        color = c.outline,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -310,10 +311,10 @@ fun SettingsScreen(
             }
 
             item {
-                GoalInputPill("Steps Goal", settings.stepsGoal.toString(), "steps", ElectricIndigo) { onSettingsChanged(settings.copy(stepsGoal = it.toIntOrNull() ?: 10000)) }
+                GoalInputPill("Steps Goal", settings.stepsGoal.toString(), "steps", c.primary) { onSettingsChanged(settings.copy(stepsGoal = it.toIntOrNull() ?: 10000)) }
             }
             item {
-                GoalInputPill("Floors Goal", settings.floorsGoal.toString(), "floors", SuccessGreen) { onSettingsChanged(settings.copy(floorsGoal = it.toIntOrNull() ?: 10)) }
+                GoalInputPill("Floors Goal", settings.floorsGoal.toString(), "floors", c.success) { onSettingsChanged(settings.copy(floorsGoal = it.toIntOrNull() ?: 10)) }
             }
             item {
                 GoalInputPill("Calories Goal", settings.caloriesGoal.toString(), "kcal", CardCalories) { onSettingsChanged(settings.copy(caloriesGoal = it.toIntOrNull() ?: 500)) }
@@ -344,7 +345,7 @@ fun SettingsScreen(
                     Text(
                         text = category,
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSubtle,
+                        color = c.outline,
                         modifier = Modifier.padding(top = 8.dp, start = 4.dp)
                     )
                 }
@@ -372,7 +373,7 @@ fun SettingsScreen(
                             .height(56.dp)
                             .clip(RoundedCornerShape(28.dp))
                             .background(
-                                Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta))
+                                Brush.horizontalGradient(listOf(c.primary, c.secondary))
                             )
                             .clickable { onExportClick() },
                         contentAlignment = Alignment.Center
@@ -397,7 +398,7 @@ fun SettingsScreen(
                     Text(
                         text = "Encrypted data will be synthesized and delivered to your primary node.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSubtle,
+                        color = c.outline,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -410,12 +411,12 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(28.dp))
-                        .background(SurfaceMid)
+                        .background(c.surface)
                         .clickable { onSettingsChanged(SettingsData.DEFAULT) }
                         .padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Reset to Defaults", color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium)
+                    Text("Reset to Defaults", color = c.onSurfaceVariant, fontWeight = FontWeight.Medium)
                 }
 
                 Spacer(modifier = Modifier.height(40.dp))
@@ -430,10 +431,11 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionHeader(title: String) {
+    val c = LocalAppColors.current
     Text(
         text = title.uppercase(),
         style = MaterialTheme.typography.labelMedium,
-        color = SoftLavender,
+        color = c.tertiary,
         letterSpacing = 2.sp,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
@@ -449,11 +451,12 @@ private fun FeatureTogglePill(
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
+    val c = LocalAppColors.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(32.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
@@ -465,7 +468,7 @@ private fun FeatureTogglePill(
                 Box(
                     modifier = Modifier
                         .size(44.dp)
-                        .background(SurfaceHighest, CircleShape),
+                        .background(c.surfaceHighest, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -477,8 +480,8 @@ private fun FeatureTogglePill(
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text(text = title, color = TextOnSurface, fontWeight = FontWeight.Medium, fontSize = 15.sp)
-                    Text(text = subtitle, color = TextOnSurfaceVariant, fontSize = 11.sp)
+                    Text(text = title, color = c.onSurface, fontWeight = FontWeight.Medium, fontSize = 15.sp)
+                    Text(text = subtitle, color = c.onSurfaceVariant, fontSize = 11.sp)
                 }
             }
             Switch(
@@ -486,9 +489,9 @@ private fun FeatureTogglePill(
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = ElectricIndigo,
-                    uncheckedThumbColor = TextSubtle,
-                    uncheckedTrackColor = SurfaceHighest
+                    checkedTrackColor = c.primary,
+                    uncheckedThumbColor = c.outline,
+                    uncheckedTrackColor = c.surfaceHighest
                 )
             )
         }
@@ -501,11 +504,12 @@ private fun MetricTogglePill(
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
+    val c = LocalAppColors.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(28.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(horizontal = 20.dp, vertical = 10.dp)
     ) {
         Row(
@@ -513,15 +517,15 @@ private fun MetricTogglePill(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = label, color = TextOnSurface, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+            Text(text = label, color = c.onSurface, fontWeight = FontWeight.Medium, fontSize = 14.sp)
             Switch(
                 checked = isEnabled,
                 onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = ElectricIndigo,
-                    uncheckedThumbColor = TextSubtle,
-                    uncheckedTrackColor = SurfaceHighest
+                    checkedTrackColor = c.primary,
+                    uncheckedThumbColor = c.outline,
+                    uncheckedTrackColor = c.surfaceHighest
                 )
             )
         }
@@ -538,12 +542,13 @@ private fun NocturneTextField(
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
+    val c = LocalAppColors.current
     Column(modifier = modifier) {
         if (label.isNotEmpty()) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = TextOnSurfaceVariant,
+                color = c.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
             )
         }
@@ -551,21 +556,21 @@ private fun NocturneTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = TextSubtle) },
+            placeholder = { Text(placeholder, color = c.outline) },
             visualTransformation = if (isPassword) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
             singleLine = true,
             shape = RoundedCornerShape(28.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = SurfaceHighest,
-                unfocusedContainerColor = SurfaceHighest,
-                focusedBorderColor = ElectricIndigo.copy(alpha = 0.5f),
+                focusedContainerColor = c.surfaceHighest,
+                unfocusedContainerColor = c.surfaceHighest,
+                focusedBorderColor = c.primary.copy(alpha = 0.5f),
                 unfocusedBorderColor = Color.Transparent,
-                focusedTextColor = TextOnSurface,
-                unfocusedTextColor = TextOnSurface,
-                cursorColor = ElectricIndigo
+                focusedTextColor = c.onSurface,
+                unfocusedTextColor = c.onSurface,
+                cursorColor = c.primary
             ),
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextOnSurface)
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = c.onSurface)
         )
     }
 }
@@ -577,6 +582,7 @@ private fun ThemeCircle(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -589,7 +595,7 @@ private fun ThemeCircle(
                 .then(
                     if (isSelected) Modifier
                         .clip(CircleShape)
-                        .background(ElectricIndigo.copy(alpha = 0.1f))
+                        .background(c.primary.copy(alpha = 0.1f))
                         .padding(3.dp)
                     else Modifier
                 )
@@ -612,7 +618,7 @@ private fun ThemeCircle(
             fontSize = 9.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp,
-            color = if (isSelected) ElectricIndigo else TextSubtle
+            color = if (isSelected) c.primary else c.outline
         )
     }
 }
@@ -625,13 +631,14 @@ private fun GoalInputPill(
     color: Color,
     onValueChange: (String) -> Unit
 ) {
+    val c = LocalAppColors.current
     var textValue by remember(value) { mutableStateOf(value) }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(28.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .padding(horizontal = 20.dp, vertical = 10.dp)
     ) {
         Row(
@@ -646,29 +653,29 @@ private fun GoalInputPill(
                         .background(color, CircleShape)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(text = title, color = TextOnSurface, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                Text(text = title, color = c.onSurface, fontWeight = FontWeight.Medium, fontSize = 14.sp)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = textValue,
                     onValueChange = { textValue = it; onValueChange(it) },
                     modifier = Modifier.width(80.dp),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextOnSurface, fontWeight = FontWeight.Bold),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = c.onSurface, fontWeight = FontWeight.Bold),
                     keyboardOptions = KeyboardOptions(keyboardType = if (unit == "km") KeyboardType.Decimal else KeyboardType.Number),
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = SurfaceHighest,
-                        unfocusedContainerColor = SurfaceHighest,
+                        focusedContainerColor = c.surfaceHighest,
+                        unfocusedContainerColor = c.surfaceHighest,
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedTextColor = TextOnSurface,
-                        unfocusedTextColor = TextOnSurface,
-                        cursorColor = ElectricIndigo
+                        focusedTextColor = c.onSurface,
+                        unfocusedTextColor = c.onSurface,
+                        cursorColor = c.primary
                     )
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = unit, color = TextSubtle, fontSize = 12.sp)
+                Text(text = unit, color = c.outline, fontSize = 12.sp)
             }
         }
     }

@@ -83,6 +83,7 @@ fun ReadinessDetailScreen(
     onMetricClick: (HealthViewModel.MetricType) -> Unit = {},
     onStartSession: () -> Unit = {}
 ) {
+    val c = LocalAppColors.current
     val readinessInfo = calculateReadinessInfo(healthData)
 
     // Derive recommendation based on score
@@ -128,25 +129,25 @@ fun ReadinessDetailScreen(
                 title = {
                     Text(
                         text = "Readiness",
-                        color = ElectricIndigo,
+                        color = c.primary,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = ElectricIndigo)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = c.primary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceLowest)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = c.background)
             )
         },
-        containerColor = SurfaceLowest
+        containerColor = c.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SurfaceLowest)
+                .background(c.background)
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -158,7 +159,7 @@ fun ReadinessDetailScreen(
                     Text(
                         text = "MORNING STATUS",
                         style = MaterialTheme.typography.labelSmall,
-                        color = VibrantMagenta,
+                        color = c.secondary,
                         letterSpacing = 3.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -168,7 +169,7 @@ fun ReadinessDetailScreen(
                         text = readinessInfo.label,
                         fontSize = 40.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         letterSpacing = (-1).sp,
                         lineHeight = 44.sp
                     )
@@ -177,7 +178,7 @@ fun ReadinessDetailScreen(
                         text = "Condition",
                         fontSize = 40.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = ElectricIndigo,
+                        color = c.primary,
                         letterSpacing = (-1).sp,
                         lineHeight = 44.sp
                     )
@@ -186,7 +187,7 @@ fun ReadinessDetailScreen(
                     Text(
                         text = readinessInfo.explanation,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextOnSurfaceVariant,
+                        color = c.onSurfaceVariant,
                         lineHeight = 20.sp
                     )
                 }
@@ -198,7 +199,7 @@ fun ReadinessDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(CircleShape)
-                        .background(SurfaceHigh)
+                        .background(c.surfaceHigh)
                         .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -216,7 +217,7 @@ fun ReadinessDetailScreen(
 
                             // Background track
                             drawArc(
-                                color = SurfaceLowest,
+                                color = c.background,
                                 startAngle = -90f,
                                 sweepAngle = 360f,
                                 useCenter = false,
@@ -227,7 +228,7 @@ fun ReadinessDetailScreen(
                             // Gradient progress arc
                             drawArc(
                                 brush = Brush.sweepGradient(
-                                    listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
+                                    listOf(c.primary, c.secondary, c.primary)
                                 ),
                                 startAngle = -90f,
                                 sweepAngle = 360f * animatedScore,
@@ -242,12 +243,12 @@ fun ReadinessDetailScreen(
                                 text = readinessInfo.score.toString(),
                                 fontSize = 56.sp,
                                 fontWeight = FontWeight.Black,
-                                color = TextOnSurface
+                                color = c.onSurface
                             )
                             Text(
                                 text = "READY",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextOnSurfaceVariant,
+                                color = c.onSurfaceVariant,
                                 letterSpacing = 3.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -267,7 +268,7 @@ fun ReadinessDetailScreen(
                         modifier = Modifier
                             .weight(2f)
                             .clip(RoundedCornerShape(20.dp))
-                            .background(SurfaceLow)
+                            .background(c.surfaceLow)
                             .clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
                             .padding(20.dp)
                     ) {
@@ -277,14 +278,14 @@ fun ReadinessDetailScreen(
                                 Icon(
                                     imageVector = Icons.Default.Favorite,
                                     contentDescription = null,
-                                    tint = ElectricIndigo,
+                                    tint = c.primary,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Heart Rate Variability",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = TextOnSurface,
+                                    color = c.onSurface,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
@@ -293,13 +294,13 @@ fun ReadinessDetailScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50))
-                                    .background(ElectricIndigo.copy(alpha = 0.10f))
+                                    .background(c.primary.copy(alpha = 0.10f))
                                     .padding(horizontal = 12.dp, vertical = 4.dp)
                             ) {
                                 Text(
                                     text = hrvStatus,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = ElectricIndigo,
+                                    color = c.primary,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -324,11 +325,11 @@ fun ReadinessDetailScreen(
                                             .background(
                                                 if (isHighlighted) {
                                                     Brush.verticalGradient(
-                                                        listOf(VibrantMagenta, ElectricIndigo)
+                                                        listOf(c.secondary, c.primary)
                                                     )
                                                 } else {
                                                     Brush.verticalGradient(
-                                                        listOf(SurfaceHighest, SurfaceHighest)
+                                                        listOf(c.surfaceHighest, c.surfaceHighest)
                                                     )
                                                 }
                                             )
@@ -345,7 +346,7 @@ fun ReadinessDetailScreen(
                             .clip(RoundedCornerShape(20.dp))
                             .background(
                                 Brush.verticalGradient(
-                                    listOf(MagentaContainer, SurfaceHigh)
+                                    listOf(c.secondaryContainer, c.surfaceHigh)
                                 )
                             )
                             .padding(20.dp)
@@ -357,7 +358,7 @@ fun ReadinessDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Restore,
                                 contentDescription = null,
-                                tint = TextOnSurface,
+                                tint = c.onSurface,
                                 modifier = Modifier.size(40.dp)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
@@ -367,32 +368,32 @@ fun ReadinessDetailScreen(
                                     text = recoveryHours,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Black,
-                                    color = TextOnSurface
+                                    color = c.onSurface
                                 )
                                 Text(
                                     text = "h ",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextOnSurface.copy(alpha = 0.5f)
+                                    color = c.onSurface.copy(alpha = 0.5f)
                                 )
                                 Text(
                                     text = recoveryMinutes,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Black,
-                                    color = TextOnSurface
+                                    color = c.onSurface
                                 )
                                 Text(
                                     text = "m",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextOnSurface.copy(alpha = 0.5f)
+                                    color = c.onSurface.copy(alpha = 0.5f)
                                 )
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "RECOVERY\nNEEDED",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = TextOnSurface.copy(alpha = 0.7f),
+                                color = c.onSurface.copy(alpha = 0.7f),
                                 letterSpacing = 2.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
@@ -412,7 +413,7 @@ fun ReadinessDetailScreen(
                                         .fillMaxWidth(recoveryProgress.coerceIn(0f, 1f))
                                         .fillMaxHeight()
                                         .clip(RoundedCornerShape(3.dp))
-                                        .background(TextOnSurface)
+                                        .background(c.onSurface)
                                 )
                             }
                         }
@@ -430,13 +431,13 @@ fun ReadinessDetailScreen(
                     Text(
                         text = "Deep Dive Insights",
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "View All",
                         style = MaterialTheme.typography.labelMedium,
-                        color = ElectricIndigo,
+                        color = c.primary,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clickable { }
                     )
@@ -459,7 +460,7 @@ fun ReadinessDetailScreen(
                             modifier = Modifier
                                 .width(220.dp)
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(SurfaceHigh)
+                                .background(c.surfaceHigh)
                                 .then(
                                     if (index == 0) Modifier.clickable { onMetricClick(HealthViewModel.MetricType.SLEEP) }
                                     else Modifier
@@ -471,13 +472,13 @@ fun ReadinessDetailScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(40.dp)
-                                        .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                        .background(c.primary.copy(alpha = 0.12f), CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = icon,
                                         contentDescription = null,
-                                        tint = ElectricIndigo,
+                                        tint = c.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -485,14 +486,14 @@ fun ReadinessDetailScreen(
                                 Text(
                                     text = title,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextOnSurface,
+                                    color = c.onSurface,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = description,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = TextOnSurfaceVariant,
+                                    color = c.onSurfaceVariant,
                                     lineHeight = 18.sp,
                                     maxLines = 3,
                                     overflow = TextOverflow.Ellipsis
@@ -509,7 +510,7 @@ fun ReadinessDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(20.dp))
-                        .background(SurfaceMid)
+                        .background(c.surface)
                         .padding(24.dp)
                 ) {
                     Column {
@@ -517,13 +518,13 @@ fun ReadinessDetailScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(VibrantMagenta)
+                                .background(c.secondary)
                                 .padding(horizontal = 14.dp, vertical = 6.dp)
                         ) {
                             Text(
                                 text = "RECOMMENDED ACTION",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = OnMagenta,
+                                color = c.onSecondary,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
                             )
@@ -534,7 +535,7 @@ fun ReadinessDetailScreen(
                             text = recommendationTitle,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = TextOnSurface,
+                            color = c.onSurface,
                             lineHeight = 30.sp
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -542,7 +543,7 @@ fun ReadinessDetailScreen(
                         Text(
                             text = recommendationDescription,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextOnSurfaceVariant,
+                            color = c.onSurfaceVariant,
                             lineHeight = 22.sp
                         )
                         Spacer(modifier = Modifier.height(20.dp))
@@ -550,7 +551,7 @@ fun ReadinessDetailScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(ElectricIndigo)
+                                .background(c.primary)
                                 .clickable { onStartSession() }
                                 .padding(horizontal = 28.dp, vertical = 14.dp),
                             contentAlignment = Alignment.Center
@@ -558,7 +559,7 @@ fun ReadinessDetailScreen(
                             Text(
                                 text = "Start Session",
                                 style = MaterialTheme.typography.labelLarge,
-                                color = OnIndigo,
+                                color = c.onPrimary,
                                 fontWeight = FontWeight.Bold
                             )
                         }

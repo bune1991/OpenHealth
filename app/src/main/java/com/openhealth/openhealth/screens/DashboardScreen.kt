@@ -162,6 +162,7 @@ fun DashboardScreen(
     initialScrollOffset: Int = 0,
     onScrollPositionChanged: (Int, Int) -> Unit = { _, _ -> }
 ) {
+    val c = LocalAppColors.current
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = initialScrollIndex,
         initialFirstVisibleItemScrollOffset = initialScrollOffset
@@ -200,12 +201,12 @@ fun DashboardScreen(
     val readinessScore = calculateReadinessScore(healthData)
 
     Scaffold(
-        containerColor = SurfaceLowest
+        containerColor = c.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SurfaceLowest)
+                .background(c.background)
                 .padding(paddingValues)
         ) {
         PullToRefreshBox(
@@ -267,7 +268,7 @@ fun DashboardScreen(
                                 // Magenta glow behind card
                                 Canvas(modifier = Modifier.matchParentSize()) {
                                     drawCircle(
-                                        color = VibrantMagenta.copy(alpha = 0.12f),
+                                        color = c.secondary.copy(alpha = 0.12f),
                                         radius = size.width * 0.55f,
                                         center = Offset(size.width * 0.5f, size.height * 0.5f)
                                     )
@@ -277,7 +278,7 @@ fun DashboardScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(20.dp))
-                                        .background(VibrantMagenta)
+                                        .background(c.secondary)
                                         .clickable { onReadinessClick() }
                                         .padding(24.dp)
                                 ) {
@@ -317,7 +318,7 @@ fun DashboardScreen(
                                                 recoveryLabel,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Black,
-                                                color = VibrantMagenta,
+                                                color = c.secondary,
                                                 letterSpacing = 2.sp
                                             )
                                         }
@@ -346,7 +347,7 @@ fun DashboardScreen(
                                             .weight(1f)
                                             .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE) }
                                             .padding(16.dp)
                                     ) {
@@ -377,7 +378,7 @@ fun DashboardScreen(
                                                 Text(
                                                     "RESTING HR",
                                                     fontSize = 9.sp,
-                                                    color = TextOnSurfaceVariant,
+                                                    color = c.onSurfaceVariant,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 1.5.sp
                                                 )
@@ -387,13 +388,13 @@ fun DashboardScreen(
                                                     text = if (restingHr != null) "${restingHr.toInt()}" else "--",
                                                     fontSize = 36.sp,
                                                     fontWeight = FontWeight.Black,
-                                                    color = TextOnSurface,
+                                                    color = c.onSurface,
                                                     letterSpacing = (-1).sp
                                                 )
                                                 Text(
                                                     "bpm",
                                                     fontSize = 12.sp,
-                                                    color = TextOnSurfaceVariant
+                                                    color = c.onSurfaceVariant
                                                 )
                                             }
                                         }
@@ -405,7 +406,7 @@ fun DashboardScreen(
                                             .weight(1f)
                                             .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
                                             .padding(16.dp)
                                     ) {
@@ -422,21 +423,21 @@ fun DashboardScreen(
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Canvas(modifier = Modifier.size(36.dp)) {
                                                         drawCircle(
-                                                            color = SoftLavender.copy(alpha = 0.25f),
+                                                            color = c.tertiary.copy(alpha = 0.25f),
                                                             radius = size.minDimension / 2
                                                         )
                                                     }
                                                     Icon(
                                                         Icons.Filled.Favorite,
                                                         contentDescription = null,
-                                                        tint = SoftLavender,
+                                                        tint = c.tertiary,
                                                         modifier = Modifier.size(20.dp)
                                                     )
                                                 }
                                                 Text(
                                                     "HRV",
                                                     fontSize = 9.sp,
-                                                    color = TextOnSurfaceVariant,
+                                                    color = c.onSurfaceVariant,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 1.5.sp
                                                 )
@@ -446,13 +447,13 @@ fun DashboardScreen(
                                                     text = if (hrvVal != null) "${hrvVal.toInt()}" else "--",
                                                     fontSize = 36.sp,
                                                     fontWeight = FontWeight.Black,
-                                                    color = TextOnSurface,
+                                                    color = c.onSurface,
                                                     letterSpacing = (-1).sp
                                                 )
                                                 Text(
                                                     "ms",
                                                     fontSize = 12.sp,
-                                                    color = TextOnSurfaceVariant
+                                                    color = c.onSurfaceVariant
                                                 )
                                             }
                                         }
@@ -470,7 +471,7 @@ fun DashboardScreen(
                                             .weight(1f)
                                             .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .clickable { onMetricClick(HealthViewModel.MetricType.NUTRITION) }
                                             .padding(16.dp)
                                     ) {
@@ -513,7 +514,7 @@ fun DashboardScreen(
                                                     Text(
                                                         "NUTRITION",
                                                         fontSize = 9.sp,
-                                                        color = TextOnSurfaceVariant,
+                                                        color = c.onSurfaceVariant,
                                                         fontWeight = FontWeight.Bold,
                                                         letterSpacing = 1.5.sp
                                                     )
@@ -530,13 +531,13 @@ fun DashboardScreen(
                                                         text = if (nutritionCal != null) "%,.0f".format(nutritionCal) else "--",
                                                         fontSize = 36.sp,
                                                         fontWeight = FontWeight.Black,
-                                                        color = TextOnSurface,
+                                                        color = c.onSurface,
                                                         letterSpacing = (-1).sp
                                                     )
                                                     Text(
                                                         "kcal",
                                                         fontSize = 12.sp,
-                                                        color = TextOnSurfaceVariant
+                                                        color = c.onSurfaceVariant
                                                     )
                                                 }
                                                 // Mini radial progress ring
@@ -545,7 +546,7 @@ fun DashboardScreen(
                                                         val strokeW = 4.dp.toPx()
                                                         val arcDiameter = size.width - strokeW
                                                         drawArc(
-                                                            color = SurfaceHighest,
+                                                            color = c.surfaceHighest,
                                                             startAngle = -90f, sweepAngle = 360f,
                                                             useCenter = false,
                                                             style = Stroke(strokeW, cap = StrokeCap.Round),
@@ -578,7 +579,7 @@ fun DashboardScreen(
                                             .weight(1f)
                                             .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
-                                            .background(SurfaceLow)
+                                            .background(c.surfaceLow)
                                             .clickable { onHydrationClick() }
                                             .padding(16.dp)
                                     ) {
@@ -621,7 +622,7 @@ fun DashboardScreen(
                                                     Text(
                                                         "HYDRATION",
                                                         fontSize = 9.sp,
-                                                        color = TextOnSurfaceVariant,
+                                                        color = c.onSurfaceVariant,
                                                         fontWeight = FontWeight.Bold,
                                                         letterSpacing = 1.5.sp
                                                     )
@@ -638,13 +639,13 @@ fun DashboardScreen(
                                                         text = if (hydrationLiters != null) "%.1f".format(hydLiters) else "--",
                                                         fontSize = 36.sp,
                                                         fontWeight = FontWeight.Black,
-                                                        color = TextOnSurface,
+                                                        color = c.onSurface,
                                                         letterSpacing = (-1).sp
                                                     )
                                                     Text(
                                                         "liters",
                                                         fontSize = 12.sp,
-                                                        color = TextOnSurfaceVariant
+                                                        color = c.onSurfaceVariant
                                                     )
                                                 }
                                                 // Mini radial progress ring
@@ -653,7 +654,7 @@ fun DashboardScreen(
                                                         val strokeW = 4.dp.toPx()
                                                         val arcDiameter = size.width - strokeW
                                                         drawArc(
-                                                            color = SurfaceHighest,
+                                                            color = c.surfaceHighest,
                                                             startAngle = -90f, sweepAngle = 360f,
                                                             useCenter = false,
                                                             style = Stroke(strokeW, cap = StrokeCap.Round),
@@ -705,7 +706,7 @@ fun DashboardScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .clickable { onStressClick() }
                                         .padding(20.dp)
                                 ) {
@@ -718,7 +719,7 @@ fun DashboardScreen(
                                                 "STRESS & RESILIENCE",
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextSubtle,
+                                                color = c.outline,
                                                 letterSpacing = 2.sp
                                             )
                                             Spacer(modifier = Modifier.height(6.dp))
@@ -726,13 +727,13 @@ fun DashboardScreen(
                                                 stressLabel,
                                                 fontSize = 18.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextOnSurface
+                                                color = c.onSurface
                                             )
                                             Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 stressDesc,
                                                 fontSize = 12.sp,
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 lineHeight = 16.sp,
                                                 maxLines = 2,
                                                 overflow = TextOverflow.Ellipsis
@@ -747,7 +748,7 @@ fun DashboardScreen(
                                                 val topLeft = Offset(strokeW / 2, strokeW / 2)
                                                 // Background arc (half circle)
                                                 drawArc(
-                                                    color = SurfaceHighest,
+                                                    color = c.surfaceHighest,
                                                     startAngle = 180f, sweepAngle = 180f,
                                                     useCenter = false,
                                                     style = Stroke(strokeW, cap = StrokeCap.Round),
@@ -755,7 +756,7 @@ fun DashboardScreen(
                                                 )
                                                 // Progress arc
                                                 drawArc(
-                                                    brush = Brush.sweepGradient(listOf(ElectricIndigo, VibrantMagenta)),
+                                                    brush = Brush.sweepGradient(listOf(c.primary, c.secondary)),
                                                     startAngle = 180f, sweepAngle = 180f * (stressLevel / 100f),
                                                     useCenter = false,
                                                     style = Stroke(strokeW, cap = StrokeCap.Round),
@@ -766,7 +767,7 @@ fun DashboardScreen(
                                                 "$stressLevel",
                                                 fontSize = 18.sp,
                                                 fontWeight = FontWeight.Black,
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 modifier = Modifier.padding(top = 8.dp)
                                             )
                                         }
@@ -791,8 +792,8 @@ fun DashboardScreen(
                                     .background(
                                         Brush.horizontalGradient(
                                             listOf(
-                                                ElectricIndigo.copy(alpha = 0.10f),
-                                                VibrantMagenta.copy(alpha = 0.10f)
+                                                c.primary.copy(alpha = 0.10f),
+                                                c.secondary.copy(alpha = 0.10f)
                                             )
                                         )
                                     )
@@ -806,12 +807,12 @@ fun DashboardScreen(
                                             contentAlignment = Alignment.Center,
                                             modifier = Modifier
                                                 .size(36.dp)
-                                                .background(ElectricIndigo.copy(alpha = 0.2f), CircleShape)
+                                                .background(c.primary.copy(alpha = 0.2f), CircleShape)
                                         ) {
                                             Icon(
                                                 Icons.Filled.Psychology,
                                                 contentDescription = null,
-                                                tint = ElectricIndigo,
+                                                tint = c.primary,
                                                 modifier = Modifier.size(20.dp)
                                             )
                                         }
@@ -820,14 +821,14 @@ fun DashboardScreen(
                                             "Neural Insight",
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = ElectricIndigo
+                                            color = c.primary
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         // Pulsing dot
                                         Box(
                                             modifier = Modifier
                                                 .size(8.dp)
-                                                .background(ElectricIndigo, CircleShape)
+                                                .background(c.primary, CircleShape)
                                         )
                                     }
 
@@ -836,13 +837,13 @@ fun DashboardScreen(
                                     Text(
                                         text = buildAnnotatedString {
                                             append("Based on your deep sleep cycles and current HRV, you are operating at ")
-                                            withStyle(SpanStyle(color = TextOnSurface, fontWeight = FontWeight.Bold)) {
+                                            withStyle(SpanStyle(color = c.onSurface, fontWeight = FontWeight.Bold)) {
                                                 append("$capacityPercent daily capacity")
                                             }
                                             append(". Your metabolic window for peak performance is between 18:00 and 20:30.")
                                         },
                                         fontSize = 14.sp,
-                                        color = TextOnSurfaceVariant,
+                                        color = c.onSurfaceVariant,
                                         lineHeight = 21.sp
                                     )
 
@@ -853,7 +854,7 @@ fun DashboardScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(50))
-                                            .background(ElectricIndigo)
+                                            .background(c.primary)
                                             .clickable { onAiInsightsClick() }
                                             .padding(vertical = 14.dp),
                                         contentAlignment = Alignment.Center
@@ -862,7 +863,7 @@ fun DashboardScreen(
                                             "View Full Analysis",
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = OnIndigo
+                                            color = c.onPrimary
                                         )
                                     }
                                 }
@@ -891,7 +892,7 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(28.dp))
-                                    .background(SurfaceLow)
+                                    .background(c.surfaceLow)
                                     .clickable { onPerformanceClick() }
                                     .padding(28.dp)
                             ) {
@@ -910,13 +911,13 @@ fun DashboardScreen(
                                             val cx = size.width / 2
                                             val cy = size.height / 2
 
-                                            // ── Outer ring: Move (ElectricIndigo gradient) ──
+                                            // ── Outer ring: Move (c.primary gradient) ──
                                             val r1 = cx - strokeW / 2
                                             val arcSize1 = Size(r1 * 2, r1 * 2)
                                             val tl1 = Offset(cx - r1, cy - r1)
                                             // Track
                                             drawArc(
-                                                color = SurfaceHigh,
+                                                color = c.surfaceHigh,
                                                 startAngle = 0f, sweepAngle = 360f, useCenter = false,
                                                 style = Stroke(strokeW, cap = StrokeCap.Round),
                                                 topLeft = tl1, size = arcSize1
@@ -926,7 +927,7 @@ fun DashboardScreen(
                                             if (animatedCal > 0f) {
                                                 drawArc(
                                                     brush = Brush.sweepGradient(
-                                                        listOf(ElectricIndigo.copy(alpha = 0.35f), ElectricIndigoDim.copy(alpha = 0.15f))
+                                                        listOf(c.primary.copy(alpha = 0.35f), c.primaryDim.copy(alpha = 0.15f))
                                                     ),
                                                     startAngle = -90f, sweepAngle = outerSweep, useCenter = false,
                                                     style = Stroke(strokeW + 10.dp.toPx(), cap = StrokeCap.Round),
@@ -936,18 +937,18 @@ fun DashboardScreen(
                                             }
                                             // Active arc
                                             drawArc(
-                                                brush = Brush.sweepGradient(listOf(ElectricIndigo, ElectricIndigoDim, ElectricIndigo)),
+                                                brush = Brush.sweepGradient(listOf(c.primary, c.primaryDim, c.primary)),
                                                 startAngle = -90f, sweepAngle = outerSweep, useCenter = false,
                                                 style = Stroke(strokeW, cap = StrokeCap.Round),
                                                 topLeft = tl1, size = arcSize1
                                             )
 
-                                            // ── Middle ring: Exercise (VibrantMagenta gradient) ──
+                                            // ── Middle ring: Exercise (c.secondary gradient) ──
                                             val r2 = r1 - strokeW - gap
                                             val arcSize2 = Size(r2 * 2, r2 * 2)
                                             val tl2 = Offset(cx - r2, cy - r2)
                                             drawArc(
-                                                color = SurfaceHigh,
+                                                color = c.surfaceHigh,
                                                 startAngle = 0f, sweepAngle = 360f, useCenter = false,
                                                 style = Stroke(strokeW, cap = StrokeCap.Round),
                                                 topLeft = tl2, size = arcSize2
@@ -956,7 +957,7 @@ fun DashboardScreen(
                                             if (animatedExc > 0f) {
                                                 drawArc(
                                                     brush = Brush.sweepGradient(
-                                                        listOf(VibrantMagenta.copy(alpha = 0.3f), MagentaContainer.copy(alpha = 0.12f))
+                                                        listOf(c.secondary.copy(alpha = 0.3f), c.secondaryContainer.copy(alpha = 0.12f))
                                                     ),
                                                     startAngle = -90f, sweepAngle = midSweep, useCenter = false,
                                                     style = Stroke(strokeW + 10.dp.toPx(), cap = StrokeCap.Round),
@@ -965,18 +966,18 @@ fun DashboardScreen(
                                                 )
                                             }
                                             drawArc(
-                                                brush = Brush.sweepGradient(listOf(VibrantMagenta, MagentaContainer, VibrantMagenta)),
+                                                brush = Brush.sweepGradient(listOf(c.secondary, c.secondaryContainer, c.secondary)),
                                                 startAngle = -90f, sweepAngle = midSweep, useCenter = false,
                                                 style = Stroke(strokeW, cap = StrokeCap.Round),
                                                 topLeft = tl2, size = arcSize2
                                             )
 
-                                            // ── Inner ring: Stand (SoftLavender gradient) ──
+                                            // ── Inner ring: Stand (c.tertiary gradient) ──
                                             val r3 = r2 - strokeW - gap
                                             val arcSize3 = Size(r3 * 2, r3 * 2)
                                             val tl3 = Offset(cx - r3, cy - r3)
                                             drawArc(
-                                                color = SurfaceHigh,
+                                                color = c.surfaceHigh,
                                                 startAngle = 0f, sweepAngle = 360f, useCenter = false,
                                                 style = Stroke(strokeW, cap = StrokeCap.Round),
                                                 topLeft = tl3, size = arcSize3
@@ -985,7 +986,7 @@ fun DashboardScreen(
                                             if (animatedStand > 0f) {
                                                 drawArc(
                                                     brush = Brush.sweepGradient(
-                                                        listOf(SoftLavender.copy(alpha = 0.3f), OnIndigo.copy(alpha = 0.12f))
+                                                        listOf(c.tertiary.copy(alpha = 0.3f), c.onPrimary.copy(alpha = 0.12f))
                                                     ),
                                                     startAngle = -90f, sweepAngle = innerSweep, useCenter = false,
                                                     style = Stroke(strokeW + 10.dp.toPx(), cap = StrokeCap.Round),
@@ -994,7 +995,7 @@ fun DashboardScreen(
                                                 )
                                             }
                                             drawArc(
-                                                brush = Brush.sweepGradient(listOf(SoftLavender, OnIndigo, SoftLavender)),
+                                                brush = Brush.sweepGradient(listOf(c.tertiary, c.onPrimary, c.tertiary)),
                                                 startAngle = -90f, sweepAngle = innerSweep, useCenter = false,
                                                 style = Stroke(strokeW, cap = StrokeCap.Round),
                                                 topLeft = tl3, size = arcSize3
@@ -1010,7 +1011,7 @@ fun DashboardScreen(
                                                 "ACTIVE ENERGY",
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 letterSpacing = 2.sp
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
@@ -1018,7 +1019,7 @@ fun DashboardScreen(
                                                 "${healthData.calories.totalBurned.roundToInt()}",
                                                 fontSize = 48.sp,
                                                 fontWeight = FontWeight.Black,
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 letterSpacing = (-1).sp
                                             )
                                             Row(
@@ -1028,13 +1029,13 @@ fun DashboardScreen(
                                                     "KCAL",
                                                     fontSize = 12.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = ElectricIndigo,
+                                                    color = c.primary,
                                                     letterSpacing = 2.sp
                                                 )
                                                 Icon(
                                                     Icons.Default.ChevronRight,
                                                     contentDescription = null,
-                                                    tint = ElectricIndigo,
+                                                    tint = c.primary,
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                             }
@@ -1056,7 +1057,7 @@ fun DashboardScreen(
                                             Icon(
                                                 Icons.Default.Bolt,
                                                 contentDescription = null,
-                                                tint = ElectricIndigo,
+                                                tint = c.primary,
                                                 modifier = Modifier.size(22.dp)
                                             )
                                             Spacer(modifier = Modifier.height(4.dp))
@@ -1064,7 +1065,7 @@ fun DashboardScreen(
                                                 "MOVE",
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 letterSpacing = 1.5.sp
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
@@ -1073,12 +1074,12 @@ fun DashboardScreen(
                                                     "$movePercent%",
                                                     fontSize = 18.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = TextOnSurface
+                                                    color = c.onSurface
                                                 )
                                                 Icon(
                                                     Icons.Default.ChevronRight,
                                                     contentDescription = null,
-                                                    tint = TextSubtle,
+                                                    tint = c.outline,
                                                     modifier = Modifier.size(14.dp)
                                                 )
                                             }
@@ -1092,7 +1093,7 @@ fun DashboardScreen(
                                             Icon(
                                                 Icons.Default.FitnessCenter,
                                                 contentDescription = null,
-                                                tint = VibrantMagenta,
+                                                tint = c.secondary,
                                                 modifier = Modifier.size(22.dp)
                                             )
                                             Spacer(modifier = Modifier.height(4.dp))
@@ -1100,7 +1101,7 @@ fun DashboardScreen(
                                                 "EXC",
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 letterSpacing = 1.5.sp
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
@@ -1109,12 +1110,12 @@ fun DashboardScreen(
                                                     "$excPercent%",
                                                     fontSize = 18.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = TextOnSurface
+                                                    color = c.onSurface
                                                 )
                                                 Icon(
                                                     Icons.Default.ChevronRight,
                                                     contentDescription = null,
-                                                    tint = TextSubtle,
+                                                    tint = c.outline,
                                                     modifier = Modifier.size(14.dp)
                                                 )
                                             }
@@ -1128,7 +1129,7 @@ fun DashboardScreen(
                                             Icon(
                                                 Icons.AutoMirrored.Filled.DirectionsWalk,
                                                 contentDescription = null,
-                                                tint = SoftLavender,
+                                                tint = c.tertiary,
                                                 modifier = Modifier.size(22.dp)
                                             )
                                             Spacer(modifier = Modifier.height(4.dp))
@@ -1136,7 +1137,7 @@ fun DashboardScreen(
                                                 "STAND",
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextOnSurfaceVariant,
+                                                color = c.onSurfaceVariant,
                                                 letterSpacing = 1.5.sp
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
@@ -1145,12 +1146,12 @@ fun DashboardScreen(
                                                     "$standPercent%",
                                                     fontSize = 18.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = TextOnSurface
+                                                    color = c.onSurface
                                                 )
                                                 Icon(
                                                     Icons.Default.ChevronRight,
                                                     contentDescription = null,
-                                                    tint = TextSubtle,
+                                                    tint = c.outline,
                                                     modifier = Modifier.size(14.dp)
                                                 )
                                             }
@@ -1179,7 +1180,7 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
-                                    .background(SurfaceLow)
+                                    .background(c.surfaceLow)
                                     .clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }
                                     .padding(20.dp)
                             ) {
@@ -1193,12 +1194,12 @@ fun DashboardScreen(
                                             "Step Intensity",
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = TextOnSurface
+                                            color = c.onSurface
                                         )
                                         Icon(
                                             Icons.AutoMirrored.Filled.TrendingUp,
                                             contentDescription = null,
-                                            tint = VibrantMagenta,
+                                            tint = c.secondary,
                                             modifier = Modifier.size(22.dp)
                                         )
                                     }
@@ -1210,13 +1211,13 @@ fun DashboardScreen(
                                         Text(
                                             "Current Burst",
                                             fontSize = 13.sp,
-                                            color = TextOnSurfaceVariant
+                                            color = c.onSurfaceVariant
                                         )
                                         Text(
                                             intensityLabel,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = ElectricIndigo
+                                            color = c.primary
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(10.dp))
@@ -1229,8 +1230,8 @@ fun DashboardScreen(
                                             drawRoundRect(
                                                 brush = Brush.horizontalGradient(
                                                     listOf(
-                                                        ElectricIndigo.copy(alpha = 0.4f),
-                                                        VibrantMagenta.copy(alpha = 0.4f)
+                                                        c.primary.copy(alpha = 0.4f),
+                                                        c.secondary.copy(alpha = 0.4f)
                                                     )
                                                 ),
                                                 cornerRadius = CornerRadius(8.dp.toPx()),
@@ -1243,7 +1244,7 @@ fun DashboardScreen(
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .clip(RoundedCornerShape(5.dp))
-                                                .background(SurfaceHigh)
+                                                .background(c.surfaceHigh)
                                         )
                                         // Fill
                                         Box(
@@ -1253,7 +1254,7 @@ fun DashboardScreen(
                                                 .clip(RoundedCornerShape(5.dp))
                                                 .background(
                                                     Brush.horizontalGradient(
-                                                        listOf(ElectricIndigo, VibrantMagenta)
+                                                        listOf(c.primary, c.secondary)
                                                     )
                                                 )
                                         )
@@ -1263,7 +1264,7 @@ fun DashboardScreen(
                                     Text(
                                         intensityDesc,
                                         fontSize = 13.sp,
-                                        color = TextOnSurfaceVariant,
+                                        color = c.onSurfaceVariant,
                                         lineHeight = 18.sp
                                     )
                                 }
@@ -1281,7 +1282,7 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
-                                    .background(SurfaceLow)
+                                    .background(c.surfaceLow)
                                     .clickable { onMetricClick(HealthViewModel.MetricType.DISTANCE) }
                                     .padding(20.dp)
                             ) {
@@ -1295,12 +1296,12 @@ fun DashboardScreen(
                                             "Distance Traveled",
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = TextOnSurface
+                                            color = c.onSurface
                                         )
                                         Icon(
                                             Icons.Default.Place,
                                             contentDescription = null,
-                                            tint = ElectricIndigo,
+                                            tint = c.primary,
                                             modifier = Modifier.size(22.dp)
                                         )
                                     }
@@ -1310,7 +1311,7 @@ fun DashboardScreen(
                                             String.format("%.1f", distanceKm),
                                             fontSize = 36.sp,
                                             fontWeight = FontWeight.Black,
-                                            color = TextOnSurface,
+                                            color = c.onSurface,
                                             letterSpacing = (-1).sp
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -1318,7 +1319,7 @@ fun DashboardScreen(
                                             "KM",
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = ElectricIndigo,
+                                            color = c.primary,
                                             letterSpacing = 2.sp,
                                             modifier = Modifier.padding(bottom = 6.dp)
                                         )
@@ -1332,8 +1333,8 @@ fun DashboardScreen(
                                             drawRoundRect(
                                                 brush = Brush.horizontalGradient(
                                                     listOf(
-                                                        ElectricIndigo.copy(alpha = 0.35f),
-                                                        VibrantMagenta.copy(alpha = 0.35f)
+                                                        c.primary.copy(alpha = 0.35f),
+                                                        c.secondary.copy(alpha = 0.35f)
                                                     )
                                                 ),
                                                 cornerRadius = CornerRadius(6.dp.toPx()),
@@ -1345,7 +1346,7 @@ fun DashboardScreen(
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .clip(RoundedCornerShape(4.dp))
-                                                .background(SurfaceHigh)
+                                                .background(c.surfaceHigh)
                                         )
                                         Box(
                                             modifier = Modifier
@@ -1354,7 +1355,7 @@ fun DashboardScreen(
                                                 .clip(RoundedCornerShape(4.dp))
                                                 .background(
                                                     Brush.horizontalGradient(
-                                                        listOf(ElectricIndigo, VibrantMagenta)
+                                                        listOf(c.primary, c.secondary)
                                                     )
                                                 )
                                         )
@@ -1368,13 +1369,13 @@ fun DashboardScreen(
                                         Text(
                                             "Daily Goal: ${String.format("%.1f", distanceGoalKm)} KM",
                                             fontSize = 13.sp,
-                                            color = TextOnSurfaceVariant
+                                            color = c.onSurfaceVariant
                                         )
                                         Text(
                                             "$distPercent%",
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = ElectricIndigo
+                                            color = c.primary
                                         )
                                     }
                                 }
@@ -1387,20 +1388,20 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
-                                    .background(SurfaceHigh)
+                                    .background(c.surfaceHigh)
                                     .padding(20.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.Top) {
                                     Box(
                                         modifier = Modifier
                                             .size(44.dp)
-                                            .background(MagentaContainer.copy(alpha = 0.2f), CircleShape),
+                                            .background(c.secondaryContainer.copy(alpha = 0.2f), CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             Icons.Default.Bolt,
                                             contentDescription = null,
-                                            tint = VibrantMagenta,
+                                            tint = c.secondary,
                                             modifier = Modifier.size(24.dp)
                                         )
                                     }
@@ -1410,13 +1411,13 @@ fun DashboardScreen(
                                             "Peak Performance",
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = ElectricIndigo
+                                            color = c.primary
                                         )
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(
                                             "Your metabolic efficiency is currently peaking. This is the optimal window for a high-intensity session to maximize calorie afterburn.",
                                             fontSize = 13.sp,
-                                            color = TextOnSurfaceVariant,
+                                            color = c.onSurfaceVariant,
                                             lineHeight = 19.sp
                                         )
                                     }
@@ -1436,12 +1437,12 @@ fun DashboardScreen(
                                         "Latest Sessions",
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = TextOnSurface
+                                        color = c.onSurface
                                     )
                                     Text(
                                         "VIEW ALL",
                                         fontSize = 10.sp,
-                                        color = ElectricIndigo,
+                                        color = c.primary,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = 1.sp
                                     )
@@ -1454,7 +1455,7 @@ fun DashboardScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceHigh)
+                                        .background(c.surfaceHigh)
                                         .clickable { onSessionClick(session) }
                                         .padding(16.dp)
                                 ) {
@@ -1466,25 +1467,25 @@ fun DashboardScreen(
                                             modifier = Modifier
                                                 .size(48.dp)
                                                 .clip(RoundedCornerShape(12.dp))
-                                                .background(SurfaceLow),
+                                                .background(c.surfaceLow),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(Icons.Default.Bolt, null, tint = ElectricIndigo, modifier = Modifier.size(24.dp))
+                                            Icon(Icons.Default.Bolt, null, tint = c.primary, modifier = Modifier.size(24.dp))
                                         }
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Text(session.exerciseType, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                            Text("${durMin}m", fontSize = 12.sp, color = TextOnSurfaceVariant)
+                                            Text(session.exerciseType, fontWeight = FontWeight.Bold, color = c.onSurface)
+                                            Text("${durMin}m", fontSize = 12.sp, color = c.onSurfaceVariant)
                                         }
                                         Column(horizontalAlignment = Alignment.End) {
                                             Text(
                                                 "${session.caloriesBurned?.roundToInt() ?: (durMin * 7)}",
                                                 fontWeight = FontWeight.Bold,
-                                                color = ElectricIndigo
+                                                color = c.primary
                                             )
-                                            Text("KCAL", fontSize = 10.sp, color = TextOnSurfaceVariant)
+                                            Text("KCAL", fontSize = 10.sp, color = c.onSurfaceVariant)
                                         }
-                                        Icon(Icons.Default.ChevronRight, null, tint = TextSubtle, modifier = Modifier.size(20.dp))
+                                        Icon(Icons.Default.ChevronRight, null, tint = c.outline, modifier = Modifier.size(20.dp))
                                     }
                                 }
                             }
@@ -1500,7 +1501,7 @@ fun DashboardScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                         .clickable { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
                                         .padding(vertical = 32.dp, horizontal = 24.dp)
                                 ) {
@@ -1512,7 +1513,7 @@ fun DashboardScreen(
                                             "CURRENT SATURATION",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = ElectricIndigo,
+                                            color = c.primary,
                                             letterSpacing = 3.sp
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
@@ -1521,13 +1522,13 @@ fun DashboardScreen(
                                                 "${healthData.oxygenSaturation.percentage?.roundToInt()}",
                                                 fontSize = 72.sp,
                                                 fontWeight = FontWeight.Black,
-                                                color = TextOnSurface,
+                                                color = c.onSurface,
                                                 letterSpacing = (-2).sp
                                             )
                                             Text(
                                                 "%",
                                                 fontSize = 28.sp,
-                                                color = ElectricIndigo,
+                                                color = c.primary,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.padding(bottom = 10.dp, start = 2.dp)
                                             )
@@ -1536,13 +1537,13 @@ fun DashboardScreen(
                                         // "Optimal SpO2" badge
                                         Box(
                                             modifier = Modifier
-                                                .background(SurfaceHighest, RoundedCornerShape(20.dp))
+                                                .background(c.surfaceHighest, RoundedCornerShape(20.dp))
                                                 .padding(horizontal = 14.dp, vertical = 8.dp)
                                         ) {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(Icons.Default.Favorite, null, tint = VibrantMagenta, modifier = Modifier.size(14.dp))
+                                                Icon(Icons.Default.Favorite, null, tint = c.secondary, modifier = Modifier.size(14.dp))
                                                 Spacer(modifier = Modifier.width(6.dp))
-                                                Text("Optimal SpO2", fontSize = 13.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium)
+                                                Text("Optimal SpO2", fontSize = 13.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Medium)
                                             }
                                         }
                                     }
@@ -1568,7 +1569,7 @@ fun DashboardScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(24.dp))
-                                            .background(SurfaceHigh)
+                                            .background(c.surfaceHigh)
                                             .clickable { onStressClick() }
                                             .padding(20.dp)
                                     ) {
@@ -1581,13 +1582,13 @@ fun DashboardScreen(
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.Top
                                             ) {
-                                                Text("DAILY STRESS", fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                                                Icon(Icons.Default.Favorite, null, tint = VibrantMagenta, modifier = Modifier.size(18.dp))
+                                                Text("DAILY STRESS", fontSize = 10.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Icon(Icons.Default.Favorite, null, tint = c.secondary, modifier = Modifier.size(18.dp))
                                             }
                                             Spacer(modifier = Modifier.height(16.dp))
-                                            Text("$stressLevel", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            Text("$stressLevel", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
                                             Spacer(modifier = Modifier.height(2.dp))
-                                            Text(stressLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = VibrantMagenta)
+                                            Text(stressLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = c.secondary)
                                             Spacer(modifier = Modifier.height(12.dp))
                                             // Stress progress bar
                                             Box(
@@ -1595,13 +1596,13 @@ fun DashboardScreen(
                                                     .fillMaxWidth()
                                                     .height(6.dp)
                                                     .clip(RoundedCornerShape(3.dp))
-                                                    .background(SurfaceLowest)
+                                                    .background(c.background)
                                             ) {
                                                 Box(
                                                     modifier = Modifier
                                                         .fillMaxWidth(stressLevel / 100f)
                                                         .fillMaxHeight()
-                                                        .background(VibrantMagenta, RoundedCornerShape(3.dp))
+                                                        .background(c.secondary, RoundedCornerShape(3.dp))
                                                 )
                                             }
                                         }
@@ -1612,7 +1613,7 @@ fun DashboardScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .clip(RoundedCornerShape(24.dp))
-                                            .background(SurfaceHigh)
+                                            .background(c.surfaceHigh)
                                             .padding(20.dp)
                                     ) {
                                         Column(
@@ -1624,16 +1625,16 @@ fun DashboardScreen(
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.Top
                                             ) {
-                                                Text("BODY ENERGY", fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                                                Icon(Icons.Default.Assessment, null, tint = ElectricIndigo, modifier = Modifier.size(18.dp))
+                                                Text("BODY ENERGY", fontSize = 10.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Icon(Icons.Default.Assessment, null, tint = c.primary, modifier = Modifier.size(18.dp))
                                             }
                                             Spacer(modifier = Modifier.height(16.dp))
                                             Row(verticalAlignment = Alignment.Bottom) {
-                                                Text("$energyPercent", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                                Text("%", fontSize = 18.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 6.dp, start = 2.dp))
+                                                Text("$energyPercent", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
+                                                Text("%", fontSize = 18.sp, color = c.primary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 6.dp, start = 2.dp))
                                             }
                                             Spacer(modifier = Modifier.height(2.dp))
-                                            Text(energyLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = ElectricIndigo)
+                                            Text(energyLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = c.primary)
                                             Spacer(modifier = Modifier.height(12.dp))
                                             // Energy gradient bar
                                             Box(
@@ -1642,7 +1643,7 @@ fun DashboardScreen(
                                                     .height(12.dp)
                                                     .clip(RoundedCornerShape(6.dp))
                                                     .background(
-                                                        Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
+                                                        Brush.horizontalGradient(listOf(c.primary, c.secondary)),
                                                         RoundedCornerShape(6.dp)
                                                     )
                                             )
@@ -1666,7 +1667,7 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
-                                    .background(SurfaceLow)
+                                    .background(c.surfaceLow)
                                     .clickable { onMetricClick(HealthViewModel.MetricType.SLEEP) }
                                     .padding(20.dp)
                             ) {
@@ -1677,13 +1678,13 @@ fun DashboardScreen(
                                         verticalAlignment = Alignment.Bottom
                                     ) {
                                         Column {
-                                            Text("SLEEP QUALITY", fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                            Text("SLEEP QUALITY", fontSize = 10.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                                             Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 if (hasSleepData) "${sleepHours}h ${sleepMinutes}m" else "--",
                                                 fontSize = 32.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextOnSurface
+                                                color = c.onSurface
                                             )
                                         }
                                         // Mini bar chart decoration
@@ -1693,7 +1694,7 @@ fun DashboardScreen(
                                             modifier = Modifier.height(40.dp)
                                         ) {
                                             listOf(0.6f, 0.8f, 0.4f, 1f, 0.6f, 0.8f, 0.4f).forEachIndexed { i, h ->
-                                                val color = if (i % 2 == 1) ElectricIndigo else SurfaceHighest
+                                                val color = if (i % 2 == 1) c.primary else c.surfaceHighest
                                                 Box(
                                                     modifier = Modifier
                                                         .width(3.dp)
@@ -1715,18 +1716,18 @@ fun DashboardScreen(
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .clip(RoundedCornerShape(12.dp))
-                                                    .background(SurfaceHighest.copy(alpha = 0.5f))
+                                                    .background(c.surfaceHighest.copy(alpha = 0.5f))
                                                     .padding(10.dp),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text("DEEP", fontSize = 9.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
+                                                    Text("DEEP", fontSize = 9.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold)
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                     Text(
                                                         if (deepMin > 0) "${deepMin / 60}h ${deepMin % 60}m" else "--",
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurface
+                                                        color = c.onSurface
                                                     )
                                                 }
                                             }
@@ -1735,10 +1736,10 @@ fun DashboardScreen(
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .clip(RoundedCornerShape(12.dp))
-                                                    .background(SurfaceHighest.copy(alpha = 0.5f))
+                                                    .background(c.surfaceHighest.copy(alpha = 0.5f))
                                                     .drawBehind {
                                                         drawRoundRect(
-                                                            color = ElectricIndigo,
+                                                            color = c.primary,
                                                             cornerRadius = CornerRadius(12.dp.toPx()),
                                                             size = Size(size.width, 2.dp.toPx()),
                                                             topLeft = Offset(0f, size.height - 2.dp.toPx())
@@ -1748,13 +1749,13 @@ fun DashboardScreen(
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text("REM", fontSize = 9.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
+                                                    Text("REM", fontSize = 9.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold)
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                     Text(
                                                         if (remMin > 0) "${remMin / 60}h ${remMin % 60}m" else "--",
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurface
+                                                        color = c.onSurface
                                                     )
                                                 }
                                             }
@@ -1763,18 +1764,18 @@ fun DashboardScreen(
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .clip(RoundedCornerShape(12.dp))
-                                                    .background(SurfaceHighest.copy(alpha = 0.5f))
+                                                    .background(c.surfaceHighest.copy(alpha = 0.5f))
                                                     .padding(10.dp),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text("LIGHT", fontSize = 9.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
+                                                    Text("LIGHT", fontSize = 9.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold)
                                                     Spacer(modifier = Modifier.height(2.dp))
                                                     Text(
                                                         if (lightMin > 0) "${lightMin / 60}h ${lightMin % 60}m" else "--",
                                                         fontSize = 14.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurface
+                                                        color = c.onSurface
                                                     )
                                                 }
                                             }
@@ -1789,7 +1790,7 @@ fun DashboardScreen(
                             Text(
                                 "Key Vitals",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = TextOnSurface,
+                                color = c.onSurface,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                             )
@@ -1801,7 +1802,7 @@ fun DashboardScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(16.dp))
-                                        .background(SurfaceHigh)
+                                        .background(c.surfaceHigh)
                                         .clickable(onClick = onClick)
                                         .padding(14.dp),
                                     contentAlignment = Alignment.Center
@@ -1809,12 +1810,12 @@ fun DashboardScreen(
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Icon(icon, null, tint = iconTint, modifier = Modifier.size(22.dp))
                                         Spacer(modifier = Modifier.height(8.dp))
-                                        Text(label, fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                        Text(label, fontSize = 10.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Row(verticalAlignment = Alignment.Bottom) {
-                                            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
                                             if (unit.isNotEmpty()) {
-                                                Text(unit, fontSize = 9.sp, color = TextOnSurfaceVariant, modifier = Modifier.padding(bottom = 2.dp, start = 2.dp))
+                                                Text(unit, fontSize = 9.sp, color = c.onSurfaceVariant, modifier = Modifier.padding(bottom = 2.dp, start = 2.dp))
                                             }
                                         }
                                     }
@@ -1833,7 +1834,7 @@ fun DashboardScreen(
                                         value = healthData.heartRateVariability.rmssdMs?.toInt()?.toString() ?: "--",
                                         unit = "ms",
                                         icon = Icons.Default.Favorite,
-                                        iconTint = ElectricIndigo,
+                                        iconTint = c.primary,
                                         onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
                                     )
                                 }
@@ -1844,7 +1845,7 @@ fun DashboardScreen(
                                         value = healthData.respiratoryRate.ratePerMinute?.roundToInt()?.toString() ?: "--",
                                         unit = "brpm",
                                         icon = Icons.Default.Refresh,
-                                        iconTint = VibrantMagenta,
+                                        iconTint = c.secondary,
                                         onClick = { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
                                     )
                                 }
@@ -1855,7 +1856,7 @@ fun DashboardScreen(
                                         value = healthData.bodyTemperature.temperatureCelsius?.let { String.format("%.1f", it) } ?: "--",
                                         unit = "\u00B0C",
                                         icon = Icons.Default.LocalFireDepartment,
-                                        iconTint = SoftLavender,
+                                        iconTint = c.tertiary,
                                         onClick = { onMetricClick(HealthViewModel.MetricType.BODY_TEMPERATURE) }
                                     )
                                 }
@@ -1876,7 +1877,7 @@ fun DashboardScreen(
                                 Text(
                                     "Body Composition",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = TextOnSurface,
+                                    color = c.onSurface,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                                 )
@@ -1887,7 +1888,7 @@ fun DashboardScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
+                                        .background(c.surfaceLow)
                                 ) {
                                     Column {
                                         // Weight row
@@ -1907,19 +1908,19 @@ fun DashboardScreen(
                                                         Box(
                                                             modifier = Modifier
                                                                 .size(40.dp)
-                                                                .background(SurfaceHighest, CircleShape),
+                                                                .background(c.surfaceHighest, CircleShape),
                                                             contentAlignment = Alignment.Center
                                                         ) {
-                                                            Icon(Icons.Default.Assessment, null, tint = ElectricIndigo, modifier = Modifier.size(20.dp))
+                                                            Icon(Icons.Default.Assessment, null, tint = c.primary, modifier = Modifier.size(20.dp))
                                                         }
                                                         Spacer(modifier = Modifier.width(12.dp))
-                                                        Text("Total Weight", fontWeight = FontWeight.Medium, color = TextOnSurface)
+                                                        Text("Total Weight", fontWeight = FontWeight.Medium, color = c.onSurface)
                                                     }
                                                     Text(
                                                         String.format("%.1f kg", healthData.weight.kilograms),
                                                         fontSize = 16.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurface
+                                                        color = c.onSurface
                                                     )
                                                 }
                                             }
@@ -1928,7 +1929,7 @@ fun DashboardScreen(
                                         // Body Fat row
                                         if (hasBodyFat) {
                                             if (hasWeight) {
-                                                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(SurfaceHighest.copy(alpha = 0.3f)))
+                                                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(c.surfaceHighest.copy(alpha = 0.3f)))
                                             }
                                             Box(
                                                 modifier = Modifier
@@ -1945,19 +1946,19 @@ fun DashboardScreen(
                                                         Box(
                                                             modifier = Modifier
                                                                 .size(40.dp)
-                                                                .background(SurfaceHighest, CircleShape),
+                                                                .background(c.surfaceHighest, CircleShape),
                                                             contentAlignment = Alignment.Center
                                                         ) {
-                                                            Icon(Icons.Default.Favorite, null, tint = VibrantMagenta, modifier = Modifier.size(20.dp))
+                                                            Icon(Icons.Default.Favorite, null, tint = c.secondary, modifier = Modifier.size(20.dp))
                                                         }
                                                         Spacer(modifier = Modifier.width(12.dp))
-                                                        Text("Body Fat Percentage", fontWeight = FontWeight.Medium, color = TextOnSurface)
+                                                        Text("Body Fat Percentage", fontWeight = FontWeight.Medium, color = c.onSurface)
                                                     }
                                                     Text(
                                                         String.format("%.1f%%", healthData.bodyFat.percentage),
                                                         fontSize = 16.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurface
+                                                        color = c.onSurface
                                                     )
                                                 }
                                             }
@@ -1965,7 +1966,7 @@ fun DashboardScreen(
 
                                         // Lean Muscle Mass row
                                         if (hasLeanMass) {
-                                            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(SurfaceHighest.copy(alpha = 0.3f)))
+                                            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(c.surfaceHighest.copy(alpha = 0.3f)))
                                             Box(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
@@ -1981,19 +1982,19 @@ fun DashboardScreen(
                                                         Box(
                                                             modifier = Modifier
                                                                 .size(40.dp)
-                                                                .background(SurfaceHighest, CircleShape),
+                                                                .background(c.surfaceHighest, CircleShape),
                                                             contentAlignment = Alignment.Center
                                                         ) {
-                                                            Icon(Icons.Default.Assessment, null, tint = SoftLavender, modifier = Modifier.size(20.dp))
+                                                            Icon(Icons.Default.Assessment, null, tint = c.tertiary, modifier = Modifier.size(20.dp))
                                                         }
                                                         Spacer(modifier = Modifier.width(12.dp))
-                                                        Text("Lean Muscle Mass", fontWeight = FontWeight.Medium, color = TextOnSurface)
+                                                        Text("Lean Muscle Mass", fontWeight = FontWeight.Medium, color = c.onSurface)
                                                     }
                                                     Text(
                                                         String.format("%.1f kg", healthData.leanBodyMass.kilograms),
                                                         fontSize = 16.sp,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurface
+                                                        color = c.onSurface
                                                     )
                                                 }
                                             }
@@ -2010,11 +2011,11 @@ fun DashboardScreen(
                         item {
                             val consistency = readinessScore.score.coerceIn(0, 100)
                             Column {
-                                Text("CONSISTENCY SCORE", fontSize = 10.sp, color = ElectricIndigo, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                                Text("CONSISTENCY SCORE", fontSize = 10.sp, color = c.primary, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text("${consistency}% Active Zone", fontSize = 36.sp, fontWeight = FontWeight.Black, color = TextOnSurface, letterSpacing = (-1).sp)
+                                Text("${consistency}% Active Zone", fontSize = 36.sp, fontWeight = FontWeight.Black, color = c.onSurface, letterSpacing = (-1).sp)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text("You're maintaining a steady rhythm. Your physical output is optimizing recovery.", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant, lineHeight = 18.sp)
+                                Text("You're maintaining a steady rhythm. Your physical output is optimizing recovery.", style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant, lineHeight = 18.sp)
                             }
                         }
 
@@ -2022,22 +2023,22 @@ fun DashboardScreen(
                         item {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 // Streak
-                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).padding(16.dp)) {
                                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-                                        Icon(Icons.Default.LocalFireDepartment, null, tint = VibrantMagenta, modifier = Modifier.size(24.dp))
+                                        Icon(Icons.Default.LocalFireDepartment, null, tint = c.secondary, modifier = Modifier.size(24.dp))
                                         Column {
-                                            Text(if (stepsStreak > 0) "$stepsStreak" else "--", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                            Text("STREAK DAYS", fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                            Text(if (stepsStreak > 0) "$stepsStreak" else "--", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
+                                            Text("STREAK DAYS", fontSize = 9.sp, color = c.onSurfaceVariant, letterSpacing = 1.sp)
                                         }
                                     }
                                 }
                                 // Status
-                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).padding(16.dp)) {
                                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-                                        Icon(Icons.Default.Favorite, null, tint = ElectricIndigo, modifier = Modifier.size(24.dp))
+                                        Icon(Icons.Default.Favorite, null, tint = c.primary, modifier = Modifier.size(24.dp))
                                         Column {
-                                            Text(when { readinessScore.score >= 80 -> "Strong"; readinessScore.score >= 60 -> "Good"; else -> "Building" }, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                            Text("STATUS", fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                            Text(when { readinessScore.score >= 80 -> "Strong"; readinessScore.score >= 60 -> "Good"; else -> "Building" }, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
+                                            Text("STATUS", fontSize = 9.sp, color = c.onSurfaceVariant, letterSpacing = 1.sp)
                                         }
                                     }
                                 }
@@ -2046,13 +2047,13 @@ fun DashboardScreen(
 
                         // Avg Steps wide card
                         item {
-                            Box(modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).padding(16.dp)) {
+                            Box(modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceHigh).padding(16.dp)) {
                                 Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-                                    Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null, tint = SoftLavender, modifier = Modifier.size(24.dp))
+                                    Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null, tint = c.tertiary, modifier = Modifier.size(24.dp))
                                     Column {
                                         val avgK = if (healthData.steps.count > 0) String.format("%.1fk", healthData.steps.count / 1000f) else "--"
-                                        Text(avgK, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                        Text("AVG STEPS", fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                        Text(avgK, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
+                                        Text("AVG STEPS", fontSize = 9.sp, color = c.onSurfaceVariant, letterSpacing = 1.sp)
                                     }
                                 }
                             }
@@ -2060,8 +2061,8 @@ fun DashboardScreen(
 
                         // Step Trends — density circle
                         item {
-                            NocturneCard(surfaceColor = SurfaceLow) {
-                                Text("Step Trends", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                            NocturneCard(surfaceColor = c.surfaceLow) {
+                                Text("Step Trends", style = MaterialTheme.typography.titleMedium, color = c.onSurface, fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.height(16.dp))
 
                                 Row(
@@ -2071,9 +2072,9 @@ fun DashboardScreen(
                                 ) {
                                     // Info text
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("Density", fontSize = 12.sp, color = TextOnSurfaceVariant)
+                                        Text("Density", fontSize = 12.sp, color = c.onSurfaceVariant)
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("Peak activity times are clustered in the morning hours", fontSize = 12.sp, color = TextSubtle, lineHeight = 16.sp)
+                                        Text("Peak activity times are clustered in the morning hours", fontSize = 12.sp, color = c.outline, lineHeight = 16.sp)
                                     }
 
                                     Spacer(modifier = Modifier.width(16.dp))
@@ -2082,9 +2083,9 @@ fun DashboardScreen(
                                     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(80.dp)) {
                                         Canvas(modifier = Modifier.size(80.dp)) {
                                             val strokeW = 8.dp.toPx()
-                                            drawCircle(color = SurfaceHighest, radius = size.minDimension / 2 - strokeW / 2, style = Stroke(strokeW))
+                                            drawCircle(color = c.surfaceHighest, radius = size.minDimension / 2 - strokeW / 2, style = Stroke(strokeW))
                                             drawArc(
-                                                brush = Brush.sweepGradient(listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)),
+                                                brush = Brush.sweepGradient(listOf(c.primary, c.secondary, c.primary)),
                                                 startAngle = -90f, sweepAngle = 270f,
                                                 useCenter = false,
                                                 style = Stroke(strokeW, cap = StrokeCap.Round),
@@ -2093,7 +2094,7 @@ fun DashboardScreen(
                                             )
                                         }
                                         val avgStepsK = if (healthData.steps.count > 0) String.format("%.1f", healthData.steps.count / 1000f) else "0"
-                                        Text(avgStepsK, fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
+                                        Text(avgStepsK, fontSize = 18.sp, fontWeight = FontWeight.Black, color = c.onSurface)
                                     }
                                 }
                             }
@@ -2102,18 +2103,18 @@ fun DashboardScreen(
                         // Milestones section
                         item {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Milestones", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                                Text("View Gallery", color = ElectricIndigo, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Milestones", style = MaterialTheme.typography.titleMedium, color = c.onSurface, fontWeight = FontWeight.Bold)
+                                Text("View Gallery", color = c.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
-                        // Weekly Insight — ElectricIndigo background (Stitch progress_remix)
+                        // Weekly Insight — c.primary background (Stitch progress_remix)
                         item {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
-                                    .background(ElectricIndigo)
+                                    .background(c.primary)
                                     .clickable { onReportsClick() }
                                     .padding(24.dp)
                             ) {
@@ -2122,24 +2123,24 @@ fun DashboardScreen(
                                     drawCircle(color = Color.White.copy(alpha = 0.08f), radius = 120.dp.toPx(), center = Offset(size.width + 20.dp.toPx(), -20.dp.toPx()))
                                 }
                                 Column {
-                                    Icon(Icons.Default.Lightbulb, null, tint = OnIndigo, modifier = Modifier.size(24.dp))
+                                    Icon(Icons.Default.Lightbulb, null, tint = c.onPrimary, modifier = Modifier.size(24.dp))
                                     Spacer(modifier = Modifier.height(12.dp))
-                                    Text("Weekly Insight", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = OnIndigo)
+                                    Text("Weekly Insight", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.onPrimary)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         "Your training consistency has improved by 12% since last month. High-intensity intervals significantly boosted your recovery rate.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = OnIndigo.copy(alpha = 0.8f),
+                                        color = c.onPrimary.copy(alpha = 0.8f),
                                         lineHeight = 18.sp
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(20.dp))
-                                            .background(OnIndigo)
+                                            .background(c.onPrimary)
                                             .padding(horizontal = 20.dp, vertical = 10.dp)
                                     ) {
-                                        Text("Read Analysis", color = ElectricIndigo, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                        Text("Read Analysis", color = c.primary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                     }
                                 }
                             }
@@ -2184,6 +2185,7 @@ private fun DashboardHeader(
     onSettingsClick: () -> Unit,
     onReportsClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -2195,7 +2197,7 @@ private fun DashboardHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
                     contentDescription = "Previous Day",
-                    tint = TextOnSurfaceVariant
+                    tint = c.onSurfaceVariant
                 )
             }
             Spacer(modifier = Modifier.width(4.dp))
@@ -2203,13 +2205,13 @@ private fun DashboardHeader(
                 Text(
                     text = "OpenHealth",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = dateText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextOnSurfaceVariant
+                    color = c.onSurfaceVariant
                 )
             }
         }
@@ -2220,13 +2222,13 @@ private fun DashboardHeader(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(ElectricIndigo.copy(alpha = 0.15f))
+                        .background(c.primary.copy(alpha = 0.15f))
                         .clickable { onToday() }
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = "Today",
-                        color = ElectricIndigo,
+                        color = c.primary,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -2241,21 +2243,21 @@ private fun DashboardHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                     contentDescription = "Next Day",
-                    tint = if (isToday) TextSubtle else TextOnSurfaceVariant
+                    tint = if (isToday) c.outline else c.onSurfaceVariant
                 )
             }
             IconButton(onClick = onReportsClick, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = Icons.Default.Assessment,
                     contentDescription = "Reports",
-                    tint = TextOnSurfaceVariant
+                    tint = c.onSurfaceVariant
                 )
             }
             IconButton(onClick = onSettingsClick, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
-                    tint = TextOnSurfaceVariant
+                    tint = c.onSurfaceVariant
                 )
             }
         }
@@ -2272,6 +2274,7 @@ private fun ReadinessHeroCard(
     healthData: HealthData,
     onClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
@@ -2289,11 +2292,11 @@ private fun ReadinessHeroCard(
             // MASSIVE pulsing purple glow — 320dp behind the ring
             Canvas(modifier = Modifier.size(320.dp)) {
                 drawCircle(
-                    color = ElectricIndigo.copy(alpha = 0.20f),
+                    color = c.primary.copy(alpha = 0.20f),
                     radius = size.minDimension / 2
                 )
                 drawCircle(
-                    color = ElectricIndigo.copy(alpha = 0.08f),
+                    color = c.primary.copy(alpha = 0.08f),
                     radius = size.minDimension / 2 * 1.15f
                 )
             }
@@ -2321,14 +2324,14 @@ private fun ReadinessHeroCard(
 
                     // Shadow glow ring (larger radius, behind the main ring)
                     drawCircle(
-                        color = ElectricIndigo.copy(alpha = 0.15f),
+                        color = c.primary.copy(alpha = 0.15f),
                         radius = size.minDimension / 2 - strokeWidth / 2 + 6.dp.toPx(),
                         style = Stroke(width = strokeWidth + 12.dp.toPx())
                     )
 
                     // Background track ring (full 360)
                     drawArc(
-                        color = SurfaceHighest.copy(alpha = 0.6f),
+                        color = c.surfaceHighest.copy(alpha = 0.6f),
                         startAngle = -90f,
                         sweepAngle = 360f,
                         useCenter = false,
@@ -2339,7 +2342,7 @@ private fun ReadinessHeroCard(
 
                     // Progress ring (solid primary fill)
                     drawArc(
-                        color = ElectricIndigo,
+                        color = c.primary,
                         startAngle = -90f,
                         sweepAngle = 360f * animatedScore,
                         useCenter = false,
@@ -2354,7 +2357,7 @@ private fun ReadinessHeroCard(
                     Text(
                         text = "READINESS",
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextOnSurfaceVariant,
+                        color = c.onSurfaceVariant,
                         letterSpacing = 3.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -2363,13 +2366,13 @@ private fun ReadinessHeroCard(
                         text = animatedNumber.toString(),
                         fontSize = 72.sp,
                         fontWeight = FontWeight.Black,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         letterSpacing = (-2).sp
                     )
                     Text(
                         text = readinessScore.label.uppercase(),
                         style = MaterialTheme.typography.labelSmall,
-                        color = ElectricIndigo,
+                        color = c.primary,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 2.sp
                     )
@@ -2388,6 +2391,7 @@ private fun RecoveryStatusCard(
     readinessScore: ReadinessScore,
     healthData: HealthData
 ) {
+    val c = LocalAppColors.current
     val recoveryLabel = when {
         readinessScore.score >= 80 -> "Peak"
         readinessScore.score >= 60 -> "Good"
@@ -2407,7 +2411,7 @@ private fun RecoveryStatusCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(MagentaContainer)
+            .background(c.secondaryContainer)
             .padding(24.dp)
     ) {
         // Blurred white circle overlay (top-right)
@@ -2480,7 +2484,7 @@ private fun RecoveryStatusCard(
                     Icon(
                         imageVector = Icons.Default.Assessment,
                         contentDescription = null,
-                        tint = MagentaContainer,
+                        tint = c.secondaryContainer,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -2498,12 +2502,13 @@ private fun HrvChartCard(
     healthData: HealthData,
     onClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     val hrvValue = healthData.heartRateVariability.rmssdMs
     if (hrvValue == null) return
 
     NocturneCard(
         onClick = onClick,
-        surfaceColor = SurfaceHigh
+        surfaceColor = c.surfaceHigh
     ) {
         // Header
         Row(
@@ -2515,14 +2520,14 @@ private fun HrvChartCard(
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = null,
-                    tint = ElectricIndigo,
+                    tint = c.primary,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Heart Rate\nVariability",
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 22.sp
                 )
@@ -2530,7 +2535,7 @@ private fun HrvChartCard(
             Text(
                 text = "${String.format("%.0f", hrvValue)} ms",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextOnSurfaceVariant,
+                color = c.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -2557,7 +2562,7 @@ private fun HrvChartCard(
                         .padding(horizontal = 3.dp)
                         .fillMaxHeight(height)
                         .background(
-                            if (isToday) ElectricIndigo else ElectricIndigo.copy(alpha = 0.2f),
+                            if (isToday) c.primary else c.primary.copy(alpha = 0.2f),
                             RoundedCornerShape(50)
                         )
                 )
@@ -2576,7 +2581,7 @@ private fun HrvChartCard(
                     text = label,
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (index == todayIndex) ElectricIndigo else TextSubtle,
+                    color = if (index == todayIndex) c.primary else c.outline,
                     letterSpacing = 0.5.sp,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
@@ -2595,6 +2600,7 @@ private fun SleepEfficiencyPill(
     healthData: HealthData,
     onClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     val sleepHours = healthData.sleep.totalDuration?.toHours()?.toInt() ?: 0
     val sleepMinutes = healthData.sleep.totalDuration?.let { ((it.toMinutes() % 60).toInt()) } ?: 0
     if (sleepHours == 0 && sleepMinutes == 0) return
@@ -2606,7 +2612,7 @@ private fun SleepEfficiencyPill(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(32.dp))
-            .background(SurfaceLow)
+            .background(c.surfaceLow)
             .clickable(onClick = onClick)
             .padding(6.dp)
     ) {
@@ -2620,13 +2626,13 @@ private fun SleepEfficiencyPill(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(SurfaceHighest, CircleShape),
+                    .background(c.surfaceHighest, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.NightsStay,
                     contentDescription = null,
-                    tint = SoftLavender,
+                    tint = c.tertiary,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -2638,13 +2644,13 @@ private fun SleepEfficiencyPill(
                 Text(
                     text = "Sleep Efficiency",
                     style = MaterialTheme.typography.titleSmall,
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "Deep Sleep: ${deepSleep / 60}h ${deepSleep % 60}m",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextOnSurfaceVariant
+                    color = c.onSurfaceVariant
                 )
             }
 
@@ -2655,7 +2661,7 @@ private fun SleepEfficiencyPill(
                 text = "$efficiency%",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
-                color = VibrantMagenta
+                color = c.secondary
             )
         }
 
@@ -2671,14 +2677,14 @@ private fun SleepEfficiencyPill(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(4.dp)
-                    .background(SurfaceHighest, RoundedCornerShape(2.dp))
+                    .background(c.surfaceHighest, RoundedCornerShape(2.dp))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth((efficiency / 100f).coerceAtLeast(0.01f))
                         .height(4.dp)
                         .background(
-                            Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
+                            Brush.horizontalGradient(listOf(c.primary, c.secondary)),
                             RoundedCornerShape(2.dp)
                         )
                 )
@@ -2693,6 +2699,7 @@ private fun SleepEfficiencyPill(
 
 @Composable
 private fun WeatherCard(weatherData: com.openhealth.openhealth.utils.WeatherData) {
+    val c = LocalAppColors.current
     NocturneCard {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -2702,14 +2709,14 @@ private fun WeatherCard(weatherData: com.openhealth.openhealth.utils.WeatherData
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "${String.format("%.0f", weatherData.temperature)}°",
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    val uvColor = when(weatherData.uvLabel) { "Low" -> SuccessGreen; "Moderate" -> Color(0xFFFFCC00); else -> ErrorRed }
-                    val aqiColor = when(weatherData.aqi) { 1, 2 -> SuccessGreen; 3 -> Color(0xFFFFCC00); else -> ErrorRed }
+                    val uvColor = when(weatherData.uvLabel) { "Low" -> c.success; "Moderate" -> Color(0xFFFFCC00); else -> c.error }
+                    val aqiColor = when(weatherData.aqi) { 1, 2 -> c.success; 3 -> Color(0xFFFFCC00); else -> c.error }
                     Text(text = "UV ${String.format("%.0f", weatherData.uvIndex)} (${weatherData.uvLabel})", color = uvColor, fontSize = 13.sp)
                     Text(text = "Air: ${weatherData.aqiLabel}", color = aqiColor, fontSize = 13.sp)
                 }
@@ -2719,7 +2726,7 @@ private fun WeatherCard(weatherData: com.openhealth.openhealth.utils.WeatherData
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = weatherData.healthAdvisory,
-                color = WarningOrange,
+                color = c.warning,
                 fontSize = 12.sp,
                 lineHeight = 18.sp
             )
@@ -2742,6 +2749,7 @@ private fun MetricCard(
     sparklineData: List<Float>,
     onClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
@@ -2775,7 +2783,7 @@ private fun MetricCard(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextOnSurfaceVariant
+                            color = c.onSurfaceVariant
                         )
                     }
 
@@ -2794,7 +2802,7 @@ private fun MetricCard(
                         Text(
                             text = displayValue,
                             style = MaterialTheme.typography.displaySmall,
-                            color = TextOnSurface,
+                            color = c.onSurface,
                             fontWeight = FontWeight.Bold
                         )
                         if (unit.isNotEmpty()) {
@@ -2802,7 +2810,7 @@ private fun MetricCard(
                             Text(
                                 text = unit,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextSubtle,
+                                color = c.outline,
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                         }
@@ -2843,11 +2851,12 @@ private fun StressEnergyCard(
     energyPercent: Int,
     onClick: () -> Unit = {}
 ) {
+    val c = LocalAppColors.current
     NocturneCard(onClick = onClick) {
         Text(
             text = "Stress & Energy",
             style = MaterialTheme.typography.titleMedium,
-            color = TextOnSurface,
+            color = c.onSurface,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -2858,7 +2867,7 @@ private fun StressEnergyCard(
             verticalAlignment = Alignment.Bottom
         ) {
             Column {
-                Text(text = "Stress", color = TextOnSurfaceVariant, fontSize = 13.sp)
+                Text(text = "Stress", color = c.onSurfaceVariant, fontSize = 13.sp)
                 Spacer(modifier = Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(text = "$stressLevel", color = stressColor, fontWeight = FontWeight.Bold, fontSize = 28.sp)
@@ -2872,26 +2881,26 @@ private fun StressEnergyCard(
 
         // Energy bar
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Energy", color = TextOnSurfaceVariant, fontSize = 13.sp)
+            Text(text = "Energy", color = c.onSurfaceVariant, fontSize = 13.sp)
             Spacer(modifier = Modifier.width(12.dp))
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .height(8.dp)
-                    .background(SurfaceHigh, RoundedCornerShape(4.dp))
+                    .background(c.surfaceHigh, RoundedCornerShape(4.dp))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth((energyPercent / 100f).coerceAtLeast(0.01f))
                         .height(8.dp)
                         .background(
-                            Brush.horizontalGradient(listOf(ElectricIndigo, SuccessGreen)),
+                            Brush.horizontalGradient(listOf(c.primary, c.success)),
                             RoundedCornerShape(4.dp)
                         )
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "$energyPercent%", color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(text = "$energyPercent%", color = c.onSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         }
     }
 }
@@ -2910,6 +2919,7 @@ private fun DetailCard(
     sparklineColor: Color = ElectricIndigo,
     onClick: (() -> Unit)? = null
 ) {
+    val c = LocalAppColors.current
     NocturneCard(onClick = onClick) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -2921,7 +2931,7 @@ private fun DetailCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.SemiBold
                     )
                     if (statusColor != null) {
@@ -2937,7 +2947,7 @@ private fun DetailCard(
                 Text(
                     text = value,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextOnSurfaceVariant,
+                    color = c.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
                 if (progress != null) {
@@ -2946,14 +2956,14 @@ private fun DetailCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp)
-                            .background(SurfaceHigh, RoundedCornerShape(3.dp))
+                            .background(c.surfaceHigh, RoundedCornerShape(3.dp))
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(progress.coerceIn(0f, 1f))
                                 .height(6.dp)
                                 .background(
-                                    Brush.horizontalGradient(listOf(ElectricIndigo, SoftLavender)),
+                                    Brush.horizontalGradient(listOf(c.primary, c.tertiary)),
                                     RoundedCornerShape(3.dp)
                                 )
                         )
@@ -2985,7 +2995,7 @@ private fun DetailCard(
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = "View details",
-                    tint = TextSubtle,
+                    tint = c.outline,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -3010,6 +3020,7 @@ private fun BodyCompositionCard(
     onExpandedChange: (Boolean) -> Unit,
     onMetricClick: (HealthViewModel.MetricType) -> Unit
 ) {
+    val c = LocalAppColors.current
     NocturneCard {
         Column(modifier = Modifier.animateContentSize(animationSpec = tween(200))) {
             // Header
@@ -3023,13 +3034,13 @@ private fun BodyCompositionCard(
                 Text(
                     text = "Body Composition",
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextOnSurface,
+                    color = c.onSurface,
                     fontWeight = FontWeight.SemiBold
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = TextSubtle
+                    tint = c.outline
                 )
             }
 
@@ -3042,20 +3053,20 @@ private fun BodyCompositionCard(
             ) {
                 if (hasWeight) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.weight.kilograms), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "kg", color = TextSubtle, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.weight.kilograms), color = c.onSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "kg", color = c.outline, fontSize = 12.sp)
                     }
                 }
                 if (hasBodyFat) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.bodyFat.percentage), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "% fat", color = TextSubtle, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.bodyFat.percentage), color = c.onSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "% fat", color = c.outline, fontSize = 12.sp)
                     }
                 }
                 if (hasLeanMass) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.1f", healthData.leanBodyMass.kilograms), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "kg lean", color = TextSubtle, fontSize = 12.sp)
+                        Text(text = String.format("%.1f", healthData.leanBodyMass.kilograms), color = c.onSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "kg lean", color = c.outline, fontSize = 12.sp)
                     }
                 }
             }
@@ -3077,6 +3088,7 @@ private fun BodyCompositionCard(
 
 @Composable
 private fun BodyMetricRow(label: String, value: String, onClick: () -> Unit) {
+    val c = LocalAppColors.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -3085,11 +3097,11 @@ private fun BodyMetricRow(label: String, value: String, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = TextOnSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
+        Text(text = label, color = c.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = value, color = TextOnSurface, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Text(text = value, color = c.onSurface, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.width(4.dp))
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextSubtle, modifier = Modifier.size(18.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = c.outline, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -3112,6 +3124,7 @@ private fun VitalsCard(
     onExpandedChange: (Boolean) -> Unit,
     onMetricClick: (HealthViewModel.MetricType) -> Unit
 ) {
+    val c = LocalAppColors.current
     val hrvCheck = if (hasHRV) (healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!) >= 30 else true
     val spo2Check = if (hasBloodOxygen) (healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!) >= 95 else true
     val rrCheck = if (hasRespiratoryRate) (healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!) in 12.0..20.0 else true
@@ -3119,7 +3132,7 @@ private fun VitalsCard(
     val bgCheck = if (hasBloodGlucose) healthData.bloodGlucose.levelMgPerDl!! in 60.0..140.0 else true
     val btCheck = if (hasBodyTemp) healthData.bodyTemperature.temperatureCelsius!! in 35.5..38.0 else true
     val allNormal = hrvCheck && spo2Check && rrCheck && bpCheck && bgCheck && btCheck
-    val statusColor = if (allNormal) SuccessGreen else WarningOrange
+    val statusColor = if (allNormal) c.success else c.warning
     val statusText = if (allNormal) "All normal" else "Needs attention"
 
     NocturneCard {
@@ -3136,7 +3149,7 @@ private fun VitalsCard(
                     Text(
                         text = "Vitals",
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextOnSurface,
+                        color = c.onSurface,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -3151,7 +3164,7 @@ private fun VitalsCard(
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = TextSubtle
+                    tint = c.outline
                 )
             }
 
@@ -3165,22 +3178,22 @@ private fun VitalsCard(
                 if (hasHRV) {
                     val hrvDisplay = healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f", hrvDisplay), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "ms HRV", color = TextSubtle, fontSize = 12.sp)
+                        Text(text = String.format("%.0f", hrvDisplay), color = c.onSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "ms HRV", color = c.outline, fontSize = 12.sp)
                     }
                 }
                 if (hasBloodOxygen) {
                     val spo2Display = healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f%%", spo2Display), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "SpO2", color = TextSubtle, fontSize = 12.sp)
+                        Text(text = String.format("%.0f%%", spo2Display), color = c.onSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "SpO2", color = c.outline, fontSize = 12.sp)
                     }
                 }
                 if (hasRespiratoryRate) {
                     val rrDisplay = healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = String.format("%.0f", rrDisplay), color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text(text = "breaths", color = TextSubtle, fontSize = 12.sp)
+                        Text(text = String.format("%.0f", rrDisplay), color = c.onSurface, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                        Text(text = "breaths", color = c.outline, fontSize = 12.sp)
                     }
                 }
             }
@@ -3191,32 +3204,32 @@ private fun VitalsCard(
 
                 if (hasHRV) {
                     val hrvAvg = healthData.heartRateVariability.avgMs ?: healthData.heartRateVariability.rmssdMs!!
-                    val dot = when { hrvAvg >= 30 -> SuccessGreen; hrvAvg >= 20 -> WarningOrange; else -> ErrorRed }
+                    val dot = when { hrvAvg >= 30 -> c.success; hrvAvg >= 20 -> c.warning; else -> c.error }
                     VitalMetricRow("Heart Rate Variability", String.format("%.0f ms", hrvAvg), dot) { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
                 }
                 if (hasBloodOxygen) {
                     val spo2Avg = healthData.oxygenSaturation.avgPercentage ?: healthData.oxygenSaturation.percentage!!
-                    val dot = when { spo2Avg >= 95 -> SuccessGreen; spo2Avg >= 90 -> WarningOrange; else -> ErrorRed }
+                    val dot = when { spo2Avg >= 95 -> c.success; spo2Avg >= 90 -> c.warning; else -> c.error }
                     VitalMetricRow("Blood Oxygen", String.format("%.0f%%", spo2Avg), dot) { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
                 }
                 if (hasBloodGlucose) {
                     val bg = healthData.bloodGlucose.levelMgPerDl!!
-                    val dot = when { bg in 70.0..100.0 -> SuccessGreen; bg in 60.0..140.0 -> WarningOrange; else -> ErrorRed }
+                    val dot = when { bg in 70.0..100.0 -> c.success; bg in 60.0..140.0 -> c.warning; else -> c.error }
                     VitalMetricRow("Blood Glucose", String.format("%.0f mg/dL", bg), dot) { onMetricClick(HealthViewModel.MetricType.BLOOD_GLUCOSE) }
                 }
                 if (hasBloodPressure) {
                     val sys = healthData.bloodPressure.systolicMmHg!!
-                    val dot = when { sys in 90.0..120.0 -> SuccessGreen; sys in 80.0..140.0 -> WarningOrange; else -> ErrorRed }
+                    val dot = when { sys in 90.0..120.0 -> c.success; sys in 80.0..140.0 -> c.warning; else -> c.error }
                     VitalMetricRow("Blood Pressure", String.format("%.0f/%.0f mmHg", sys, healthData.bloodPressure.diastolicMmHg), dot) { onMetricClick(HealthViewModel.MetricType.BLOOD_PRESSURE) }
                 }
                 if (hasBodyTemp) {
                     val temp = healthData.bodyTemperature.temperatureCelsius!!
-                    val dot = when { temp in 36.1..37.2 -> SuccessGreen; temp in 35.5..38.0 -> WarningOrange; else -> ErrorRed }
+                    val dot = when { temp in 36.1..37.2 -> c.success; temp in 35.5..38.0 -> c.warning; else -> c.error }
                     VitalMetricRow("Body Temperature", String.format("%.1f°C", temp), dot) { onMetricClick(HealthViewModel.MetricType.BODY_TEMPERATURE) }
                 }
                 if (hasRespiratoryRate) {
                     val rrAvg = healthData.respiratoryRate.avgRate ?: healthData.respiratoryRate.ratePerMinute!!
-                    val dot = when { rrAvg in 12.0..20.0 -> SuccessGreen; rrAvg in 8.0..25.0 -> WarningOrange; else -> ErrorRed }
+                    val dot = when { rrAvg in 12.0..20.0 -> c.success; rrAvg in 8.0..25.0 -> c.warning; else -> c.error }
                     VitalMetricRow("Respiratory Rate", String.format("%.0f breaths/min", rrAvg), dot) { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
                 }
                 if (hasSkinTemp) {
@@ -3229,6 +3242,7 @@ private fun VitalsCard(
 
 @Composable
 private fun VitalMetricRow(label: String, value: String, statusDot: Color?, onClick: () -> Unit) {
+    val c = LocalAppColors.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -3238,16 +3252,16 @@ private fun VitalMetricRow(label: String, value: String, statusDot: Color?, onCl
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = label, color = TextOnSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
+            Text(text = label, color = c.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
             if (statusDot != null) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(modifier = Modifier.size(8.dp).background(statusDot, CircleShape))
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = value, color = TextOnSurface, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
+            Text(text = value, color = c.onSurface, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.width(4.dp))
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = TextSubtle, modifier = Modifier.size(18.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = c.outline, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -3262,12 +3276,13 @@ private fun FloatingBottomNavBar(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val c = LocalAppColors.current
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 16.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(SurfaceLow.copy(alpha = 0.85f))
+            .background(c.surfaceLow.copy(alpha = 0.85f))
             .padding(horizontal = 8.dp, vertical = 8.dp)
     ) {
         Row(
@@ -3310,6 +3325,7 @@ private fun BottomNavItem(
     isActive: Boolean,
     onClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     val iconVector = when (icon) {
         "bolt" -> Icons.Default.Favorite  // Readiness
         "fitness" -> Icons.AutoMirrored.Filled.DirectionsWalk  // Activity
@@ -3325,7 +3341,7 @@ private fun BottomNavItem(
                 .clip(RoundedCornerShape(24.dp))
                 .background(
                     Brush.horizontalGradient(
-                        listOf(ElectricIndigoDim, VibrantMagenta)
+                        listOf(c.primaryDim, c.secondary)
                     )
                 )
                 .clickable(onClick = onClick)
@@ -3360,12 +3376,12 @@ private fun BottomNavItem(
                 Icon(
                     imageVector = iconVector,
                     contentDescription = label,
-                    tint = TextOnSurfaceVariant.copy(alpha = 0.7f),
+                    tint = c.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.size(22.dp)
                 )
                 Text(
                     text = label.uppercase(),
-                    color = TextOnSurfaceVariant.copy(alpha = 0.7f),
+                    color = c.onSurfaceVariant.copy(alpha = 0.7f),
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 1.sp
@@ -3387,6 +3403,7 @@ private fun NocturneCard(
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
+    val c = LocalAppColors.current
     Box(
         modifier = modifier
             .fillMaxWidth()
