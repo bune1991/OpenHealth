@@ -72,6 +72,7 @@ fun PerformanceScreen(
     healthData: HealthData,
     settings: SettingsData,
     onBackClick: () -> Unit,
+    onMetricClick: (com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType) -> Unit = {},
     onSessionClick: (ExerciseSession) -> Unit = {}
 ) {
     // Derive data
@@ -371,6 +372,7 @@ fun PerformanceScreen(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
                         .background(SurfaceHigh)
+                        .clickable { onMetricClick(com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.EXERCISE) }
                         .padding(20.dp)
                 ) {
                     Row(
@@ -447,6 +449,7 @@ fun PerformanceScreen(
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
                             .background(SurfaceHigh)
+                            .clickable { onMetricClick(com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.EXERCISE) }
                             .padding(20.dp)
                     ) {
                         Column {
@@ -485,6 +488,7 @@ fun PerformanceScreen(
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
                             .background(SurfaceHigh)
+                            .clickable { onMetricClick(com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.STEPS) }
                             .padding(20.dp)
                     ) {
                         Column {

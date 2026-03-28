@@ -190,6 +190,10 @@ class MainActivity : ComponentActivity() {
                                             healthData = healthData,
                                             settings = settings,
                                             onBackClick = { viewModel.hidePerformance() },
+                                            onMetricClick = { metricType ->
+                                                viewModel.hidePerformance()
+                                                viewModel.selectMetric(metricType)
+                                            },
                                             onSessionClick = { viewModel.showWorkoutDetail(it) }
                                         )
                                     }
