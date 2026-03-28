@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NightsStay
@@ -736,196 +737,168 @@ fun DashboardScreen(
                                             drawArc(color = SoftLavender, startAngle = -90f, sweepAngle = 360f * calProgress, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = Offset(off3, off3), size = Size(r3 * 2, r3 * 2))
                                         }
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("$overallProgress%", fontSize = 32.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
-                                            Text("PROGRESS", fontSize = 9.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                            Text("$overallProgress%", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface)
+                                            Text("DAILY GOAL", fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium, letterSpacing = 2.sp)
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(24.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                                    // 3 stat pills row
+                                    // 3 legend dots: Move / Exercise / Stand
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceEvenly
                                     ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("${healthData.calories.totalBurned.roundToInt()}", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = ElectricIndigo)
-                                            Text("kcal", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
-                                        }
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("$exerciseMin", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = VibrantMagenta)
-                                            Text("min", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
-                                        }
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            val stepsK = if (healthData.steps.count >= 1000) "${healthData.steps.count / 1000}k" else "${healthData.steps.count}"
-                                            Text(stepsK, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = SoftLavender)
-                                            Text("steps", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                        listOf(
+                                            "Move" to VibrantMagenta,
+                                            "Exercise" to ElectricIndigo,
+                                            "Stand" to SoftLavender
+                                        ).forEach { (label, color) ->
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Box(modifier = Modifier.size(6.dp).background(color, CircleShape))
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(label.uppercase(), fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
 
-                        // DAILY PERFORMANCE section header
-                        item {
-                            Text(
-                                "DAILY PERFORMANCE",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextOnSurfaceVariant,
-                                letterSpacing = 2.sp,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                            )
-                        }
-
-                        // Metabolic Efficiency card -- Stitch remix bento style
+                        // Active Energy card — clickable, opens Exercise detail
                         item {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(SurfaceHigh)
+                                    .clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
                                     .padding(20.dp)
                             ) {
-                                Column {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.Top
-                                    ) {
-                                        Icon(Icons.Default.Assessment, null, tint = VibrantMagenta, modifier = Modifier.size(28.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .background(VibrantMagenta.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                                        ) {
-                                            Text("HIGH EFFICIENCY", fontSize = 9.sp, color = VibrantMagenta, fontWeight = FontWeight.Black, letterSpacing = 1.5.sp)
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Text("Metabolic Efficiency", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        "Your body is burning fuel at an optimal rate during stationary periods.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = TextOnSurfaceVariant,
-                                        lineHeight = 18.sp
-                                    )
-                                }
-                            }
-                        }
-
-                        // Distance Traveled card
-                        val hasDistance = settings.showDistance && healthData.distance.kilometers > 0
-                        if (hasDistance) {
-                            item {
-                                val distProgress = (healthData.distance.kilometers.toFloat() / settings.distanceGoalKm).coerceIn(0f, 1f)
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
-                                        .clickable { onMetricClick(HealthViewModel.MetricType.DISTANCE) }
-                                        .padding(20.dp)
-                                ) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                     Column {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.Bottom
-                                        ) {
-                                            Column {
-                                                Text("DISTANCE TRAVELED", fontSize = 9.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Row(verticalAlignment = Alignment.Bottom) {
-                                                    Text(String.format("%.1f", healthData.distance.kilometers), fontSize = 28.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    Text("km", fontSize = 16.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 2.dp))
-                                                }
-                                            }
-                                            Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null, tint = ElectricIndigo, modifier = Modifier.size(24.dp))
+                                        Text("ACTIVE ENERGY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Medium)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            Text("${healthData.calories.totalBurned.roundToInt()}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Kcal", color = ElectricIndigo, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 4.dp))
                                         }
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(8.dp)
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background(SurfaceHighest)
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth(distProgress.coerceAtLeast(0.01f))
-                                                    .fillMaxHeight()
-                                                    .background(if (distProgress > 0f) Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)) else Brush.horizontalGradient(listOf(SurfaceHighest, SurfaceHighest)), RoundedCornerShape(4.dp))
-                                            )
+                                    }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(modifier = Modifier.size(44.dp).background(ElectricIndigo.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Default.Bolt, null, tint = ElectricIndigo, modifier = Modifier.size(22.dp))
+                                        }
+                                        Icon(Icons.Default.ChevronRight, null, tint = TextSubtle, modifier = Modifier.size(20.dp))
+                                    }
+                                }
+                            }
+                        }
+
+                        // Exercise + Steps side-by-side cards
+                        item {
+                            val exerciseMin = healthData.exercise.totalDuration?.toMinutes()?.toInt() ?: 0
+                            val exerciseProgress = (exerciseMin / 30f).coerceIn(0f, 1f)
+                            val stepProgress = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                // Exercise card
+                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }.padding(16.dp)) {
+                                    Column {
+                                        Text("EXERCISE", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Medium)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            Text("$exerciseMin", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("min", fontSize = 12.sp, color = TextOnSurfaceVariant)
+                                        }
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Box(modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(SurfaceHighest)) {
+                                            Box(modifier = Modifier.fillMaxWidth(exerciseProgress.coerceAtLeast(0.01f)).fillMaxHeight().background(VibrantMagenta, RoundedCornerShape(2.dp)))
+                                        }
+                                    }
+                                }
+                                // Steps card
+                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
+                                    Column {
+                                        Text("STEPS", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Medium)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(String.format("%,d", healthData.steps.count), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Box(modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(SurfaceHighest)) {
+                                            Box(modifier = Modifier.fillMaxWidth(stepProgress.coerceAtLeast(0.01f)).fillMaxHeight().background(ElectricIndigo, RoundedCornerShape(2.dp)))
                                         }
                                     }
                                 }
                             }
                         }
 
-                        // Step Intensity energy pill bar -- Stitch remix
+                        // Neural Insight card
                         item {
-                            val stepProgress = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(24.dp))
-                                    .background(SurfaceLow)
-                                    .clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }
-                                    .padding(24.dp)
+                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
+                                    .background(Brush.linearGradient(listOf(IndigoContainer.copy(alpha = 0.2f), MagentaContainer.copy(alpha = 0.2f))))
+                                    .padding(20.dp)
                             ) {
-                                Column {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text("Step Intensity", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                                        Text("${healthData.steps.count} / ${settings.stepsGoal}", color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Icon(Icons.Default.AutoAwesome, null, tint = ElectricIndigo, modifier = Modifier.size(28.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text("Neural Insight", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("Your metabolic efficiency is currently peaking. This is the optimal window for a high-intensity session to maximize calorie afterburn.", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant, lineHeight = 18.sp)
                                     }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    // Fat energy pill bar
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(40.dp)
-                                            .clip(RoundedCornerShape(20.dp))
-                                            .background(SurfaceHighest)
-                                            .padding(4.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth(stepProgress.coerceAtLeast(0.01f))
-                                                .fillMaxHeight()
-                                                .background(
-                                                    if (stepProgress > 0f) Brush.horizontalGradient(listOf(ElectricIndigo, SoftLavender, VibrantMagenta)) else Brush.horizontalGradient(listOf(SurfaceHighest, SurfaceHighest)),
-                                                    RoundedCornerShape(16.dp)
-                                                ),
-                                            contentAlignment = Alignment.CenterEnd
-                                        ) {
-                                            if (stepProgress > 0.2f) {
-                                                Text(
-                                                    "ACTIVE GOAL",
-                                                    fontSize = 9.sp,
-                                                    fontWeight = FontWeight.Black,
-                                                    color = Color.White,
-                                                    letterSpacing = 1.sp,
-                                                    modifier = Modifier.padding(end = 12.dp)
-                                                )
+                                }
+                            }
+                        }
+
+                        // Intensity Flow bar chart
+                        item {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                                Text("Intensity Flow", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                Text("LAST 12 HOURS", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                            }
+                        }
+                        item {
+                            val barHeights = listOf(0.2f, 0.35f, 0.65f, 0.45f, 0.85f, 0.95f, 0.6f, 0.3f, 0.25f, 0.4f, 0.55f, 0.15f)
+                            Box(modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
+                                    barHeights.forEachIndexed { i, h ->
+                                        val isActive = i in 4..6
+                                        Box(modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(h).clip(RoundedCornerShape(50)).background(if (isActive) ElectricIndigo else SurfaceHighest))
+                                    }
+                                }
+                            }
+                        }
+
+                        // Latest Sessions
+                        if (healthData.exercise.sessions.isNotEmpty()) {
+                            item {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Latest Sessions", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                    Text("VIEW ALL", fontSize = 10.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                }
+                            }
+                            items(healthData.exercise.sessions.take(3).size) { index ->
+                                val session = healthData.exercise.sessions[index]
+                                val durMin = session.duration.toMinutes()
+                                val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
+                                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).padding(16.dp)) {
+                                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                        Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(SurfaceLow), contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Default.Bolt, null, tint = ElectricIndigo, modifier = Modifier.size(24.dp))
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(session.exerciseType, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            Row {
+                                                Text("${durMin}m", fontSize = 12.sp, color = TextOnSurfaceVariant)
                                             }
                                         }
-                                    }
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    // Axis markers
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        listOf("0", "2.5k", "5k", "7.5k", "${settings.stepsGoal / 1000}k").forEach { label ->
-                                            Text(label, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text("${session.caloriesBurned?.roundToInt() ?: (durMin * 7)}", fontWeight = FontWeight.Bold, color = ElectricIndigo)
+                                            Text("KCAL", fontSize = 10.sp, color = TextOnSurfaceVariant)
                                         }
+                                        Icon(Icons.Default.ChevronRight, null, tint = TextSubtle, modifier = Modifier.size(20.dp))
                                     }
                                 }
                             }
