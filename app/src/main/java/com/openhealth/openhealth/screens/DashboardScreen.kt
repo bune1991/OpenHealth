@@ -3399,16 +3399,17 @@ private fun BottomNavItem(
 @Composable
 private fun NocturneCard(
     modifier: Modifier = Modifier,
-    surfaceColor: Color = SurfaceMid,
+    surfaceColor: Color? = null,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val c = LocalAppColors.current
+    val bgColor = surfaceColor ?: c.surface
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(surfaceColor)
+            .background(bgColor)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(20.dp)
     ) {
