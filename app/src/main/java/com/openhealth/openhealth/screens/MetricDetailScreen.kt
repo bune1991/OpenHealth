@@ -255,7 +255,8 @@ fun MetricDetailScreen(
                                 HealthViewModel.MetricType.NUTRITION, HealthViewModel.MetricType.EXERCISE,
                                 HealthViewModel.MetricType.WEIGHT, HealthViewModel.MetricType.BODY_FAT,
                                 HealthViewModel.MetricType.BASAL_METABOLIC_RATE, HealthViewModel.MetricType.BODY_WATER_MASS,
-                                HealthViewModel.MetricType.LEAN_BODY_MASS, HealthViewModel.MetricType.BONE_MASS
+                                HealthViewModel.MetricType.LEAN_BODY_MASS, HealthViewModel.MetricType.BONE_MASS,
+                                HealthViewModel.MetricType.HEART_RATE_VARIABILITY, HealthViewModel.MetricType.RESPIRATORY_RATE
                             )
                             if (!skipGenericHero) {
                                 Row(
@@ -318,7 +319,8 @@ fun MetricDetailScreen(
                                 HealthViewModel.MetricType.HEART_RATE, HealthViewModel.MetricType.WEIGHT,
                                 HealthViewModel.MetricType.BODY_FAT, HealthViewModel.MetricType.BASAL_METABOLIC_RATE,
                                 HealthViewModel.MetricType.BODY_WATER_MASS, HealthViewModel.MetricType.LEAN_BODY_MASS,
-                                HealthViewModel.MetricType.BONE_MASS
+                                HealthViewModel.MetricType.BONE_MASS,
+                                HealthViewModel.MetricType.HEART_RATE_VARIABILITY, HealthViewModel.MetricType.RESPIRATORY_RATE
                             )
                             if (!skipToday) {
                                 TodayValueCard(
@@ -354,6 +356,841 @@ fun MetricDetailScreen(
                                             .fillMaxWidth()
                                             .height(160.dp)
                                     )
+                                }
+                            }
+                        }
+
+                        // ── HRV Custom Detail ──
+                        if (metricType == HealthViewModel.MetricType.HEART_RATE_VARIABILITY) {
+                            item {
+                                val hrv = healthData?.heartRateVariability
+                                val currentHrv = hrv?.rmssdMs ?: selectedDateValue
+                                val avgHrv = hrv?.avgMs ?: currentHrv
+                                val minHrv = hrv?.minMs ?: currentHrv
+                                val maxHrv = hrv?.maxMs ?: currentHrv
+
+                                // Determine quality level
+                                val qualityLabel = when {
+                                    currentHrv >= 60 -> "GOOD"
+                                    currentHrv >= 30 -> "MODERATE"
+                                    else -> "LOW"
+                                }
+                                val qualityColor = when {
+                                    currentHrv >= 60 -> SuccessGreen
+                                    currentHrv >= 30 -> WarningOrange
+                                    else -> VibrantMagenta
+                                }
+
+                                // 7-day trend from history
+                                val last7 = metricHistory?.last30Days?.takeLast(7) ?: emptyList()
+                                val trendValue = if (last7.size >= 2) {
+                                    val recent = last7.takeLast(3).map { it.value }.average()
+                                    val older = last7.take(3).map { it.value }.average()
+                                    recent - older
+                                } else 0.0
+                                val trendLabel = when {
+                                    trendValue > 2 -> "IMPROVING"
+                                    trendValue < -2 -> "DECLINING"
+                                    else -> "STABLE"
+                                }
+
+                                // Custom Hero
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(SurfaceLow)
+                                        .padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "HEART RATE VARIABILITY",
+                                        color = TextSubtle,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 2.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.Bottom
+                                    ) {
+                                        Text(
+                                            text = String.format("%.0f", currentHrv),
+                                            color = TextOnSurface,
+                                            fontSize = 48.sp,
+                                            fontWeight = FontWeight.Black
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "ms",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    // 7-DAY TREND badge
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .background(SurfaceHighest)
+                                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = "7-DAY TREND: $trendLabel",
+                                            color = ElectricIndigo,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 1.5.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Recovery Arc Gauge
+                            item {
+                                val hrv = healthData?.heartRateVariability
+                                val currentHrv = hrv?.rmssdMs ?: selectedDateValue
+                                // Normalize HRV to 0-1 range (0-120ms typical range)
+                                val normalizedHrv = (currentHrv / 120.0).coerceIn(0.0, 1.0).toFloat()
+                                val animatedProgress by animateFloatAsState(
+                                    targetValue = normalizedHrv,
+                                    animationSpec = tween(durationMillis = 1200),
+                                    label = "hrvProgress"
+                                )
+
+                                val qualityLabel = when {
+                                    currentHrv >= 60 -> "Good Recovery"
+                                    currentHrv >= 30 -> "Moderate Recovery"
+                                    else -> "Low Recovery"
+                                }
+                                val qualityColor = when {
+                                    currentHrv >= 60 -> SuccessGreen
+                                    currentHrv >= 30 -> WarningOrange
+                                    else -> VibrantMagenta
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(SurfaceLow)
+                                        .padding(vertical = 24.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier.size(180.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        // Background track
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val strokeWidth = 12.dp.toPx()
+                                            val padding = strokeWidth / 2
+                                            drawArc(
+                                                color = SurfaceMid,
+                                                startAngle = -225f,
+                                                sweepAngle = 270f,
+                                                useCenter = false,
+                                                topLeft = Offset(padding, padding),
+                                                size = Size(size.width - strokeWidth, size.height - strokeWidth),
+                                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                                            )
+                                        }
+                                        // Progress arc with gradient
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val strokeWidth = 12.dp.toPx()
+                                            val padding = strokeWidth / 2
+                                            drawArc(
+                                                brush = Brush.sweepGradient(
+                                                    listOf(VibrantMagenta, ElectricIndigo, SoftLavender)
+                                                ),
+                                                startAngle = -225f,
+                                                sweepAngle = 270f * animatedProgress,
+                                                useCenter = false,
+                                                topLeft = Offset(padding, padding),
+                                                size = Size(size.width - strokeWidth, size.height - strokeWidth),
+                                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                                            )
+                                        }
+                                        // Center text
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = qualityLabel,
+                                                color = qualityColor,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "${(normalizedHrv * 100).roundToInt()}%",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3 Stat Cards: Previous, High, Low
+                            item {
+                                val hrv = healthData?.heartRateVariability
+                                val currentHrv = hrv?.rmssdMs ?: selectedDateValue
+                                val minHrv = hrv?.minMs ?: currentHrv
+                                val maxHrv = hrv?.maxMs ?: currentHrv
+                                val yesterday = metricHistory?.allHistoricalData
+                                    ?.find { it.date == selectedDate.minusDays(1) }?.value
+                                val previousValue = yesterday ?: (hrv?.avgMs ?: currentHrv)
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Previous
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "PREVIOUS",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = String.format("%.0f", previousValue),
+                                                color = TextOnSurface,
+                                                fontSize = 20.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "ms",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                    // High
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "HIGH",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = String.format("%.0f", maxHrv),
+                                                color = SuccessGreen,
+                                                fontSize = 20.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "ms",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                    // Low
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "LOW",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = String.format("%.0f", minHrv),
+                                                color = VibrantMagenta,
+                                                fontSize = 20.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "ms",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Recovery Insight Card
+                            item {
+                                val hrv = healthData?.heartRateVariability
+                                val currentHrv = hrv?.rmssdMs ?: selectedDateValue
+
+                                val insightBadge = when {
+                                    currentHrv >= 60 -> "GOOD"
+                                    currentHrv >= 30 -> "MODERATE"
+                                    else -> "LOW"
+                                }
+                                val insightColor = when {
+                                    currentHrv >= 60 -> SuccessGreen
+                                    currentHrv >= 30 -> WarningOrange
+                                    else -> VibrantMagenta
+                                }
+                                val insightText = when {
+                                    currentHrv >= 60 -> "Your autonomic nervous system shows strong recovery. This is a great day for intense training or challenging activities."
+                                    currentHrv >= 30 -> "Your body is in a moderate recovery state. Consider balanced activity with adequate rest periods."
+                                    else -> "Your HRV indicates your body needs more recovery time. Focus on rest, hydration, and stress management today."
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .padding(20.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.Top) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Favorite,
+                                                contentDescription = null,
+                                                tint = ElectricIndigo,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = "Recovery Insight",
+                                                color = TextOnSurface,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(50))
+                                                    .background(insightColor.copy(alpha = 0.15f))
+                                                    .padding(horizontal = 10.dp, vertical = 3.dp)
+                                            ) {
+                                                Text(
+                                                    text = insightBadge,
+                                                    color = insightColor,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 1.sp
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = insightText,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = TextOnSurfaceVariant,
+                                                lineHeight = 20.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(50))
+                                                    .background(SurfaceHighest)
+                                                    .clickable { }
+                                                    .padding(horizontal = 20.dp, vertical = 10.dp)
+                                            ) {
+                                                Text(
+                                                    text = "View Sleep Coach",
+                                                    color = ElectricIndigo,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // History Section
+                            item {
+                                val historyData = metricHistory?.last30Days?.takeLast(7)?.reversed() ?: emptyList()
+                                if (historyData.isNotEmpty()) {
+                                    Column {
+                                        Text(
+                                            text = "HISTORY",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 2.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        historyData.forEach { point ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(16.dp))
+                                                    .background(SurfaceLow)
+                                                    .padding(16.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = point.date.format(
+                                                            DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault())
+                                                        ),
+                                                        color = TextOnSurface,
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                    Text(
+                                                        text = "${String.format("%.0f", point.value)} ms",
+                                                        color = ElectricIndigo,
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // ── Respiratory Rate Custom Detail ──
+                        if (metricType == HealthViewModel.MetricType.RESPIRATORY_RATE) {
+                            item {
+                                val rr = healthData?.respiratoryRate
+                                val currentRr = rr?.ratePerMinute ?: selectedDateValue
+                                val avgRr = rr?.avgRate ?: currentRr
+                                val minRr = rr?.minRate ?: currentRr
+                                val maxRr = rr?.maxRate ?: currentRr
+
+                                // Determine stability
+                                val stabilityLabel = when {
+                                    maxRr - minRr <= 4 -> "STABLE"
+                                    maxRr - minRr <= 8 -> "VARIABLE"
+                                    else -> "ELEVATED"
+                                }
+                                val stabilityColor = when {
+                                    maxRr - minRr <= 4 -> SuccessGreen
+                                    maxRr - minRr <= 8 -> WarningOrange
+                                    else -> VibrantMagenta
+                                }
+
+                                // Custom Hero
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(SurfaceLow)
+                                        .padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "RESPIRATORY RATE",
+                                        color = TextSubtle,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 2.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.Bottom
+                                    ) {
+                                        Text(
+                                            text = String.format("%.0f", currentRr),
+                                            color = TextOnSurface,
+                                            fontSize = 48.sp,
+                                            fontWeight = FontWeight.Black
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "br/min",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    // Stability badge
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .background(SurfaceHighest)
+                                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = stabilityLabel,
+                                            color = stabilityColor,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 1.5.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Arc Gauge
+                            item {
+                                val rr = healthData?.respiratoryRate
+                                val currentRr = rr?.ratePerMinute ?: selectedDateValue
+                                // Normal range: 12-20 br/min. Normalize to 0-1
+                                val normalizedRr = ((currentRr - 8) / 24.0).coerceIn(0.0, 1.0).toFloat()
+                                val animatedProgress by animateFloatAsState(
+                                    targetValue = normalizedRr,
+                                    animationSpec = tween(durationMillis = 1200),
+                                    label = "rrProgress"
+                                )
+
+                                val qualityLabel = when {
+                                    currentRr in 12.0..20.0 -> "Normal"
+                                    currentRr < 12 -> "Below Normal"
+                                    else -> "Elevated"
+                                }
+                                val qualityColor = when {
+                                    currentRr in 12.0..20.0 -> SuccessGreen
+                                    currentRr < 12 -> WarningOrange
+                                    else -> VibrantMagenta
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(SurfaceLow)
+                                        .padding(vertical = 24.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier.size(180.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        // Background track
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val strokeWidth = 12.dp.toPx()
+                                            val padding = strokeWidth / 2
+                                            drawArc(
+                                                color = SurfaceMid,
+                                                startAngle = -225f,
+                                                sweepAngle = 270f,
+                                                useCenter = false,
+                                                topLeft = Offset(padding, padding),
+                                                size = Size(size.width - strokeWidth, size.height - strokeWidth),
+                                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                                            )
+                                        }
+                                        // Progress arc with gradient
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val strokeWidth = 12.dp.toPx()
+                                            val padding = strokeWidth / 2
+                                            drawArc(
+                                                brush = Brush.sweepGradient(
+                                                    listOf(ElectricIndigo, SoftLavender, VibrantMagenta)
+                                                ),
+                                                startAngle = -225f,
+                                                sweepAngle = 270f * animatedProgress,
+                                                useCenter = false,
+                                                topLeft = Offset(padding, padding),
+                                                size = Size(size.width - strokeWidth, size.height - strokeWidth),
+                                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                                            )
+                                        }
+                                        // Center text
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = qualityLabel,
+                                                color = qualityColor,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "${String.format("%.0f", currentRr)} br/min",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3 Stat Cards: Avg, High, Low
+                            item {
+                                val rr = healthData?.respiratoryRate
+                                val currentRr = rr?.ratePerMinute ?: selectedDateValue
+                                val avgRr = rr?.avgRate ?: currentRr
+                                val minRr = rr?.minRate ?: currentRr
+                                val maxRr = rr?.maxRate ?: currentRr
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Avg
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "AVG",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = String.format("%.0f", avgRr),
+                                                color = TextOnSurface,
+                                                fontSize = 20.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "br/min",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                    // High
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "HIGH",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = String.format("%.0f", maxRr),
+                                                color = WarningOrange,
+                                                fontSize = 20.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "br/min",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                    // Low
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(SurfaceLow)
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = "LOW",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                text = String.format("%.0f", minRr),
+                                                color = ElectricIndigo,
+                                                fontSize = 20.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "br/min",
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Recovery Insight Card
+                            item {
+                                val rr = healthData?.respiratoryRate
+                                val currentRr = rr?.ratePerMinute ?: selectedDateValue
+                                val minRr = rr?.minRate ?: currentRr
+                                val maxRr = rr?.maxRate ?: currentRr
+
+                                val insightBadge = when {
+                                    currentRr in 12.0..20.0 -> "NORMAL"
+                                    currentRr < 12 -> "LOW"
+                                    else -> "ELEVATED"
+                                }
+                                val insightColor = when {
+                                    currentRr in 12.0..20.0 -> SuccessGreen
+                                    currentRr < 12 -> WarningOrange
+                                    else -> VibrantMagenta
+                                }
+                                val insightText = when {
+                                    currentRr in 12.0..20.0 -> "Your breathing rate is within the normal range, indicating good respiratory health and a relaxed state."
+                                    currentRr < 12 -> "Your respiratory rate is below the typical range. This may indicate deep relaxation or could warrant monitoring."
+                                    else -> "Your respiratory rate is elevated. This could be due to physical activity, stress, or other factors. Consider relaxation techniques."
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .padding(20.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.Top) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Air,
+                                                contentDescription = null,
+                                                tint = ElectricIndigo,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = "Recovery Insight",
+                                                color = TextOnSurface,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(50))
+                                                    .background(insightColor.copy(alpha = 0.15f))
+                                                    .padding(horizontal = 10.dp, vertical = 3.dp)
+                                            ) {
+                                                Text(
+                                                    text = insightBadge,
+                                                    color = insightColor,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 1.sp
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = insightText,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = TextOnSurfaceVariant,
+                                                lineHeight = 20.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(50))
+                                                    .background(SurfaceHighest)
+                                                    .clickable { }
+                                                    .padding(horizontal = 20.dp, vertical = 10.dp)
+                                            ) {
+                                                Text(
+                                                    text = "View Sleep Coach",
+                                                    color = ElectricIndigo,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Recent Activity Section
+                            item {
+                                val historyData = metricHistory?.last30Days?.takeLast(7)?.reversed() ?: emptyList()
+                                if (historyData.isNotEmpty()) {
+                                    Column {
+                                        Text(
+                                            text = "RECENT ACTIVITY",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 2.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        historyData.forEach { point ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(16.dp))
+                                                    .background(SurfaceLow)
+                                                    .padding(16.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = point.date.format(
+                                                            DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault())
+                                                        ),
+                                                        color = TextOnSurface,
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                    Text(
+                                                        text = "${String.format("%.0f", point.value)} br/min",
+                                                        color = ElectricIndigo,
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                        }
+                                    }
                                 }
                             }
                         }
