@@ -889,6 +889,7 @@ fun DashboardScreen(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(28.dp))
                                     .background(SurfaceLow)
+                                    .clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
                                     .padding(28.dp)
                             ) {
                                 Column(
