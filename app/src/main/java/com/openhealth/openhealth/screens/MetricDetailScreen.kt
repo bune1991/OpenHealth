@@ -244,8 +244,15 @@ fun MetricDetailScreen(
                                 } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
                             } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
 
-                            // Hero section — skip for sleep (clock is the hero), steps (ring is the hero), and nutrition (custom hero)
-                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION) {
+                            // Hero section — skip for metrics with custom heroes
+                            val skipGenericHero = metricType in listOf(
+                                HealthViewModel.MetricType.SLEEP, HealthViewModel.MetricType.STEPS,
+                                HealthViewModel.MetricType.NUTRITION, HealthViewModel.MetricType.EXERCISE,
+                                HealthViewModel.MetricType.WEIGHT, HealthViewModel.MetricType.BODY_FAT,
+                                HealthViewModel.MetricType.BASAL_METABOLIC_RATE, HealthViewModel.MetricType.BODY_WATER_MASS,
+                                HealthViewModel.MetricType.LEAN_BODY_MASS, HealthViewModel.MetricType.BONE_MASS
+                            )
+                            if (!skipGenericHero) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -300,11 +307,15 @@ fun MetricDetailScreen(
                                 } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
                             } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
 
-                            // Skip TodayValueCard for sleep — SleepClockCard is the hero
-                            // Skip TodayValueCard for steps — circular progress ring is the hero
-                            // Skip TodayValueCard for nutrition — custom daily intake hero
-                            // Skip TodayValueCard for heart rate — gradient chart is the hero
-                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION && metricType != HealthViewModel.MetricType.HEART_RATE) {
+                            val skipToday = metricType in listOf(
+                                HealthViewModel.MetricType.SLEEP, HealthViewModel.MetricType.STEPS,
+                                HealthViewModel.MetricType.NUTRITION, HealthViewModel.MetricType.EXERCISE,
+                                HealthViewModel.MetricType.HEART_RATE, HealthViewModel.MetricType.WEIGHT,
+                                HealthViewModel.MetricType.BODY_FAT, HealthViewModel.MetricType.BASAL_METABOLIC_RATE,
+                                HealthViewModel.MetricType.BODY_WATER_MASS, HealthViewModel.MetricType.LEAN_BODY_MASS,
+                                HealthViewModel.MetricType.BONE_MASS
+                            )
+                            if (!skipToday) {
                                 TodayValueCard(
                                     value = selectedDateValue,
                                     valueFormatted = displayValue,
