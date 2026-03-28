@@ -603,13 +603,7 @@ fun DashboardScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(SurfaceHigh, SurfaceLow),
-                                            start = Offset(0f, 0f),
-                                            end = Offset(Float.MAX_VALUE, Float.MAX_VALUE)
-                                        )
-                                    )
+                                    .background(SurfaceHigh)
                                     .padding(24.dp)
                             ) {
                                 Column {
