@@ -156,6 +156,8 @@ fun DashboardScreen(
         }
     }
 
+    var selectedTab by rememberSaveable { mutableStateOf(0) }
+
     val isToday = selectedDate == LocalDate.now(ZoneId.systemDefault())
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
     val dateText = if (isToday) "Today" else selectedDate.format(dateFormatter)
@@ -203,7 +205,7 @@ fun DashboardScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // ─── Header ───
+                // ─── Header (all tabs) ───
                 item {
                     DashboardHeader(
                         dateText = dateText,
@@ -217,311 +219,147 @@ fun DashboardScreen(
                     )
                 }
 
-                // ─── Readiness Score — Hero Card ───
-                item {
-                    ReadinessHeroCard(
-                        readinessScore = readinessScore,
-                        healthData = healthData,
-                        onClick = onReadinessClick
-                    )
-                }
+                // ═══════════════════════════════════════
+                // TAB CONTENT
+                // ═══════════════════════════════════════
 
-                // ─── Recovery Status Pill ───
-                item {
-                    RecoveryStatusCard(
-                        readinessScore = readinessScore,
-                        healthData = healthData
-                    )
-                }
-
-                // ─── HRV Chart Card ───
-                if (healthData.heartRateVariability.rmssdMs != null) {
-                    item {
-                        HrvChartCard(
-                            healthData = healthData,
-                            onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
-                        )
-                    }
-                }
-
-                // ─── Sleep Efficiency Pill ───
-                item {
-                    SleepEfficiencyPill(
-                        healthData = healthData,
-                        onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) }
-                    )
-                }
-
-                // ─── Weather Health Advisory ───
-                if (weatherData.isAvailable) {
-                    item {
-                        WeatherCard(weatherData = weatherData)
-                    }
-                }
-
-                // ─── Stress & Energy ───
-                if (healthData.heartRateVariability.rmssdMs != null) {
-                    item {
-                        val hrv = healthData.heartRateVariability.rmssdMs!!
-                        val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
-                        val stressLabel = when {
-                            stressLevel < 25 -> "Low"
-                            stressLevel < 50 -> "Moderate"
-                            stressLevel < 75 -> "High"
-                            else -> "Very High"
+                when (selectedTab) {
+                    // ─── TAB 0: PULSE (Readiness & Daily Snapshot) ───
+                    0 -> {
+                        item { ReadinessHeroCard(readinessScore = readinessScore, healthData = healthData, onClick = onReadinessClick) }
+                        item { RecoveryStatusCard(readinessScore = readinessScore, healthData = healthData) }
+                        if (healthData.heartRateVariability.rmssdMs != null) {
+                            item { HrvChartCard(healthData = healthData, onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }) }
                         }
-                        val stressColor = when {
-                            stressLevel < 25 -> SuccessGreen
-                            stressLevel < 50 -> Color(0xFFFFCC00)
-                            stressLevel < 75 -> WarningOrange
-                            else -> ErrorRed
-                        }
-                        val energyPct = readinessScore.score.coerceIn(0, 100)
-
-                        StressEnergyCard(
-                            stressLevel = stressLevel,
-                            stressLabel = stressLabel,
-                            stressColor = stressColor,
-                            energyPercent = energyPct,
-                            onClick = onStressClick
-                        )
-                    }
-                }
-
-                // ─── AI Insights ───
-                if (settings.aiProvider != com.openhealth.openhealth.model.AiProvider.NONE) {
-                    item {
-                        NocturneCard(onClick = onAiInsightsClick) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "AI Health Analysis",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = TextOnSurface,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Get insights from ${settings.aiProvider.name}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = TextOnSurfaceVariant
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .background(
-                                            Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
-                                            RoundedCornerShape(20.dp)
-                                        )
-                                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                                ) {
-                                    Text(
-                                        text = "Analyze",
-                                        color = Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
+                        item { SleepEfficiencyPill(healthData = healthData, onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) }) }
+                        if (settings.aiProvider != com.openhealth.openhealth.model.AiProvider.NONE) {
+                            item {
+                                NocturneCard(onClick = onAiInsightsClick) {
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                        Column {
+                                            Text("AI Health Analysis", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.SemiBold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text("Get insights from ${settings.aiProvider.name}", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant)
+                                        }
+                                        Box(modifier = Modifier.background(Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)), RoundedCornerShape(20.dp)).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                            Text("Analyze", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // ─── Core Metrics ───
-                item {
-                    MetricCard(
-                        title = "Steps",
-                        value = healthData.steps.count.toString(),
-                        unit = "steps",
-                        icon = Icons.AutoMirrored.Filled.DirectionsWalk,
-                        accentColor = CardSteps,
-                        sparklineData = generateSparklineData(healthData.steps.count, 20000),
-                        onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) },
-                        subtitle = if (settings.showStepsStreak && stepsStreak > 0) "$stepsStreak day streak" else ""
-                    )
-                }
-
-                item {
-                    MetricCard(
-                        title = "Heart Rate",
-                        value = healthData.heartRate.currentBpm?.toString() ?: "--",
-                        unit = "bpm",
-                        icon = Icons.Default.Favorite,
-                        accentColor = CardHeartRate,
-                        sparklineData = generateHeartRateSparklineData(healthData.heartRate.currentBpm ?: 70),
-                        onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE) }
-                    )
-                }
-
-                item {
-                    val sleepHours = healthData.sleep.totalDuration?.toHours()?.toInt() ?: 0
-                    val sleepMinutes = healthData.sleep.totalDuration?.let { ((it.toMinutes() % 60).toInt()) } ?: 0
-                    val sleepTimeRange = healthData.sleep.sessions.maxByOrNull { it.endTime }?.let { session ->
-                        val formatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
-                        val startTime = session.startTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
-                        val endTime = session.endTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)
-                        "$startTime - $endTime"
-                    } ?: ""
-                    MetricCard(
-                        title = "Sleep",
-                        value = if (sleepHours > 0 || sleepMinutes > 0) "${sleepHours}h ${sleepMinutes}m" else "--",
-                        unit = "",
-                        subtitle = sleepTimeRange,
-                        icon = Icons.Default.NightsStay,
-                        accentColor = CardSleep,
-                        sparklineData = generateSleepSparklineData(sleepHours * 60 + sleepMinutes),
-                        onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) }
-                    )
-                }
-
-                item {
-                    MetricCard(
-                        title = "Calories",
-                        value = healthData.calories.totalBurned.roundToInt().toString(),
-                        unit = "kcal",
-                        icon = Icons.Default.LocalFireDepartment,
-                        accentColor = CardCalories,
-                        sparklineData = generateSparklineData(healthData.calories.totalBurned.toLong(), 3000),
-                        onClick = { onMetricClick(HealthViewModel.MetricType.CALORIES) }
-                    )
-                }
-
-                // ─── Activity Section ───
-                val hasDistance = settings.showDistance && healthData.distance.kilometers > 0
-                val hasFloors = settings.showFloors && healthData.floors.count > 0
-                val hasExercise = settings.showExercise && healthData.exercise.sessions.isNotEmpty()
-
-                if (hasExercise) {
-                    item {
-                        val totalMin = healthData.exercise.totalDuration?.toMinutes() ?: 0
-                        val sessionText = if (healthData.exercise.sessionCount == 1) "1 session" else "${healthData.exercise.sessionCount} sessions"
-                        val durationText = if (totalMin >= 60) "${totalMin / 60}h ${totalMin % 60}m" else "${totalMin}m"
-                        DetailCard(
-                            title = "Exercise",
-                            value = "$durationText ($sessionText)",
-                            onClick = { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
-                        )
+                    // ─── TAB 1: ACTIVITY (Movement & Energy) ───
+                    1 -> {
+                        item {
+                            MetricCard(title = "Steps", value = healthData.steps.count.toString(), unit = "steps", icon = Icons.AutoMirrored.Filled.DirectionsWalk, accentColor = CardSteps, sparklineData = generateSparklineData(healthData.steps.count, 20000), onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) }, subtitle = if (settings.showStepsStreak && stepsStreak > 0) "$stepsStreak day streak" else "")
+                        }
+                        item {
+                            MetricCard(title = "Calories", value = healthData.calories.totalBurned.roundToInt().toString(), unit = "kcal", icon = Icons.Default.LocalFireDepartment, accentColor = CardCalories, sparklineData = generateSparklineData(healthData.calories.totalBurned.toLong(), 3000), onClick = { onMetricClick(HealthViewModel.MetricType.CALORIES) })
+                        }
+                        val hasExercise = settings.showExercise && healthData.exercise.sessions.isNotEmpty()
+                        if (hasExercise) {
+                            item {
+                                val totalMin = healthData.exercise.totalDuration?.toMinutes() ?: 0
+                                val sessionText = if (healthData.exercise.sessionCount == 1) "1 session" else "${healthData.exercise.sessionCount} sessions"
+                                val durationText = if (totalMin >= 60) "${totalMin / 60}h ${totalMin % 60}m" else "${totalMin}m"
+                                DetailCard(title = "Exercise", value = "$durationText ($sessionText)", onClick = { onMetricClick(HealthViewModel.MetricType.EXERCISE) })
+                            }
+                        }
+                        val hasDistance = settings.showDistance && healthData.distance.kilometers > 0
+                        if (hasDistance) {
+                            item { DetailCard(title = "Distance", value = String.format("%.2f km", healthData.distance.kilometers), progress = (healthData.distance.kilometers.toFloat() / settings.distanceGoalKm).coerceIn(0f, 1f), onClick = { onMetricClick(HealthViewModel.MetricType.DISTANCE) }) }
+                        }
+                        val hasFloors = settings.showFloors && healthData.floors.count > 0
+                        if (hasFloors) {
+                            item { DetailCard(title = "Floors Climbed", value = "${healthData.floors.count}", progress = (healthData.floors.count.toFloat() / settings.floorsGoal).coerceIn(0f, 1f), onClick = { onMetricClick(HealthViewModel.MetricType.FLOORS) }) }
+                        }
+                        val hasVO2Max = settings.showVO2Max && healthData.vo2Max.value != null && healthData.vo2Max.value > 0
+                        if (hasVO2Max) {
+                            item { DetailCard(title = "VO2 Max", value = String.format("%.1f ml/kg/min", healthData.vo2Max.value), onClick = { onMetricClick(HealthViewModel.MetricType.VO2_MAX) }) }
+                        }
+                        val hasNutrition = settings.showNutrition && healthData.nutrition.calories != null && healthData.nutrition.calories > 0
+                        if (hasNutrition) {
+                            item {
+                                val cal = healthData.nutrition.calories?.roundToInt() ?: 0
+                                val protein = healthData.nutrition.proteinGrams?.roundToInt() ?: 0
+                                val carbs = healthData.nutrition.carbsGrams?.roundToInt() ?: 0
+                                val fat = healthData.nutrition.fatGrams?.roundToInt() ?: 0
+                                DetailCard(title = "Nutrition", value = "$cal kcal  P:${protein}g  C:${carbs}g  F:${fat}g", onClick = { onMetricClick(HealthViewModel.MetricType.NUTRITION) })
+                            }
+                        }
                     }
-                }
 
-                if (hasDistance) {
-                    item {
-                        DetailCard(
-                            title = "Distance",
-                            value = String.format("%.2f km", healthData.distance.kilometers),
-                            progress = (healthData.distance.kilometers.toFloat() / settings.distanceGoalKm).coerceIn(0f, 1f),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.DISTANCE) }
-                        )
+                    // ─── TAB 2: VITALS (Biometric Health) ───
+                    2 -> {
+                        item {
+                            MetricCard(title = "Heart Rate", value = healthData.heartRate.currentBpm?.toString() ?: "--", unit = "bpm", icon = Icons.Default.Favorite, accentColor = CardHeartRate, sparklineData = generateHeartRateSparklineData(healthData.heartRate.currentBpm ?: 70), onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE) })
+                        }
+                        if (healthData.heartRateVariability.rmssdMs != null) {
+                            item {
+                                val hrv = healthData.heartRateVariability.rmssdMs!!
+                                val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
+                                val stressLabel = when { stressLevel < 25 -> "Low"; stressLevel < 50 -> "Moderate"; stressLevel < 75 -> "High"; else -> "Very High" }
+                                val stressColor = when { stressLevel < 25 -> SuccessGreen; stressLevel < 50 -> Color(0xFFFFCC00); stressLevel < 75 -> WarningOrange; else -> ErrorRed }
+                                StressEnergyCard(stressLevel = stressLevel, stressLabel = stressLabel, stressColor = stressColor, energyPercent = readinessScore.score.coerceIn(0, 100), onClick = onStressClick)
+                            }
+                        }
+                        item {
+                            val sleepHours = healthData.sleep.totalDuration?.toHours()?.toInt() ?: 0
+                            val sleepMinutes = healthData.sleep.totalDuration?.let { ((it.toMinutes() % 60).toInt()) } ?: 0
+                            val sleepTimeRange = healthData.sleep.sessions.maxByOrNull { it.endTime }?.let { session ->
+                                val formatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
+                                "${session.startTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)} - ${session.endTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)}"
+                            } ?: ""
+                            MetricCard(title = "Sleep", value = if (sleepHours > 0 || sleepMinutes > 0) "${sleepHours}h ${sleepMinutes}m" else "--", unit = "", subtitle = sleepTimeRange, icon = Icons.Default.NightsStay, accentColor = CardSleep, sparklineData = generateSleepSparklineData(sleepHours * 60 + sleepMinutes), onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) })
+                        }
+                        // Vitals card
+                        val hasHRV = settings.showHRV && healthData.heartRateVariability.rmssdMs != null
+                        val hasBloodOxygen = settings.showOxygenSaturation && healthData.oxygenSaturation.percentage != null
+                        val hasBloodPressure = settings.showBloodPressure && healthData.bloodPressure.systolicMmHg != null
+                        val hasBodyTemp = settings.showBodyTemperature && healthData.bodyTemperature.temperatureCelsius != null
+                        val hasRespiratoryRate = settings.showRespiratoryRate && healthData.respiratoryRate.ratePerMinute != null
+                        val hasSkinTemp = settings.showSkinTemperature && healthData.skinTemperature.temperatureCelsius != null
+                        val hasBloodGlucose = settings.showBloodGlucose && healthData.bloodGlucose.levelMgPerDl != null
+                        val hasAnyVitals = hasHRV || hasBloodOxygen || hasBloodPressure || hasBodyTemp || hasRespiratoryRate || hasSkinTemp || hasBloodGlucose
+                        if (hasAnyVitals) {
+                            item { VitalsCard(healthData = healthData, hasHRV = hasHRV, hasBloodOxygen = hasBloodOxygen, hasBloodPressure = hasBloodPressure, hasBodyTemp = hasBodyTemp, hasRespiratoryRate = hasRespiratoryRate, hasSkinTemp = hasSkinTemp, hasBloodGlucose = hasBloodGlucose, expanded = vitalsExpanded, onExpandedChange = onVitalsExpandedChange, onMetricClick = onMetricClick) }
+                        }
+                        // Body composition
+                        val hasWeight = settings.showWeight && healthData.weight.kilograms != null
+                        val hasBodyFat = settings.showBodyFat && healthData.bodyFat.percentage != null
+                        val hasBMR = settings.showBMR && healthData.basalMetabolicRate.caloriesPerDay != null
+                        val hasBodyWater = settings.showBodyWater && healthData.bodyWaterMass.kilograms != null
+                        val hasBoneMass = settings.showBoneMass && healthData.boneMass.kilograms != null
+                        val hasLeanMass = settings.showLeanBodyMass && healthData.leanBodyMass.kilograms != null
+                        val hasAnyBody = hasWeight || hasBodyFat || hasBMR || hasBodyWater || hasBoneMass || hasLeanMass
+                        if (hasAnyBody) {
+                            item { BodyCompositionCard(healthData = healthData, hasWeight = hasWeight, hasBodyFat = hasBodyFat, hasBMR = hasBMR, hasBodyWater = hasBodyWater, hasBoneMass = hasBoneMass, hasLeanMass = hasLeanMass, expanded = bodyExpanded, onExpandedChange = onBodyExpandedChange, onMetricClick = onMetricClick) }
+                        }
                     }
-                }
 
-                if (hasFloors) {
-                    item {
-                        DetailCard(
-                            title = "Floors Climbed",
-                            value = "${healthData.floors.count}",
-                            progress = (healthData.floors.count.toFloat() / settings.floorsGoal).coerceIn(0f, 1f),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.FLOORS) }
-                        )
-                    }
-                }
-
-                // VO2 Max
-                val hasVO2Max = settings.showVO2Max && healthData.vo2Max.value != null && healthData.vo2Max.value > 0
-                if (hasVO2Max) {
-                    item {
-                        DetailCard(
-                            title = "VO2 Max",
-                            value = String.format("%.1f ml/kg/min", healthData.vo2Max.value),
-                            onClick = { onMetricClick(HealthViewModel.MetricType.VO2_MAX) }
-                        )
-                    }
-                }
-
-                // ─── Body Composition ───
-                val hasWeight = settings.showWeight && healthData.weight.kilograms != null
-                val hasBodyFat = settings.showBodyFat && healthData.bodyFat.percentage != null
-                val hasBMR = settings.showBMR && healthData.basalMetabolicRate.caloriesPerDay != null
-                val hasBodyWater = settings.showBodyWater && healthData.bodyWaterMass.kilograms != null
-                val hasBoneMass = settings.showBoneMass && healthData.boneMass.kilograms != null
-                val hasLeanMass = settings.showLeanBodyMass && healthData.leanBodyMass.kilograms != null
-                val hasAnyBody = hasWeight || hasBodyFat || hasBMR || hasBodyWater || hasBoneMass || hasLeanMass
-
-                if (hasAnyBody) {
-                    item {
-                        BodyCompositionCard(
-                            healthData = healthData,
-                            hasWeight = hasWeight,
-                            hasBodyFat = hasBodyFat,
-                            hasBMR = hasBMR,
-                            hasBodyWater = hasBodyWater,
-                            hasBoneMass = hasBoneMass,
-                            hasLeanMass = hasLeanMass,
-                            expanded = bodyExpanded,
-                            onExpandedChange = onBodyExpandedChange,
-                            onMetricClick = onMetricClick
-                        )
-                    }
-                }
-
-                // ─── Vitals ───
-                val hasHRV = settings.showHRV && healthData.heartRateVariability.rmssdMs != null
-                val hasBloodOxygen = settings.showOxygenSaturation && healthData.oxygenSaturation.percentage != null
-                val hasBloodPressure = settings.showBloodPressure && healthData.bloodPressure.systolicMmHg != null
-                val hasBodyTemp = settings.showBodyTemperature && healthData.bodyTemperature.temperatureCelsius != null
-                val hasRespiratoryRate = settings.showRespiratoryRate && healthData.respiratoryRate.ratePerMinute != null
-                val hasSkinTemp = settings.showSkinTemperature && healthData.skinTemperature.temperatureCelsius != null
-                val hasBloodGlucose = settings.showBloodGlucose && healthData.bloodGlucose.levelMgPerDl != null
-                val hasAnyVitals = hasHRV || hasBloodOxygen || hasBloodPressure || hasBodyTemp || hasRespiratoryRate || hasSkinTemp || hasBloodGlucose
-
-                if (hasAnyVitals) {
-                    item {
-                        VitalsCard(
-                            healthData = healthData,
-                            hasHRV = hasHRV,
-                            hasBloodOxygen = hasBloodOxygen,
-                            hasBloodPressure = hasBloodPressure,
-                            hasBodyTemp = hasBodyTemp,
-                            hasRespiratoryRate = hasRespiratoryRate,
-                            hasSkinTemp = hasSkinTemp,
-                            hasBloodGlucose = hasBloodGlucose,
-                            expanded = vitalsExpanded,
-                            onExpandedChange = onVitalsExpandedChange,
-                            onMetricClick = onMetricClick
-                        )
-                    }
-                }
-
-                // ─── Nutrition ───
-                val hasNutrition = settings.showNutrition && healthData.nutrition.calories != null && healthData.nutrition.calories > 0
-                if (hasNutrition) {
-                    item {
-                        val cal = healthData.nutrition.calories?.roundToInt() ?: 0
-                        val protein = healthData.nutrition.proteinGrams?.roundToInt() ?: 0
-                        val carbs = healthData.nutrition.carbsGrams?.roundToInt() ?: 0
-                        val fat = healthData.nutrition.fatGrams?.roundToInt() ?: 0
-                        DetailCard(
-                            title = "Nutrition",
-                            value = "$cal kcal  P:${protein}g  C:${carbs}g  F:${fat}g",
-                            onClick = { onMetricClick(HealthViewModel.MetricType.NUTRITION) }
-                        )
-                    }
-                }
-
-                // ─── Mindfulness ───
-                val hasMindfulness = settings.showMindfulness && healthData.mindfulness.duration != null
-                if (hasMindfulness) {
-                    item {
-                        val typeText = healthData.mindfulness.sessionType ?: "Session"
-                        DetailCard(
-                            title = "Mindfulness",
-                            value = "${healthData.mindfulness.minutes}m ($typeText)",
-                            onClick = { }
-                        )
+                    // ─── TAB 3: PROGRESS (Trends & Milestones) ───
+                    3 -> {
+                        if (weatherData.isAvailable) {
+                            item { WeatherCard(weatherData = weatherData) }
+                        }
+                        item {
+                            MetricCard(title = "Steps", value = healthData.steps.count.toString(), unit = "steps", icon = Icons.AutoMirrored.Filled.DirectionsWalk, accentColor = CardSteps, sparklineData = generateSparklineData(healthData.steps.count, 20000), onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) }, subtitle = if (settings.showStepsStreak && stepsStreak > 0) "$stepsStreak day streak" else "")
+                        }
+                        // Link to full reports
+                        item {
+                            NocturneCard(onClick = onReportsClick) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Column {
+                                        Text("Weekly Summary", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.SemiBold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("View trends, milestones & reports", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant)
+                                    }
+                                    Icon(imageVector = Icons.Default.Assessment, contentDescription = null, tint = ElectricIndigo, modifier = Modifier.size(28.dp))
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -534,6 +372,8 @@ fun DashboardScreen(
 
             // ─── Floating Bottom Nav Bar ───
             FloatingBottomNavBar(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
@@ -1637,11 +1477,10 @@ private fun VitalMetricRow(label: String, value: String, statusDot: Color?, onCl
 
 @Composable
 private fun FloatingBottomNavBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // For now, "Readiness" is always active (tab 0)
-    val activeTab = 0
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -1657,27 +1496,27 @@ private fun FloatingBottomNavBar(
         ) {
             BottomNavItem(
                 icon = "bolt",
-                label = "Readiness",
-                isActive = activeTab == 0,
-                onClick = { }
+                label = "Pulse",
+                isActive = selectedTab == 0,
+                onClick = { onTabSelected(0) }
             )
             BottomNavItem(
                 icon = "fitness",
                 label = "Activity",
-                isActive = activeTab == 1,
-                onClick = { }
+                isActive = selectedTab == 1,
+                onClick = { onTabSelected(1) }
             )
             BottomNavItem(
                 icon = "heart",
                 label = "Vitals",
-                isActive = activeTab == 2,
-                onClick = { }
+                isActive = selectedTab == 2,
+                onClick = { onTabSelected(2) }
             )
             BottomNavItem(
                 icon = "chart",
                 label = "Progress",
-                isActive = activeTab == 3,
-                onClick = { }
+                isActive = selectedTab == 3,
+                onClick = { onTabSelected(3) }
             )
         }
     }
