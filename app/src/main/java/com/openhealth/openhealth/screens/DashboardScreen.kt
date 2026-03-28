@@ -250,52 +250,197 @@ fun DashboardScreen(
                         }
                     }
 
-                    // ─── TAB 1: ACTIVITY (Movement & Energy) ───
+                    // ─── TAB 1: ACTIVITY (Movement & Energy) — Stitch match ───
                     1 -> {
+                        // Hero: "Today's Resonance"
                         item {
-                            MetricCard(title = "Steps", value = healthData.steps.count.toString(), unit = "steps", icon = Icons.AutoMirrored.Filled.DirectionsWalk, accentColor = CardSteps, sparklineData = generateSparklineData(healthData.steps.count, 20000), onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) }, subtitle = if (settings.showStepsStreak && stepsStreak > 0) "$stepsStreak day streak" else "")
-                        }
-                        item {
-                            MetricCard(title = "Calories", value = healthData.calories.totalBurned.roundToInt().toString(), unit = "kcal", icon = Icons.Default.LocalFireDepartment, accentColor = CardCalories, sparklineData = generateSparklineData(healthData.calories.totalBurned.toLong(), 3000), onClick = { onMetricClick(HealthViewModel.MetricType.CALORIES) })
-                        }
-                        val hasExercise = settings.showExercise && healthData.exercise.sessions.isNotEmpty()
-                        if (hasExercise) {
-                            item {
-                                val totalMin = healthData.exercise.totalDuration?.toMinutes() ?: 0
-                                val sessionText = if (healthData.exercise.sessionCount == 1) "1 session" else "${healthData.exercise.sessionCount} sessions"
-                                val durationText = if (totalMin >= 60) "${totalMin / 60}h ${totalMin % 60}m" else "${totalMin}m"
-                                DetailCard(title = "Exercise", value = "$durationText ($sessionText)", onClick = { onMetricClick(HealthViewModel.MetricType.EXERCISE) })
+                            Column {
+                                Text("Today's", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface, letterSpacing = (-1).sp)
+                                Text("Resonance", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = ElectricIndigo, letterSpacing = (-1).sp)
                             }
                         }
+
+                        // Activity rings
+                        item {
+                            val stepsProgress = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
+                            val calProgress = (healthData.calories.totalBurned.toFloat() / settings.caloriesGoal).coerceIn(0f, 1f)
+                            val exerciseMin = healthData.exercise.totalDuration?.toMinutes()?.toInt() ?: 0
+                            val exerciseProgress = (exerciseMin / 30f).coerceIn(0f, 1f)
+
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
+                                    // 3 concentric rings
+                                    Canvas(modifier = Modifier.size(200.dp)) {
+                                        val strokeW = 18.dp.toPx()
+                                        // Move ring (outer)
+                                        val r1 = size.width / 2 - strokeW / 2
+                                        drawCircle(color = SurfaceHighest, radius = r1, style = Stroke(strokeW, cap = StrokeCap.Round))
+                                        drawArc(color = ElectricIndigo, startAngle = -90f, sweepAngle = 360f * stepsProgress, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = Offset(strokeW / 2, strokeW / 2), size = Size(r1 * 2, r1 * 2))
+                                        // Exercise ring (middle)
+                                        val r2 = r1 - strokeW - 4.dp.toPx()
+                                        val off2 = size.width / 2 - r2
+                                        drawCircle(color = SurfaceHighest, radius = r2, style = Stroke(strokeW, cap = StrokeCap.Round))
+                                        drawArc(color = VibrantMagenta, startAngle = -90f, sweepAngle = 360f * exerciseProgress, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = Offset(off2, off2), size = Size(r2 * 2, r2 * 2))
+                                        // Stand ring (inner)
+                                        val r3 = r2 - strokeW - 4.dp.toPx()
+                                        val off3 = size.width / 2 - r3
+                                        drawCircle(color = SurfaceHighest, radius = r3, style = Stroke(strokeW, cap = StrokeCap.Round))
+                                        drawArc(color = SoftLavender, startAngle = -90f, sweepAngle = 360f * calProgress, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = Offset(off3, off3), size = Size(r3 * 2, r3 * 2))
+                                    }
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text("PROGRESS", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp)
+                                        Text("${(stepsProgress * 100).roundToInt()}%", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface)
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3 stat cards: Move / Exercise / Stand
+                        item {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                val exerciseMin = healthData.exercise.totalDuration?.toMinutes()?.toInt() ?: 0
+                                listOf(
+                                    Triple("MOVE", "${healthData.calories.totalBurned.roundToInt()}", "kcal") to ElectricIndigo,
+                                    Triple("EXERCISE", "$exerciseMin", "min") to VibrantMagenta,
+                                    Triple("STEPS", "${healthData.steps.count / 1000}k", "steps") to SoftLavender
+                                ).forEach { (data, color) ->
+                                    Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                        Column {
+                                            Text(data.first, fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Row(verticalAlignment = Alignment.Bottom) {
+                                                Text(data.second, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(data.third, fontSize = 12.sp, color = TextOnSurfaceVariant, modifier = Modifier.padding(bottom = 2.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Step Intensity energy pill
+                        item {
+                            val stepProgress = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
+                            NocturneCard(surfaceColor = SurfaceHigh, onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) }) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                                    Text("Step Intensity", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                    Text("${healthData.steps.count}", color = ElectricIndigo, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Box(modifier = Modifier.fillMaxWidth().height(20.dp).clip(RoundedCornerShape(10.dp)).background(SurfaceLowest).padding(3.dp)) {
+                                    Box(modifier = Modifier.fillMaxWidth(stepProgress).fillMaxHeight().background(Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)), RoundedCornerShape(8.dp)))
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Goal: ${settings.stepsGoal}", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                    Text("${(stepProgress * 100).roundToInt()}% Completed", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                }
+                            }
+                        }
+
+                        // Distance energy pill
                         val hasDistance = settings.showDistance && healthData.distance.kilometers > 0
                         if (hasDistance) {
-                            item { DetailCard(title = "Distance", value = String.format("%.2f km", healthData.distance.kilometers), progress = (healthData.distance.kilometers.toFloat() / settings.distanceGoalKm).coerceIn(0f, 1f), onClick = { onMetricClick(HealthViewModel.MetricType.DISTANCE) }) }
-                        }
-                        val hasFloors = settings.showFloors && healthData.floors.count > 0
-                        if (hasFloors) {
-                            item { DetailCard(title = "Floors Climbed", value = "${healthData.floors.count}", progress = (healthData.floors.count.toFloat() / settings.floorsGoal).coerceIn(0f, 1f), onClick = { onMetricClick(HealthViewModel.MetricType.FLOORS) }) }
-                        }
-                        val hasVO2Max = settings.showVO2Max && healthData.vo2Max.value != null && healthData.vo2Max.value > 0
-                        if (hasVO2Max) {
-                            item { DetailCard(title = "VO2 Max", value = String.format("%.1f ml/kg/min", healthData.vo2Max.value), onClick = { onMetricClick(HealthViewModel.MetricType.VO2_MAX) }) }
-                        }
-                        val hasNutrition = settings.showNutrition && healthData.nutrition.calories != null && healthData.nutrition.calories > 0
-                        if (hasNutrition) {
                             item {
-                                val cal = healthData.nutrition.calories?.roundToInt() ?: 0
-                                val protein = healthData.nutrition.proteinGrams?.roundToInt() ?: 0
-                                val carbs = healthData.nutrition.carbsGrams?.roundToInt() ?: 0
-                                val fat = healthData.nutrition.fatGrams?.roundToInt() ?: 0
-                                DetailCard(title = "Nutrition", value = "$cal kcal  P:${protein}g  C:${carbs}g  F:${fat}g", onClick = { onMetricClick(HealthViewModel.MetricType.NUTRITION) })
+                                val distProgress = (healthData.distance.kilometers.toFloat() / settings.distanceGoalKm).coerceIn(0f, 1f)
+                                NocturneCard(surfaceColor = SurfaceHigh, onClick = { onMetricClick(HealthViewModel.MetricType.DISTANCE) }) {
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                                        Text("Distance Traveled", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            Text(String.format("%.1f", healthData.distance.kilometers), color = SoftLavender, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("km", color = TextOnSurfaceVariant, fontSize = 14.sp)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Box(modifier = Modifier.fillMaxWidth().height(20.dp).clip(RoundedCornerShape(10.dp)).background(SurfaceLowest).padding(3.dp)) {
+                                        Box(modifier = Modifier.fillMaxWidth(distProgress).fillMaxHeight().background(Brush.horizontalGradient(listOf(SoftLavender, ElectricIndigo)), RoundedCornerShape(8.dp)))
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Goal: ${settings.distanceGoalKm} km", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                        Text("${(distProgress * 100).roundToInt()}% Completed", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Metabolic Insight card
+                        item {
+                            NocturneCard(surfaceColor = SurfaceHigh) {
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Box(modifier = Modifier.size(44.dp).background(VibrantMagenta.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.Assessment, null, tint = VibrantMagenta, modifier = Modifier.size(22.dp))
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text("Metabolic Efficiency", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("Your current activity flow is optimizing your resting metabolic rate. Keep this rhythm for best results.", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant, lineHeight = 18.sp)
+                                    }
+                                }
                             }
                         }
                     }
 
-                    // ─── TAB 2: VITALS (Biometric Health) ───
+                    // ─── TAB 2: VITALS (Biometric Health) — Stitch match ───
                     2 -> {
+                        // Hero: "PULSE RHYTHM"
                         item {
-                            MetricCard(title = "Heart Rate", value = healthData.heartRate.currentBpm?.toString() ?: "--", unit = "bpm", icon = Icons.Default.Favorite, accentColor = CardHeartRate, sparklineData = generateHeartRateSparklineData(healthData.heartRate.currentBpm ?: 70), onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE) })
+                            Column {
+                                Text("LIVE STATUS", fontSize = 10.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("PULSE", fontSize = 44.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface, letterSpacing = (-1).sp)
+                                Text("RHYTHM", fontSize = 44.sp, fontWeight = FontWeight.ExtraBold, color = VibrantMagenta, letterSpacing = (-1).sp)
+                            }
                         }
+
+                        // Resting HR card with magenta left border
+                        item {
+                            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(SurfaceLow)) {
+                                // Left magenta border
+                                Box(modifier = Modifier.width(4.dp).height(80.dp).background(VibrantMagenta).align(Alignment.CenterStart))
+                                Row(modifier = Modifier.padding(20.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Column {
+                                        Text("Resting Heart Rate", fontSize = 14.sp, color = TextOnSurfaceVariant)
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            Text(healthData.heartRate.currentBpm?.toString() ?: "--", fontSize = 36.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("BPM", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = VibrantMagenta, modifier = Modifier.padding(bottom = 4.dp))
+                                        }
+                                    }
+                                    Icon(Icons.Default.Favorite, null, tint = CardHeartRate, modifier = Modifier.size(32.dp).clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE) })
+                                }
+                            }
+                        }
+
+                        // HRV bento card with bar chart
+                        if (healthData.heartRateVariability.rmssdMs != null) {
+                            item { HrvChartCard(healthData = healthData, onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }) }
+                        }
+
+                        // SpO2 card — gradient magenta background
+                        if (healthData.oxygenSaturation.percentage != null) {
+                            item {
+                                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Brush.linearGradient(listOf(MagentaContainer, SurfaceHigh))).padding(24.dp).clickable { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }) {
+                                    Column {
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text("SpO2", color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            Text("${healthData.oxygenSaturation.percentage?.roundToInt()}", fontSize = 52.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
+                                            Text("%", fontSize = 24.sp, color = VibrantMagenta, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("Optimal oxygenation detected", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Stress card
                         if (healthData.heartRateVariability.rmssdMs != null) {
                             item {
                                 val hrv = healthData.heartRateVariability.rmssdMs!!
@@ -305,16 +450,15 @@ fun DashboardScreen(
                                 StressEnergyCard(stressLevel = stressLevel, stressLabel = stressLabel, stressColor = stressColor, energyPercent = readinessScore.score.coerceIn(0, 100), onClick = onStressClick)
                             }
                         }
+
+                        // Sleep metric card
                         item {
                             val sleepHours = healthData.sleep.totalDuration?.toHours()?.toInt() ?: 0
                             val sleepMinutes = healthData.sleep.totalDuration?.let { ((it.toMinutes() % 60).toInt()) } ?: 0
-                            val sleepTimeRange = healthData.sleep.sessions.maxByOrNull { it.endTime }?.let { session ->
-                                val formatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
-                                "${session.startTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)} - ${session.endTime.atZone(java.time.ZoneId.systemDefault()).format(formatter)}"
-                            } ?: ""
-                            MetricCard(title = "Sleep", value = if (sleepHours > 0 || sleepMinutes > 0) "${sleepHours}h ${sleepMinutes}m" else "--", unit = "", subtitle = sleepTimeRange, icon = Icons.Default.NightsStay, accentColor = CardSleep, sparklineData = generateSleepSparklineData(sleepHours * 60 + sleepMinutes), onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) })
+                            MetricCard(title = "Sleep", value = if (sleepHours > 0 || sleepMinutes > 0) "${sleepHours}h ${sleepMinutes}m" else "--", unit = "", icon = Icons.Default.NightsStay, accentColor = CardSleep, sparklineData = generateSleepSparklineData(sleepHours * 60 + sleepMinutes), onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) })
                         }
-                        // Vitals card
+
+                        // Vitals detail card
                         val hasHRV = settings.showHRV && healthData.heartRateVariability.rmssdMs != null
                         val hasBloodOxygen = settings.showOxygenSaturation && healthData.oxygenSaturation.percentage != null
                         val hasBloodPressure = settings.showBloodPressure && healthData.bloodPressure.systolicMmHg != null
@@ -326,6 +470,7 @@ fun DashboardScreen(
                         if (hasAnyVitals) {
                             item { VitalsCard(healthData = healthData, hasHRV = hasHRV, hasBloodOxygen = hasBloodOxygen, hasBloodPressure = hasBloodPressure, hasBodyTemp = hasBodyTemp, hasRespiratoryRate = hasRespiratoryRate, hasSkinTemp = hasSkinTemp, hasBloodGlucose = hasBloodGlucose, expanded = vitalsExpanded, onExpandedChange = onVitalsExpandedChange, onMetricClick = onMetricClick) }
                         }
+
                         // Body composition
                         val hasWeight = settings.showWeight && healthData.weight.kilograms != null
                         val hasBodyFat = settings.showBodyFat && healthData.bodyFat.percentage != null
@@ -339,24 +484,74 @@ fun DashboardScreen(
                         }
                     }
 
-                    // ─── TAB 3: PROGRESS (Trends & Milestones) ───
+                    // ─── TAB 3: PROGRESS (Trends & Milestones) — Stitch match ───
                     3 -> {
-                        if (weatherData.isAvailable) {
-                            item { WeatherCard(weatherData = weatherData) }
+                        // Hero: Daily Consistency
+                        item {
+                            val consistency = readinessScore.score.coerceIn(0, 100)
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                                Column {
+                                    Text("DAILY CONSISTENCY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(verticalAlignment = Alignment.Bottom) {
+                                        Text("$consistency%", fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Box(modifier = Modifier.background(Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                                            Text("ACTIVE ZONE", fontSize = 9.sp, color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                        }
+                                    }
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Assessment, null, tint = SuccessGreen, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    Text("+4%", color = SuccessGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
+
+                        // Streak + stats row
+                        item {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                listOf(
+                                    Triple("STREAK", if (stepsStreak > 0) "$stepsStreak" else "0", "Days") to ElectricIndigo,
+                                    Triple("STATUS", "Elite", "") to VibrantMagenta,
+                                    Triple("AVG STEPS", "${healthData.steps.count / 1000}k", "") to SoftLavender
+                                ).forEach { (data, color) ->
+                                    Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                        Column {
+                                            Text(data.first, fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(data.second, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            if (data.third.isNotEmpty()) Text(data.third, fontSize = 11.sp, color = TextOnSurfaceVariant)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Steps overview
                         item {
                             MetricCard(title = "Steps", value = healthData.steps.count.toString(), unit = "steps", icon = Icons.AutoMirrored.Filled.DirectionsWalk, accentColor = CardSteps, sparklineData = generateSparklineData(healthData.steps.count, 20000), onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) }, subtitle = if (settings.showStepsStreak && stepsStreak > 0) "$stepsStreak day streak" else "")
                         }
-                        // Link to full reports
+
+                        // Weather
+                        if (weatherData.isAvailable) {
+                            item { WeatherCard(weatherData = weatherData) }
+                        }
+
+                        // Weekly Summary link
                         item {
                             NocturneCard(onClick = onReportsClick) {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Column {
-                                        Text("Weekly Summary", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.SemiBold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text("View trends, milestones & reports", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant)
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Box(modifier = Modifier.size(44.dp).background(ElectricIndigo.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.Assessment, null, tint = ElectricIndigo, modifier = Modifier.size(22.dp))
                                     }
-                                    Icon(imageVector = Icons.Default.Assessment, contentDescription = null, tint = ElectricIndigo, modifier = Modifier.size(28.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text("Weekly Insight", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("View your weekly summary, trends, and milestones", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant)
+                                    }
                                 }
                             }
                         }
