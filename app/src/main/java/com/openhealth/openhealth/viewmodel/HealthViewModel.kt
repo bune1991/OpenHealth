@@ -687,6 +687,21 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         saveHydrationEntries(updated)
     }
 
+    fun removeWaterEntry(entry: com.openhealth.openhealth.screens.HydrationEntry) {
+        val updated = _hydrationEntries.value.toMutableList()
+        updated.removeAll { it.time == entry.time && it.amount == entry.amount }
+        _hydrationEntries.value = updated
+        _hydrationDailyTotal.value = updated.sumOf { it.amount }
+        saveHydrationEntries(updated)
+    }
+
+    fun clearAllWaterEntries() {
+        _hydrationEntries.value = emptyList()
+        _hydrationDailyTotal.value = 0
+        val today = LocalDate.now(kuwaitZone)
+        hydrationPrefs.edit().remove("hydration_${today}").apply()
+    }
+
     private fun loadHydrationEntries() {
         val today = LocalDate.now(kuwaitZone)
         val key = "hydration_${today}"

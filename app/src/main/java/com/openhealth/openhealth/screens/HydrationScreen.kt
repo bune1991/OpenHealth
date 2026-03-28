@@ -24,6 +24,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -73,6 +74,8 @@ fun HydrationScreen(
     dailyTotal: Int,
     goal: Int,
     onAddWater: (Int) -> Unit,
+    onRemoveEntry: (HydrationEntry) -> Unit = {},
+    onClearAll: () -> Unit = {},
     onBackClick: () -> Unit
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
@@ -390,16 +393,31 @@ fun HydrationScreen(
                 }
             }
 
-            // TODAY'S HISTORY header
+            // TODAY'S HISTORY header + Clear All
             item {
-                Text(
-                    text = "TODAY'S HISTORY",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextSubtle,
-                    letterSpacing = 1.sp,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "TODAY'S HISTORY",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextSubtle,
+                        letterSpacing = 1.sp
+                    )
+                    if (hydrationEntries.isNotEmpty()) {
+                        Text(
+                            text = "CLEAR ALL",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = VibrantMagenta,
+                            letterSpacing = 1.sp,
+                            modifier = Modifier.clickable { onClearAll() }
+                        )
+                    }
+                }
             }
 
             // History list
@@ -479,12 +497,23 @@ fun HydrationScreen(
                                     )
                                 }
                             }
-                            Text(
-                                text = "${entry.amount}ml",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ElectricIndigo
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "${entry.amount}ml",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ElectricIndigo
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Remove",
+                                    tint = TextSubtle,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .clickable { onRemoveEntry(entry) }
+                                )
+                            }
                         }
                     }
                 }

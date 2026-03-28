@@ -203,6 +203,8 @@ class MainActivity : ComponentActivity() {
                                             dailyTotal = hydrationDailyTotal,
                                             goal = 2500,
                                             onAddWater = { viewModel.addWaterEntry(it) },
+                                            onRemoveEntry = { viewModel.removeWaterEntry(it) },
+                                            onClearAll = { viewModel.clearAllWaterEntries() },
                                             onBackClick = { viewModel.hideHydration() }
                                         )
                                     }
