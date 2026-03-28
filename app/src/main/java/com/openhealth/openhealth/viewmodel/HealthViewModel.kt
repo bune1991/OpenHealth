@@ -512,10 +512,22 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         loadMetricHistory(metricType)
     }
 
-    // Clear selected metric (go back to dashboard)
+    // Track if metric was opened from readiness
+    private var _openedFromReadiness = false
+
+    fun selectMetricFromReadiness(metricType: MetricType) {
+        _openedFromReadiness = true
+        selectMetric(metricType)
+    }
+
+    // Clear selected metric (go back to previous screen)
     fun clearSelectedMetric() {
         _selectedMetric.value = null
         _metricHistory.value = null
+        if (_openedFromReadiness) {
+            _openedFromReadiness = false
+            _showReadinessDetail.value = true
+        }
     }
 
     // Selected tab state (persists across navigation)
