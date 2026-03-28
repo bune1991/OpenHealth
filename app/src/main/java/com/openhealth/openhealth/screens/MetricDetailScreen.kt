@@ -31,7 +31,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -295,7 +299,8 @@ fun MetricDetailScreen(
                             // Skip TodayValueCard for sleep — SleepClockCard is the hero
                             // Skip TodayValueCard for steps — circular progress ring is the hero
                             // Skip TodayValueCard for nutrition — custom daily intake hero
-                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION) {
+                            // Skip TodayValueCard for heart rate — gradient chart is the hero
+                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION && metricType != HealthViewModel.MetricType.HEART_RATE) {
                                 TodayValueCard(
                                     value = selectedDateValue,
                                     valueFormatted = displayValue,
@@ -307,6 +312,29 @@ fun MetricDetailScreen(
                                     sleepStartTime = null,
                                     sleepEndTime = null
                                 )
+                            }
+                        }
+
+                        // ── Heart Rate Gradient Line Chart Hero ──
+                        if (metricType == HealthViewModel.MetricType.HEART_RATE && metricHistory?.last30Days?.isNotEmpty() == true) {
+                            item {
+                                val chartData = metricHistory.last30Days.takeLast(7)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .padding(16.dp)
+                                ) {
+                                    LineChart(
+                                        data = chartData,
+                                        lineColor = VibrantMagenta,
+                                        fillColor = VibrantMagenta.copy(alpha = 0.15f),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(160.dp)
+                                    )
+                                }
                             }
                         }
 
@@ -576,17 +604,7 @@ fun MetricDetailScreen(
                         if (healthData != null) {
                             data class StatItem(val label: String, val value: String)
                             val statsItems: List<StatItem>? = when (metricType) {
-                                HealthViewModel.MetricType.HEART_RATE -> {
-                                    val hr = healthData.heartRate
-                                    val rhr = healthData.restingHeartRate.bpm
-                                    if (hr.currentBpm != null && hr.minBpm != null && hr.maxBpm != null) {
-                                        listOfNotNull(
-                                            StatItem("Latest", "${hr.currentBpm} bpm"),
-                                            StatItem("Range", "${hr.minBpm}-${hr.maxBpm} bpm"),
-                                            rhr?.let { StatItem("Resting", "$it bpm") }
-                                        )
-                                    } else null
-                                }
+                                HealthViewModel.MetricType.HEART_RATE -> null // HR uses custom 2×2 grid below
                                 HealthViewModel.MetricType.HEART_RATE_VARIABILITY -> {
                                     val hrv = healthData.heartRateVariability
                                     if (hrv.avgMs != null && hrv.minMs != null && hrv.maxMs != null) {
@@ -644,6 +662,78 @@ fun MetricDetailScreen(
                                                     )
                                                     Spacer(modifier = Modifier.height(4.dp))
                                                     Text(text = stat.value, color = TextOnSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // ── Heart Rate 2×2 Stat Grid (Stitch design) ──
+                        if (metricType == HealthViewModel.MetricType.HEART_RATE && healthData != null) {
+                            val hr = healthData.heartRate
+                            if (hr.currentBpm != null && hr.minBpm != null && hr.maxBpm != null) {
+                                val avgBpm = if (hr.readings.isNotEmpty()) {
+                                    hr.readings.map { it.bpm }.average().roundToInt()
+                                } else {
+                                    ((hr.minBpm + hr.maxBpm) / 2)
+                                }
+
+                                data class HrStat(val label: String, val value: String, val unit: String, val icon: @Composable () -> Unit)
+                                val hrStats = listOf(
+                                    HrStat("LATEST", "${hr.currentBpm}", "bpm") { Icon(Icons.Default.Favorite, null, tint = CardHeartRate, modifier = Modifier.size(18.dp)) },
+                                    HrStat("AVG", "$avgBpm", "bpm") { Icon(Icons.AutoMirrored.Filled.ShowChart, null, tint = CardHeartRate, modifier = Modifier.size(18.dp)) },
+                                    HrStat("MIN", "${hr.minBpm}", "bpm") { Icon(Icons.Default.KeyboardArrowDown, null, tint = CardHeartRate, modifier = Modifier.size(18.dp)) },
+                                    HrStat("MAX", "${hr.maxBpm}", "bpm") { Icon(Icons.Default.KeyboardArrowUp, null, tint = CardHeartRate, modifier = Modifier.size(18.dp)) }
+                                )
+
+                                item {
+                                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        for (row in hrStats.chunked(2)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                row.forEach { stat ->
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .clip(RoundedCornerShape(24.dp))
+                                                            .background(SurfaceLow)
+                                                            .padding(vertical = 20.dp, horizontal = 16.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                            stat.icon()
+                                                            Spacer(modifier = Modifier.height(8.dp))
+                                                            Text(
+                                                                text = stat.label,
+                                                                color = TextOnSurfaceVariant,
+                                                                fontSize = 10.sp,
+                                                                fontWeight = FontWeight.Bold,
+                                                                letterSpacing = 2.sp
+                                                            )
+                                                            Spacer(modifier = Modifier.height(4.dp))
+                                                            Row(
+                                                                verticalAlignment = Alignment.Bottom,
+                                                                horizontalArrangement = Arrangement.Center
+                                                            ) {
+                                                                Text(
+                                                                    text = stat.value,
+                                                                    color = TextOnSurface,
+                                                                    fontSize = 18.sp,
+                                                                    fontWeight = FontWeight.Bold
+                                                                )
+                                                                Spacer(modifier = Modifier.width(4.dp))
+                                                                Text(
+                                                                    text = stat.unit,
+                                                                    color = TextOnSurfaceVariant,
+                                                                    fontSize = 12.sp
+                                                                )
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
