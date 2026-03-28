@@ -1461,17 +1461,9 @@ fun MetricDetailScreen(
                         if (healthData != null) {
                             data class StatItem(val label: String, val value: String)
                             val statsItems: List<StatItem>? = when (metricType) {
-                                HealthViewModel.MetricType.HEART_RATE -> null // HR uses custom 2×2 grid below
-                                HealthViewModel.MetricType.HEART_RATE_VARIABILITY -> {
-                                    val hrv = healthData.heartRateVariability
-                                    if (hrv.avgMs != null && hrv.minMs != null && hrv.maxMs != null) {
-                                        listOf(
-                                            StatItem("Average", "${String.format("%.0f", hrv.avgMs)} ms"),
-                                            StatItem("Range", "${String.format("%.0f", hrv.minMs)}-${String.format("%.0f", hrv.maxMs)} ms"),
-                                            StatItem("Readings", "${hrv.readingCount}")
-                                        )
-                                    } else null
-                                }
+                                HealthViewModel.MetricType.HEART_RATE -> null
+                                HealthViewModel.MetricType.HEART_RATE_VARIABILITY -> null
+                                HealthViewModel.MetricType.RESPIRATORY_RATE -> null
                                 HealthViewModel.MetricType.OXYGEN_SATURATION -> {
                                     val spo2 = healthData.oxygenSaturation
                                     if (spo2.avgPercentage != null && spo2.minPercentage != null && spo2.maxPercentage != null) {
@@ -1479,16 +1471,6 @@ fun MetricDetailScreen(
                                             StatItem("Average", "${String.format("%.0f", spo2.avgPercentage)}%"),
                                             StatItem("Range", "${String.format("%.0f", spo2.minPercentage)}-${String.format("%.0f", spo2.maxPercentage)}%"),
                                             StatItem("Readings", "${spo2.readingCount}")
-                                        )
-                                    } else null
-                                }
-                                HealthViewModel.MetricType.RESPIRATORY_RATE -> {
-                                    val rr = healthData.respiratoryRate
-                                    if (rr.avgRate != null && rr.minRate != null && rr.maxRate != null) {
-                                        listOf(
-                                            StatItem("Average", "${String.format("%.0f", rr.avgRate)} rpm"),
-                                            StatItem("Range", "${String.format("%.0f", rr.minRate)}-${String.format("%.0f", rr.maxRate)} rpm"),
-                                            StatItem("Readings", "${rr.readingCount}")
                                         )
                                     } else null
                                 }
@@ -2663,13 +2645,14 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Insights Card (non-sleep, non-steps, non-body-comp, non-exercise, non-nutrition)
-                        if (metricType != HealthViewModel.MetricType.SLEEP
-                            && metricType != HealthViewModel.MetricType.STEPS
-                            && !isBodyCompMetric
-                            && metricType != HealthViewModel.MetricType.EXERCISE
-                            && metricType != HealthViewModel.MetricType.NUTRITION
-                        ) {
+                        // Insights Card — only for metrics without custom insight cards
+                        val hasCustomInsight = metricType in listOf(
+                            HealthViewModel.MetricType.SLEEP, HealthViewModel.MetricType.STEPS,
+                            HealthViewModel.MetricType.EXERCISE, HealthViewModel.MetricType.NUTRITION,
+                            HealthViewModel.MetricType.HEART_RATE_VARIABILITY,
+                            HealthViewModel.MetricType.RESPIRATORY_RATE
+                        ) || isBodyCompMetric
+                        if (!hasCustomInsight) {
                             item {
                                 val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
                                 if (insight != null) {
