@@ -97,6 +97,14 @@ import java.time.ZoneId
 import com.openhealth.openhealth.model.CaloriesData
 import com.openhealth.openhealth.model.HealthData
 import com.openhealth.openhealth.model.SettingsData
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Restaurant
 import com.openhealth.openhealth.ui.theme.*
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 import java.time.format.DateTimeFormatter
@@ -231,27 +239,88 @@ fun DashboardScreen(
                 when (selectedTab) {
                     // ─── TAB 0: PULSE (Readiness & Daily Snapshot) ───
                     0 -> {
-                        // Hero: Readiness ring + score
+                        // ── 1. Readiness Ring with MASSIVE pulsing glow ──
                         item { ReadinessHeroCard(readinessScore = readinessScore, healthData = healthData, onClick = onReadinessClick) }
 
-                        // Description text
+                        // ── 2. Recovery Status Card — FULL MAGENTA ──
                         item {
-                            val descText = when {
-                                readinessScore.score >= 80 -> "Your nervous system is well-recovered. You're ready for a high-intensity session tonight."
-                                readinessScore.score >= 60 -> "Your body is moderately recovered. Consider a balanced workout today."
-                                readinessScore.score >= 40 -> "Recovery is still in progress. A lighter session is recommended."
-                                else -> "Your body needs rest. Focus on recovery activities today."
+                            val recoveryLabel = when {
+                                readinessScore.score >= 80 -> "PEAK"
+                                readinessScore.score >= 60 -> "GOOD"
+                                readinessScore.score >= 40 -> "FAIR"
+                                else -> "LOW"
                             }
-                            Text(
-                                text = descText,
-                                fontSize = 14.sp,
-                                color = TextOnSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                            )
+                            val recoverySubtitle = when {
+                                readinessScore.score >= 80 -> "System performance at maximum"
+                                readinessScore.score >= 60 -> "Body recovery progressing well"
+                                readinessScore.score >= 40 -> "Recovery still in progress"
+                                else -> "Your body needs rest today"
+                            }
+
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                // Magenta glow behind card
+                                Canvas(modifier = Modifier.matchParentSize()) {
+                                    drawCircle(
+                                        color = VibrantMagenta.copy(alpha = 0.12f),
+                                        radius = size.width * 0.55f,
+                                        center = Offset(size.width * 0.5f, size.height * 0.5f)
+                                    )
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(VibrantMagenta)
+                                        .clickable { onReadinessClick() }
+                                        .padding(24.dp)
+                                ) {
+                                    // Semi-transparent bolt icon on the right
+                                    Icon(
+                                        Icons.Filled.Bolt,
+                                        contentDescription = null,
+                                        tint = Color.White.copy(alpha = 0.15f),
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .align(Alignment.CenterEnd)
+                                    )
+
+                                    Column {
+                                        Text(
+                                            "Recovery Status",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White.copy(alpha = 0.85f),
+                                            letterSpacing = 1.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            recoverySubtitle,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.White
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        // PEAK badge pill
+                                        Box(
+                                            modifier = Modifier
+                                                .background(Color.White, RoundedCornerShape(20.dp))
+                                                .padding(horizontal = 14.dp, vertical = 5.dp)
+                                        ) {
+                                            Text(
+                                                recoveryLabel,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = VibrantMagenta,
+                                                letterSpacing = 2.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
 
-                        // 2x2 Metric Grid: Resting HR, HRV, Nutrition, Hydration
+                        // ── 3. Vitals Grid — SQUARE cards with glows ──
                         item {
                             val restingHr = healthData.heartRate.minBpm
                             val hrvVal = healthData.heartRateVariability.rmssdMs
@@ -265,15 +334,15 @@ fun DashboardScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    // Resting HR tile
+                                    // Resting HR — square card
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(150.dp)
+                                            .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(SurfaceLow)
                                             .clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE) }
-                                            .padding(20.dp)
+                                            .padding(16.dp)
                                     ) {
                                         Column(
                                             modifier = Modifier.fillMaxSize(),
@@ -284,47 +353,55 @@ fun DashboardScreen(
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.Top
                                             ) {
-                                                Icon(
-                                                    Icons.Filled.Favorite,
-                                                    contentDescription = null,
-                                                    tint = ElectricIndigo,
-                                                    modifier = Modifier.size(20.dp)
-                                                )
+                                                // Icon with glow
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Canvas(modifier = Modifier.size(36.dp)) {
+                                                        drawCircle(
+                                                            color = CardHeartRate.copy(alpha = 0.25f),
+                                                            radius = size.minDimension / 2
+                                                        )
+                                                    }
+                                                    Icon(
+                                                        Icons.Filled.Favorite,
+                                                        contentDescription = null,
+                                                        tint = CardHeartRate,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
                                                 Text(
                                                     "RESTING HR",
-                                                    fontSize = 10.sp,
+                                                    fontSize = 9.sp,
                                                     color = TextOnSurfaceVariant,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 1.5.sp
                                                 )
                                             }
-                                            Row(verticalAlignment = Alignment.Bottom) {
+                                            Column {
                                                 Text(
                                                     text = if (restingHr != null) "${restingHr.toInt()}" else "--",
-                                                    fontSize = 28.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = TextOnSurface
+                                                    fontSize = 36.sp,
+                                                    fontWeight = FontWeight.Black,
+                                                    color = TextOnSurface,
+                                                    letterSpacing = (-1).sp
                                                 )
-                                                Spacer(modifier = Modifier.width(4.dp))
                                                 Text(
                                                     "bpm",
                                                     fontSize = 12.sp,
-                                                    color = TextOnSurfaceVariant,
-                                                    modifier = Modifier.padding(bottom = 3.dp)
+                                                    color = TextOnSurfaceVariant
                                                 )
                                             }
                                         }
                                     }
 
-                                    // HRV tile
+                                    // HRV — square card
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(150.dp)
+                                            .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(SurfaceLow)
                                             .clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
-                                            .padding(20.dp)
+                                            .padding(16.dp)
                                     ) {
                                         Column(
                                             modifier = Modifier.fillMaxSize(),
@@ -335,58 +412,65 @@ fun DashboardScreen(
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.Top
                                             ) {
-                                                Icon(
-                                                    Icons.Filled.Favorite,
-                                                    contentDescription = null,
-                                                    tint = SoftLavender,
-                                                    modifier = Modifier.size(20.dp)
-                                                )
+                                                // Icon with glow
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Canvas(modifier = Modifier.size(36.dp)) {
+                                                        drawCircle(
+                                                            color = SoftLavender.copy(alpha = 0.25f),
+                                                            radius = size.minDimension / 2
+                                                        )
+                                                    }
+                                                    Icon(
+                                                        Icons.Filled.Favorite,
+                                                        contentDescription = null,
+                                                        tint = SoftLavender,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
                                                 Text(
                                                     "HRV",
-                                                    fontSize = 10.sp,
+                                                    fontSize = 9.sp,
                                                     color = TextOnSurfaceVariant,
                                                     fontWeight = FontWeight.Bold,
                                                     letterSpacing = 1.5.sp
                                                 )
                                             }
-                                            Row(verticalAlignment = Alignment.Bottom) {
+                                            Column {
                                                 Text(
                                                     text = if (hrvVal != null) "${hrvVal.toInt()}" else "--",
-                                                    fontSize = 28.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = TextOnSurface
+                                                    fontSize = 36.sp,
+                                                    fontWeight = FontWeight.Black,
+                                                    color = TextOnSurface,
+                                                    letterSpacing = (-1).sp
                                                 )
-                                                Spacer(modifier = Modifier.width(4.dp))
                                                 Text(
                                                     "ms",
                                                     fontSize = 12.sp,
-                                                    color = TextOnSurfaceVariant,
-                                                    modifier = Modifier.padding(bottom = 3.dp)
+                                                    color = TextOnSurfaceVariant
                                                 )
                                             }
                                         }
                                     }
                                 }
 
-                                // Row 2: Nutrition + Hydration
+                                // Row 2: Nutrition + Hydration — square with mini rings + pulsing dots
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    // Nutrition tile with progress ring
+                                    // Nutrition — square card
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(150.dp)
+                                            .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(SurfaceLow)
                                             .clickable { onMetricClick(HealthViewModel.MetricType.NUTRITION) }
-                                            .padding(20.dp)
+                                            .padding(16.dp)
                                     ) {
                                         val nutCalories = nutritionCal ?: 0.0
                                         val nutGoal = 2200.0
                                         val nutProgress = (nutCalories / nutGoal).toFloat().coerceIn(0f, 1f)
-                                        val nutRemaining = (nutGoal - nutCalories).coerceAtLeast(0.0).toInt()
 
                                         Column(
                                             modifier = Modifier.fillMaxSize(),
@@ -397,10 +481,62 @@ fun DashboardScreen(
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.Top
                                             ) {
-                                                // Mini progress ring
-                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(28.dp)) {
-                                                    Canvas(modifier = Modifier.size(28.dp)) {
-                                                        val strokeW = 3.dp.toPx()
+                                                // Icon with glow
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Canvas(modifier = Modifier.size(36.dp)) {
+                                                        drawCircle(
+                                                            color = CardNutrition.copy(alpha = 0.25f),
+                                                            radius = size.minDimension / 2
+                                                        )
+                                                    }
+                                                    Icon(
+                                                        Icons.Filled.Restaurant,
+                                                        contentDescription = null,
+                                                        tint = CardNutrition,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    // Pulsing status dot
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(6.dp)
+                                                            .background(CardNutrition, CircleShape)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(
+                                                        "NUTRITION",
+                                                        fontSize = 9.sp,
+                                                        color = TextOnSurfaceVariant,
+                                                        fontWeight = FontWeight.Bold,
+                                                        letterSpacing = 1.5.sp
+                                                    )
+                                                }
+                                            }
+
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.Bottom
+                                            ) {
+                                                Column {
+                                                    Text(
+                                                        text = if (nutritionCal != null) "%,.0f".format(nutritionCal) else "--",
+                                                        fontSize = 36.sp,
+                                                        fontWeight = FontWeight.Black,
+                                                        color = TextOnSurface,
+                                                        letterSpacing = (-1).sp
+                                                    )
+                                                    Text(
+                                                        "kcal",
+                                                        fontSize = 12.sp,
+                                                        color = TextOnSurfaceVariant
+                                                    )
+                                                }
+                                                // Mini radial progress ring
+                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
+                                                    Canvas(modifier = Modifier.size(40.dp)) {
+                                                        val strokeW = 4.dp.toPx()
                                                         val arcDiameter = size.width - strokeW
                                                         drawArc(
                                                             color = SurfaceHighest,
@@ -419,55 +555,30 @@ fun DashboardScreen(
                                                             size = Size(arcDiameter, arcDiameter)
                                                         )
                                                     }
-                                                }
-                                                Text(
-                                                    "NUTRITION",
-                                                    fontSize = 10.sp,
-                                                    color = TextOnSurfaceVariant,
-                                                    fontWeight = FontWeight.Bold,
-                                                    letterSpacing = 1.5.sp
-                                                )
-                                            }
-                                            Column {
-                                                Row(verticalAlignment = Alignment.Bottom) {
                                                     Text(
-                                                        text = if (nutritionCal != null) "%,.0f".format(nutritionCal) else "--",
-                                                        fontSize = 20.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurface
-                                                    )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    Text(
-                                                        "/ %,.0f".format(nutGoal),
+                                                        "${(nutProgress * 100).toInt()}%",
                                                         fontSize = 10.sp,
-                                                        color = TextOnSurfaceVariant,
-                                                        modifier = Modifier.padding(bottom = 2.dp)
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = CardNutrition
                                                     )
                                                 }
-                                                Text(
-                                                    text = if (nutritionCal != null) "$nutRemaining kcal remaining" else "No data",
-                                                    fontSize = 10.sp,
-                                                    color = CardNutrition,
-                                                    fontWeight = FontWeight.Medium
-                                                )
                                             }
                                         }
                                     }
 
-                                    // Hydration tile with progress ring
+                                    // Hydration — square card
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(150.dp)
+                                            .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(SurfaceLow)
                                             .clickable { onHydrationClick() }
-                                            .padding(20.dp)
+                                            .padding(16.dp)
                                     ) {
                                         val hydLiters = hydrationLiters ?: 0.0
                                         val hydGoal = 2.5
                                         val hydProgress = (hydLiters / hydGoal).toFloat().coerceIn(0f, 1f)
-                                        val hydPercent = (hydProgress * 100).toInt()
 
                                         Column(
                                             modifier = Modifier.fillMaxSize(),
@@ -478,10 +589,62 @@ fun DashboardScreen(
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                                 verticalAlignment = Alignment.Top
                                             ) {
-                                                // Mini progress ring
-                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(28.dp)) {
-                                                    Canvas(modifier = Modifier.size(28.dp)) {
-                                                        val strokeW = 3.dp.toPx()
+                                                // Icon with glow
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Canvas(modifier = Modifier.size(36.dp)) {
+                                                        drawCircle(
+                                                            color = HydrationBlue.copy(alpha = 0.25f),
+                                                            radius = size.minDimension / 2
+                                                        )
+                                                    }
+                                                    Icon(
+                                                        Icons.Filled.WaterDrop,
+                                                        contentDescription = null,
+                                                        tint = HydrationBlue,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    // Pulsing status dot
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(6.dp)
+                                                            .background(HydrationBlue, CircleShape)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(
+                                                        "HYDRATION",
+                                                        fontSize = 9.sp,
+                                                        color = TextOnSurfaceVariant,
+                                                        fontWeight = FontWeight.Bold,
+                                                        letterSpacing = 1.5.sp
+                                                    )
+                                                }
+                                            }
+
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.Bottom
+                                            ) {
+                                                Column {
+                                                    Text(
+                                                        text = if (hydrationLiters != null) "%.1f".format(hydLiters) else "--",
+                                                        fontSize = 36.sp,
+                                                        fontWeight = FontWeight.Black,
+                                                        color = TextOnSurface,
+                                                        letterSpacing = (-1).sp
+                                                    )
+                                                    Text(
+                                                        "liters",
+                                                        fontSize = 12.sp,
+                                                        color = TextOnSurfaceVariant
+                                                    )
+                                                }
+                                                // Mini radial progress ring
+                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
+                                                    Canvas(modifier = Modifier.size(40.dp)) {
+                                                        val strokeW = 4.dp.toPx()
                                                         val arcDiameter = size.width - strokeW
                                                         drawArc(
                                                             color = SurfaceHighest,
@@ -500,37 +663,13 @@ fun DashboardScreen(
                                                             size = Size(arcDiameter, arcDiameter)
                                                         )
                                                     }
-                                                }
-                                                Text(
-                                                    "HYDRATION",
-                                                    fontSize = 10.sp,
-                                                    color = TextOnSurfaceVariant,
-                                                    fontWeight = FontWeight.Bold,
-                                                    letterSpacing = 1.5.sp
-                                                )
-                                            }
-                                            Column {
-                                                Row(verticalAlignment = Alignment.Bottom) {
                                                     Text(
-                                                        text = if (hydrationLiters != null) "%.1f".format(hydLiters) else "--",
-                                                        fontSize = 20.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = TextOnSurface
-                                                    )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    Text(
-                                                        "/ %.1f L".format(hydGoal),
+                                                        "${(hydProgress * 100).toInt()}%",
                                                         fontSize = 10.sp,
-                                                        color = TextOnSurfaceVariant,
-                                                        modifier = Modifier.padding(bottom = 2.dp)
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = HydrationBlue
                                                     )
                                                 }
-                                                Text(
-                                                    text = if (hydrationLiters != null) "$hydPercent% of goal" else "No data",
-                                                    fontSize = 10.sp,
-                                                    color = HydrationBlue,
-                                                    fontWeight = FontWeight.Medium
-                                                )
                                             }
                                         }
                                     }
@@ -538,120 +677,167 @@ fun DashboardScreen(
                             }
                         }
 
-                        // Stress & Resilience compact card
+                        // ── 4. Stress & Resilience — horizontal with mini arc gauge ──
                         if (healthData.heartRateVariability.rmssdMs != null) {
                             item {
                                 val hrv = healthData.heartRateVariability.rmssdMs!!
                                 val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
-                                val stressLabel = when { stressLevel < 25 -> "Low Stress"; stressLevel < 50 -> "Moderate"; stressLevel < 75 -> "High"; else -> "Very High" }
+                                val stressLabel = when {
+                                    stressLevel < 25 -> "Stable Mindset"
+                                    stressLevel < 50 -> "Balanced State"
+                                    stressLevel < 75 -> "Elevated Tension"
+                                    else -> "High Alert"
+                                }
+                                val stressDesc = when {
+                                    stressLevel < 25 -> "Your autonomic nervous system is in a calm, recovered state. Ideal for focused work."
+                                    stressLevel < 50 -> "Moderate sympathetic activation detected. Normal for an active day."
+                                    stressLevel < 75 -> "Elevated stress markers present. Consider a recovery break."
+                                    else -> "High sympathetic drive detected. Prioritize rest and breathwork."
+                                }
 
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
-                                        .background(SurfaceHigh)
+                                        .background(SurfaceLow)
                                         .clickable { onStressClick() }
-                                        .padding(16.dp)
+                                        .padding(20.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
-                                            Canvas(modifier = Modifier.size(56.dp)) {
-                                                val strokeW = 5.dp.toPx()
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                "STRESS & RESILIENCE",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextSubtle,
+                                                letterSpacing = 2.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Text(
+                                                stressLabel,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextOnSurface
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                stressDesc,
+                                                fontSize = 12.sp,
+                                                color = TextOnSurfaceVariant,
+                                                lineHeight = 16.sp,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        // Mini half-arc gauge
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(64.dp)) {
+                                            Canvas(modifier = Modifier.size(64.dp)) {
+                                                val strokeW = 6.dp.toPx()
                                                 val arcSize = Size(size.width - strokeW, size.height - strokeW)
                                                 val topLeft = Offset(strokeW / 2, strokeW / 2)
-                                                drawArc(color = SurfaceHighest, startAngle = 135f, sweepAngle = 270f, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = topLeft, size = arcSize)
+                                                // Background arc (half circle)
                                                 drawArc(
-                                                    brush = Brush.sweepGradient(listOf(VibrantMagenta, ElectricIndigo)),
-                                                    startAngle = 135f, sweepAngle = 270f * (stressLevel / 100f),
-                                                    useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                    color = SurfaceHighest,
+                                                    startAngle = 180f, sweepAngle = 180f,
+                                                    useCenter = false,
+                                                    style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                    topLeft = topLeft, size = arcSize
+                                                )
+                                                // Progress arc
+                                                drawArc(
+                                                    brush = Brush.sweepGradient(listOf(ElectricIndigo, VibrantMagenta)),
+                                                    startAngle = 180f, sweepAngle = 180f * (stressLevel / 100f),
+                                                    useCenter = false,
+                                                    style = Stroke(strokeW, cap = StrokeCap.Round),
                                                     topLeft = topLeft, size = arcSize
                                                 )
                                             }
-                                            Text("$stressLevel", fontSize = 16.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
-                                        }
-                                        Spacer(modifier = Modifier.width(14.dp))
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text("Stress & Resilience", style = MaterialTheme.typography.titleSmall, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Box(modifier = Modifier.background(ElectricIndigo.copy(alpha = 0.2f), RoundedCornerShape(8.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                                    Text(stressLabel.uppercase(), fontSize = 9.sp, color = ElectricIndigo, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                                                }
-                                            }
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text("Optimal recovery zone", fontSize = 12.sp, color = TextOnSurfaceVariant)
+                                            Text(
+                                                "$stressLevel",
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = TextOnSurface,
+                                                modifier = Modifier.padding(top = 8.dp)
+                                            )
                                         }
                                     }
                                 }
                             }
                         }
 
-                        // "SIGNALS OF VITALITY" section header
+                        // ── 5. Neural Insight — gradient card with highlighted text ──
                         item {
-                            Text(
-                                "SIGNALS OF VITALITY",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextSubtle,
-                                letterSpacing = 2.sp,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
+                            val capacityPercent = when {
+                                readinessScore.score >= 80 -> "92%"
+                                readinessScore.score >= 60 -> "74%"
+                                readinessScore.score >= 40 -> "56%"
+                                else -> "38%"
+                            }
 
-                        // Daily Capacity Peak — AI insight card
-                        item {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(SurfaceHigh)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(
+                                                ElectricIndigo.copy(alpha = 0.10f),
+                                                VibrantMagenta.copy(alpha = 0.10f)
+                                            )
+                                        )
+                                    )
+                                    .clickable { onAiInsightsClick() }
                                     .padding(24.dp)
                             ) {
                                 Column {
-                                    // Badge row
                                     Row(verticalAlignment = Alignment.CenterVertically) {
+                                        // Psychology icon in circle
                                         Box(
+                                            contentAlignment = Alignment.Center,
                                             modifier = Modifier
-                                                .background(ElectricIndigo.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
-                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                                .size(36.dp)
+                                                .background(ElectricIndigo.copy(alpha = 0.2f), CircleShape)
                                         ) {
-                                            Text(
-                                                "NEURAL INSIGHT",
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.ExtraBold,
-                                                color = ElectricIndigo,
-                                                letterSpacing = 1.sp
+                                            Icon(
+                                                Icons.Filled.Psychology,
+                                                contentDescription = null,
+                                                tint = ElectricIndigo,
+                                                modifier = Modifier.size(20.dp)
                                             )
                                         }
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Icon(
-                                            Icons.Filled.AutoAwesome,
-                                            contentDescription = null,
-                                            tint = ElectricIndigo,
-                                            modifier = Modifier.size(14.dp)
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            "Neural Insight",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ElectricIndigo
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        // Pulsing dot
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .background(ElectricIndigo, CircleShape)
                                         )
                                     }
 
-                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
 
                                     Text(
-                                        "Daily Capacity Peak",
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextOnSurface,
-                                        letterSpacing = (-0.5).sp
-                                    )
-
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    Text(
-                                        text = "Based on your deep sleep cycles and current HRV, your metabolic window for high performance is between 18:00 and 20:30. Focus on protein intake now to maximize recovery.",
+                                        text = buildAnnotatedString {
+                                            append("Based on your deep sleep cycles and current HRV, you are operating at ")
+                                            withStyle(SpanStyle(color = TextOnSurface, fontWeight = FontWeight.Bold)) {
+                                                append("$capacityPercent daily capacity")
+                                            }
+                                            append(". Your metabolic window for peak performance is between 18:00 and 20:30.")
+                                        },
                                         fontSize = 14.sp,
                                         color = TextOnSurfaceVariant,
-                                        lineHeight = 20.sp
+                                        lineHeight = 21.sp
                                     )
 
                                     Spacer(modifier = Modifier.height(20.dp))
@@ -1698,104 +1884,96 @@ private fun ReadinessHeroCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
-                .padding(vertical = 8.dp),
+                .padding(vertical = 16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+            // MASSIVE pulsing purple glow — 320dp behind the ring
+            Canvas(modifier = Modifier.size(320.dp)) {
+                drawCircle(
+                    color = ElectricIndigo.copy(alpha = 0.20f),
+                    radius = size.minDimension / 2
+                )
+                drawCircle(
+                    color = ElectricIndigo.copy(alpha = 0.08f),
+                    radius = size.minDimension / 2 * 1.15f
+                )
+            }
+
+            // Readiness ring
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(240.dp)
             ) {
-                // Readiness ring with outer glow
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(240.dp)
-                ) {
-                    val animatedScore by animateFloatAsState(
-                        targetValue = readinessScore.score / 100f,
-                        animationSpec = tween(1200),
-                        label = "readiness_arc"
+                val animatedScore by animateFloatAsState(
+                    targetValue = readinessScore.score / 100f,
+                    animationSpec = tween(1200),
+                    label = "readiness_arc"
+                )
+                val animatedNumber by animateIntAsState(
+                    targetValue = readinessScore.score,
+                    animationSpec = tween(1000),
+                    label = "readiness_number"
+                )
+
+                Canvas(modifier = Modifier.size(240.dp)) {
+                    val strokeWidth = 14.dp.toPx()
+                    val arcSize = Size(size.width - strokeWidth * 2, size.height - strokeWidth * 2)
+                    val topLeft = Offset(strokeWidth, strokeWidth)
+
+                    // Shadow glow ring (larger radius, behind the main ring)
+                    drawCircle(
+                        color = ElectricIndigo.copy(alpha = 0.15f),
+                        radius = size.minDimension / 2 - strokeWidth / 2 + 6.dp.toPx(),
+                        style = Stroke(width = strokeWidth + 12.dp.toPx())
                     )
-                    val animatedNumber by animateIntAsState(
-                        targetValue = readinessScore.score,
-                        animationSpec = tween(1000),
-                        label = "readiness_number"
+
+                    // Background track ring (full 360)
+                    drawArc(
+                        color = SurfaceHighest.copy(alpha = 0.6f),
+                        startAngle = -90f,
+                        sweepAngle = 360f,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        topLeft = topLeft,
+                        size = arcSize
                     )
 
-                    Canvas(modifier = Modifier.size(240.dp)) {
-                        val strokeWidth = 12.dp.toPx()
-                        val arcSize = Size(size.width - strokeWidth * 2, size.height - strokeWidth * 2)
-                        val topLeft = Offset(strokeWidth, strokeWidth)
+                    // Progress ring (solid primary fill)
+                    drawArc(
+                        color = ElectricIndigo,
+                        startAngle = -90f,
+                        sweepAngle = 360f * animatedScore,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        topLeft = topLeft,
+                        size = arcSize
+                    )
+                }
 
-                        // Outer glow
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    ElectricIndigo.copy(alpha = 0.1f),
-                                    Color.Transparent
-                                )
-                            ),
-                            radius = size.minDimension / 2
-                        )
-
-                        // Background ring (full 360°)
-                        drawArc(
-                            color = SurfaceHighest,
-                            startAngle = -90f,
-                            sweepAngle = 360f,
-                            useCenter = false,
-                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                            topLeft = topLeft,
-                            size = arcSize
-                        )
-
-                        // Progress ring (full circle based on score)
-                        drawArc(
-                            color = ElectricIndigo,
-                            startAngle = -90f,
-                            sweepAngle = 360f * animatedScore,
-                            useCenter = false,
-                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                            topLeft = topLeft,
-                            size = arcSize
-                        )
-                    }
-
-                    // Center content
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "READINESS",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextOnSurfaceVariant,
-                            letterSpacing = 2.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = animatedNumber.toString(),
-                            fontSize = 72.sp,
-                            fontWeight = FontWeight.Black,
-                            color = TextOnSurface,
-                            letterSpacing = (-2).sp
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = null,
-                                tint = ElectricIndigo,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = readinessScore.label.uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = ElectricIndigo,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 2.sp
-                            )
-                        }
-                    }
+                // Center content
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "READINESS",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextOnSurfaceVariant,
+                        letterSpacing = 3.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = animatedNumber.toString(),
+                        fontSize = 72.sp,
+                        fontWeight = FontWeight.Black,
+                        color = TextOnSurface,
+                        letterSpacing = (-2).sp
+                    )
+                    Text(
+                        text = readinessScore.label.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ElectricIndigo,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 2.sp
+                    )
                 }
             }
         }
