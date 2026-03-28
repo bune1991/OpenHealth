@@ -302,6 +302,8 @@ class MainActivity : ComponentActivity() {
                                             onAiInsightsClick = { viewModel.showAiInsights() },
                                             onHydrationClick = { viewModel.showHydration() },
                                             onPerformanceClick = { viewModel.showPerformance() },
+                                            selectedTab = viewModel.selectedTab.collectAsState().value,
+                                            onTabChanged = { viewModel.setSelectedTab(it) },
                                             hydrationDailyTotalMl = hydrationDailyTotal,
                                             onSessionClick = { viewModel.showWorkoutDetail(it) },
                                             weatherData = weatherData,

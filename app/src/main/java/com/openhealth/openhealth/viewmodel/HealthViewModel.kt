@@ -518,6 +518,11 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         _metricHistory.value = null
     }
 
+    // Selected tab state (persists across navigation)
+    private val _selectedTab = MutableStateFlow(0)
+    val selectedTab: StateFlow<Int> = _selectedTab.asStateFlow()
+    fun setSelectedTab(tab: Int) { _selectedTab.value = tab }
+
     // Save dashboard scroll position before navigating to detail
     fun saveDashboardScrollPosition(index: Int, offset: Int = 0) {
         _dashboardScrollIndex.value = index

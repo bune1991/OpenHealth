@@ -147,6 +147,8 @@ fun DashboardScreen(
     onAiInsightsClick: () -> Unit = {},
     onHydrationClick: () -> Unit = {},
     onPerformanceClick: () -> Unit = {},
+    selectedTab: Int = 0,
+    onTabChanged: (Int) -> Unit = {},
     hydrationDailyTotalMl: Int = 0,
     onSessionClick: (com.openhealth.openhealth.model.ExerciseSession) -> Unit = {},
     weatherData: com.openhealth.openhealth.utils.WeatherData = com.openhealth.openhealth.utils.WeatherData(),
@@ -173,7 +175,7 @@ fun DashboardScreen(
         }
     }
 
-    var selectedTab by rememberSaveable { mutableStateOf(0) }
+    // selectedTab is now controlled by ViewModel via parameters
 
     val isToday = selectedDate == LocalDate.now(ZoneId.systemDefault())
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
@@ -2159,7 +2161,7 @@ fun DashboardScreen(
             // ─── Floating Bottom Nav Bar ───
             FloatingBottomNavBar(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = { onTabChanged(it) },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
