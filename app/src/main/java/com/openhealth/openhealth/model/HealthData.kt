@@ -120,7 +120,8 @@ data class HeartRateReading(
 
 data class SleepData(
     val totalDuration: Duration? = null,
-    val sessions: List<SleepSession> = emptyList()
+    val sessions: List<SleepSession> = emptyList(),
+    val stages: SleepStagesData? = null
 ) {
     val hours: Int
         get() = totalDuration?.toHours()?.toInt() ?: 0

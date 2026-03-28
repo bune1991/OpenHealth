@@ -252,9 +252,29 @@ object HealthConnectManager {
                 )
             }
 
+            // Extract sleep stages from the longest session
+            var deepMin = 0L
+            var lightMin = 0L
+            var remMin = 0L
+            var awakeMin = 0L
+            val longestRecord = records.maxByOrNull { Duration.between(it.startTime, it.endTime) }
+            longestRecord?.stages?.forEach { stage ->
+                val mins = Duration.between(stage.startTime, stage.endTime).toMinutes()
+                when (stage.stage) {
+                    SleepSessionRecord.STAGE_TYPE_DEEP -> deepMin += mins
+                    SleepSessionRecord.STAGE_TYPE_LIGHT -> lightMin += mins
+                    SleepSessionRecord.STAGE_TYPE_REM -> remMin += mins
+                    SleepSessionRecord.STAGE_TYPE_AWAKE -> awakeMin += mins
+                }
+            }
+            val stagesData = if (deepMin + lightMin + remMin + awakeMin > 0) {
+                SleepStagesData(deepMin, lightMin, remMin, awakeMin)
+            } else null
+
             SleepData(
                 totalDuration = totalDuration,
-                sessions = sessions
+                sessions = sessions,
+                stages = stagesData
             )
         } catch (e: Exception) {
             Log.e("OpenHealth_Sleep", "Error reading sleep: ${e.message}", e)

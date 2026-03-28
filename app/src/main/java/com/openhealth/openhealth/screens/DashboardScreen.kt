@@ -1657,9 +1657,10 @@ fun DashboardScreen(
                             val sleepHours = healthData.sleep.totalDuration?.toHours()?.toInt() ?: 0
                             val sleepMinutes = healthData.sleep.totalDuration?.let { ((it.toMinutes() % 60).toInt()) } ?: 0
                             val hasSleepData = sleepHours > 0 || sleepMinutes > 0
-                            val deepMin = healthData.sleep.sessions.filter { it.stage == com.openhealth.openhealth.model.SleepStage.DEEP }.sumOf { it.duration.toMinutes() }
-                            val lightMin = healthData.sleep.sessions.filter { it.stage == com.openhealth.openhealth.model.SleepStage.LIGHT }.sumOf { it.duration.toMinutes() }
-                            val remMin = healthData.sleep.sessions.filter { it.stage == com.openhealth.openhealth.model.SleepStage.REM }.sumOf { it.duration.toMinutes() }
+                            val stages = healthData.sleep.stages
+                            val deepMin = stages?.deepSleepMinutes ?: 0L
+                            val lightMin = stages?.lightSleepMinutes ?: 0L
+                            val remMin = stages?.remSleepMinutes ?: 0L
 
                             Box(
                                 modifier = Modifier
