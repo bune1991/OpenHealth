@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Home
@@ -661,7 +662,11 @@ fun MetricDetailScreen(
                             val carbs = n.carbsGrams ?: 0.0
                             val fat = n.fatGrams ?: 0.0
 
-                            // ── Daily Intake Hero ──
+                            val calGoal = 2200.0
+                            val calProgress = (calories / calGoal).toFloat().coerceIn(0f, 1f)
+                            val calRemaining = (calGoal - calories).coerceAtLeast(0.0).toInt()
+
+                            // ── Daily Intake Hero with gradient bar ──
                             item {
                                 Box(
                                     modifier = Modifier
@@ -671,122 +676,71 @@ fun MetricDetailScreen(
                                         .padding(horizontal = 24.dp, vertical = 28.dp)
                                 ) {
                                     Column {
-                                        Text(
-                                            text = "DAILY INTAKE",
-                                            color = TextSubtle,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            letterSpacing = 2.sp
-                                        )
+                                        Text("DAILY INTAKE", color = TextSubtle, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                                         Spacer(modifier = Modifier.height(8.dp))
-                                        Row(
-                                            verticalAlignment = Alignment.Bottom
-                                        ) {
-                                            Text(
-                                                text = String.format("%,.0f", calories),
-                                                color = TextOnSurface,
-                                                fontSize = 44.sp,
-                                                fontWeight = FontWeight.Black
-                                            )
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            Text(String.format("%,.0f", calories), color = TextOnSurface, fontSize = 44.sp, fontWeight = FontWeight.Black)
                                             Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = "/ 2,200 kcal",
-                                                color = ElectricIndigo,
-                                                fontSize = 16.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                modifier = Modifier.padding(bottom = 6.dp)
-                                            )
+                                            Column(modifier = Modifier.padding(bottom = 6.dp)) {
+                                                Text("/ ${String.format("%,.0f", calGoal)}", color = ElectricIndigo, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                                                Text("kcal", color = TextOnSurfaceVariant, fontSize = 12.sp)
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        // Gradient progress bar
+                                        Box(modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(6.dp)).background(SurfaceHighest)) {
+                                            Box(modifier = Modifier.fillMaxWidth(calProgress.coerceAtLeast(0.01f)).fillMaxHeight().background(Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)), RoundedCornerShape(6.dp)))
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text("${(calProgress * 100).roundToInt()}% ACHIEVED", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                            Text("$calRemaining KCAL LEFT", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
                                         }
                                     }
                                 }
                             }
 
-                            // ── Macro Progress Bars ──
+                            // ── Each Macro in SEPARATE card (Stitch design) ──
+                            // Protein
                             item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(28.dp))
-                                        .background(SurfaceLow)
-                                        .padding(horizontal = 24.dp, vertical = 20.dp)
-                                ) {
-                                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                        // Protein bar
-                                        NutritionMacroBar(
-                                            label = "Protein",
-                                            grams = protein,
-                                            goal = 120.0,
-                                            color = ElectricIndigo
-                                        )
-                                        // Carbs bar
-                                        NutritionMacroBar(
-                                            label = "Carbs",
-                                            grams = carbs,
-                                            goal = 200.0,
-                                            color = VibrantMagenta
-                                        )
-                                        // Fat bar
-                                        NutritionMacroBar(
-                                            label = "Fat",
-                                            grams = fat,
-                                            goal = 70.0,
-                                            color = SoftLavender
-                                        )
-                                    }
-                                }
+                                NutritionMacroCard(label = "Protein", grams = protein, goal = 120.0, color = ElectricIndigo)
+                            }
+                            // Carbs
+                            item {
+                                NutritionMacroCard(label = "Carbs", grams = carbs, goal = 300.0, color = VibrantMagenta)
+                            }
+                            // Fat
+                            item {
+                                NutritionMacroCard(label = "Fats", grams = fat, goal = 50.0, color = SoftLavender)
                             }
 
                             // ── Metabolic Fuel Insight Card ──
                             item {
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(24.dp))
-                                        .background(SurfaceLow)
-                                        .padding(20.dp)
+                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(20.dp)
                                 ) {
-                                    Row(
-                                        verticalAlignment = Alignment.Top,
-                                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(40.dp)
-                                                .clip(CircleShape)
-                                                .background(SurfaceHigh),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Lightbulb,
-                                                contentDescription = null,
-                                                tint = ElectricIndigo,
-                                                modifier = Modifier.size(20.dp)
-                                            )
+                                    Column {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(ElectricIndigo.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+                                                Icon(Icons.Default.Bolt, null, tint = ElectricIndigo, modifier = Modifier.size(20.dp))
+                                            }
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text("Metabolic Fuel", color = TextOnSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                         }
-                                        Column {
-                                            Text(
-                                                text = "Metabolic Fuel",
-                                                color = TextOnSurface,
-                                                fontSize = 16.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            val dominantMacro = when {
-                                                protein >= carbs && protein >= fat -> "protein"
-                                                carbs >= protein && carbs >= fat -> "carbs"
-                                                else -> "fat"
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        val dominantMacro = when { protein >= carbs && protein >= fat -> "Hypertrophy"; carbs >= protein && carbs >= fat -> "Endurance"; else -> "Hormone Balance" }
+                                        Text(
+                                            "Your current macro split is highly optimized for $dominantMacro. High protein intake detected. Consider adding complex carbs before your 6 PM session to maintain peak intensity.",
+                                            color = TextOnSurfaceVariant, fontSize = 13.sp, lineHeight = 20.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Box(modifier = Modifier.background(ElectricIndigo.copy(alpha = 0.15f), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                                                Text("PEAK RECOVERY", fontSize = 9.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                                             }
-                                            val insightText = when (dominantMacro) {
-                                                "protein" -> "Your intake is protein-dominant today. Great for muscle recovery and satiety."
-                                                "carbs" -> "Carbs are your primary fuel source today. Good for energy, especially around workouts."
-                                                else -> "Fat is your top macro today. Supports hormone health and sustained energy."
+                                            Box(modifier = Modifier.background(VibrantMagenta.copy(alpha = 0.15f), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                                                Text("MUSCLE SPARING", fontSize = 9.sp, color = VibrantMagenta, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                                             }
-                                            Text(
-                                                text = insightText,
-                                                color = TextOnSurfaceVariant,
-                                                fontSize = 13.sp,
-                                                lineHeight = 18.sp
-                                            )
                                         }
                                     }
                                 }
@@ -2716,6 +2670,35 @@ private fun MacroRow(label: String, grams: Double, percent: Int, color: Color) {
             Text(text = "${grams.roundToInt()}g", color = TextOnSurface, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = "$percent%", color = TextOnSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+private fun NutritionMacroCard(label: String, grams: Double, goal: Double, color: Color) {
+    val progress = if (goal > 0) (grams / goal).toFloat().coerceIn(0f, 1f) else 0f
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(SurfaceLow)
+            .padding(20.dp)
+    ) {
+        Column {
+            Text(label, color = TextOnSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text("${grams.roundToInt()}", color = TextOnSurface, fontSize = 32.sp, fontWeight = FontWeight.Black)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("g", color = TextOnSurfaceVariant, fontSize = 16.sp, modifier = Modifier.padding(bottom = 4.dp))
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Box(modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(SurfaceHighest)) {
+                Box(modifier = Modifier.fillMaxWidth(progress.coerceAtLeast(0.01f)).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(color))
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("GOAL: ${goal.roundToInt()}G", fontSize = 10.sp, color = TextSubtle, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
