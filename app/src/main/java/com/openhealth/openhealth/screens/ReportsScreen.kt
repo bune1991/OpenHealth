@@ -3,6 +3,7 @@ package com.openhealth.openhealth.screens
 import com.openhealth.openhealth.ui.theme.*
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,7 +68,8 @@ private val TrendDown = ErrorRed
 @Composable
 fun ReportsScreen(
     reportsData: ReportsData,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onMetricClick: (com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -173,7 +175,7 @@ fun ReportsScreen(
                 }
 
                 item {
-                    MonthlyTotalsCard(summaries = reportsData.summaries)
+                    MonthlyTotalsCard(summaries = reportsData.summaries, onMetricClick = onMetricClick)
                 }
 
                 // ── Key Metrics Comparison ──
@@ -408,7 +410,7 @@ private fun StepsBreakdownChart(data: List<com.openhealth.openhealth.model.Daily
 // ═══════════════════════════════════════════════════════════
 
 @Composable
-private fun MonthlyTotalsCard(summaries: List<MetricSummary>) {
+private fun MonthlyTotalsCard(summaries: List<MetricSummary>, onMetricClick: (com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType) -> Unit = {}) {
     val caloriesSummary = summaries.find { it.label == "Calories" }
     val exerciseSummary = summaries.find { it.label == "Exercise" }
     val stepsSummary = summaries.find { it.label == "Steps" }
@@ -417,7 +419,8 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>) {
         val icon: ImageVector,
         val iconColor: Color,
         val label: String,
-        val value: String
+        val value: String,
+        val metricType: com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType
     )
 
     val rows = listOfNotNull(
@@ -426,7 +429,8 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>) {
                 Icons.Default.LocalFireDepartment,
                 CardCalories,
                 "Total Move",
-                "${formatMetricValue(it.monthValue, it.unit)} kcal"
+                "${formatMetricValue(it.monthValue, it.unit)} kcal",
+                com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.CALORIES
             )
         },
         exerciseSummary?.let {
@@ -434,7 +438,8 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>) {
                 Icons.AutoMirrored.Filled.DirectionsRun,
                 CardExercise,
                 "Total Exercise",
-                "${formatMetricValue(it.monthValue, it.unit)} min"
+                "${formatMetricValue(it.monthValue, it.unit)} min",
+                com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.EXERCISE
             )
         },
         stepsSummary?.let {
@@ -442,7 +447,8 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>) {
                 Icons.AutoMirrored.Filled.DirectionsWalk,
                 CardSteps,
                 "Total Stand",
-                "${formatMetricValue(it.monthValue / 60.0, "hrs")} hrs"
+                "${formatMetricValue(it.monthValue / 60.0, "hrs")} hrs",
+                com.openhealth.openhealth.viewmodel.HealthViewModel.MetricType.STEPS
             )
         }
     )
@@ -459,6 +465,7 @@ private fun MonthlyTotalsCard(summaries: List<MetricSummary>) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { onMetricClick(row.metricType) }
                         .padding(horizontal = 20.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

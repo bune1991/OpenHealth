@@ -225,7 +225,11 @@ class MainActivity : ComponentActivity() {
                                     showReports -> {
                                         ReportsScreen(
                                             reportsData = reportsData,
-                                            onBackClick = { viewModel.hideReports() }
+                                            onBackClick = { viewModel.hideReports() },
+                                            onMetricClick = { metricType ->
+                                                viewModel.hideReports()
+                                                viewModel.selectMetric(metricType)
+                                            }
                                         )
                                     }
                                     showReadinessDetail -> {
