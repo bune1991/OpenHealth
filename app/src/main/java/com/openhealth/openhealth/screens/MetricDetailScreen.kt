@@ -235,8 +235,8 @@ fun MetricDetailScreen(
                                 } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
                             } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
 
-                            // Hero section — skip for sleep (clock is the hero) and steps (ring is the hero)
-                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
+                            // Hero section — skip for sleep (clock is the hero), steps (ring is the hero), and nutrition (custom hero)
+                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -293,7 +293,8 @@ fun MetricDetailScreen(
 
                             // Skip TodayValueCard for sleep — SleepClockCard is the hero
                             // Skip TodayValueCard for steps — circular progress ring is the hero
-                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
+                            // Skip TodayValueCard for nutrition — custom daily intake hero
+                            if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION) {
                                 TodayValueCard(
                                     value = selectedDateValue,
                                     valueFormatted = displayValue,
@@ -650,54 +651,142 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Nutrition Macros Breakdown (only for Nutrition metric)
+                        // ═══════════════════════════════════════
+                        // Nutrition Custom Detail Layout
+                        // ═══════════════════════════════════════
                         if (metricType == HealthViewModel.MetricType.NUTRITION && healthData != null) {
                             val n = healthData.nutrition
+                            val calories = n.calories ?: 0.0
                             val protein = n.proteinGrams ?: 0.0
                             val carbs = n.carbsGrams ?: 0.0
                             val fat = n.fatGrams ?: 0.0
-                            val totalMacros = protein + carbs + fat
 
-                            if (totalMacros > 0) {
-                                item {
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(24.dp),
-                                        colors = CardDefaults.cardColors(containerColor = SurfaceMid)
-                                    ) {
-                                        Column(modifier = Modifier.padding(16.dp)) {
+                            // ── Daily Intake Hero ──
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(SurfaceLow)
+                                        .padding(horizontal = 24.dp, vertical = 28.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "DAILY INTAKE",
+                                            color = TextSubtle,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 2.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            verticalAlignment = Alignment.Bottom
+                                        ) {
                                             Text(
-                                                text = "Macros Breakdown",
-                                                style = MaterialTheme.typography.titleMedium,
+                                                text = String.format("%,.0f", calories),
                                                 color = TextOnSurface,
+                                                fontSize = 44.sp,
+                                                fontWeight = FontWeight.Black
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = "/ 2,200 kcal",
+                                                color = ElectricIndigo,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                modifier = Modifier.padding(bottom = 6.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── Macro Progress Bars ──
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(SurfaceLow)
+                                        .padding(horizontal = 24.dp, vertical = 20.dp)
+                                ) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                        // Protein bar
+                                        NutritionMacroBar(
+                                            label = "Protein",
+                                            grams = protein,
+                                            goal = 120.0,
+                                            color = ElectricIndigo
+                                        )
+                                        // Carbs bar
+                                        NutritionMacroBar(
+                                            label = "Carbs",
+                                            grams = carbs,
+                                            goal = 200.0,
+                                            color = VibrantMagenta
+                                        )
+                                        // Fat bar
+                                        NutritionMacroBar(
+                                            label = "Fat",
+                                            grams = fat,
+                                            goal = 70.0,
+                                            color = SoftLavender
+                                        )
+                                    }
+                                }
+                            }
+
+                            // ── Metabolic Fuel Insight Card ──
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .padding(20.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.Top,
+                                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(SurfaceHigh),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lightbulb,
+                                                contentDescription = null,
+                                                tint = ElectricIndigo,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                        Column {
+                                            Text(
+                                                text = "Metabolic Fuel",
+                                                color = TextOnSurface,
+                                                fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
-                                            Spacer(modifier = Modifier.height(16.dp))
-
-                                            // Stacked bar
-                                            val pPct = (protein / totalMacros).toFloat()
-                                            val cPct = (carbs / totalMacros).toFloat()
-                                            val fPct = (fat / totalMacros).toFloat()
-
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(24.dp)
-                                                    .clip(RoundedCornerShape(20.dp))
-                                            ) {
-                                                if (pPct > 0f) Box(modifier = Modifier.weight(pPct).fillMaxHeight().background(Color(0xFF4CAF50)))
-                                                if (cPct > 0f) Box(modifier = Modifier.weight(cPct).fillMaxHeight().background(Color(0xFFFF9800)))
-                                                if (fPct > 0f) Box(modifier = Modifier.weight(fPct).fillMaxHeight().background(Color(0xFFF44336)))
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            val dominantMacro = when {
+                                                protein >= carbs && protein >= fat -> "protein"
+                                                carbs >= protein && carbs >= fat -> "carbs"
+                                                else -> "fat"
                                             }
-
-                                            Spacer(modifier = Modifier.height(16.dp))
-
-                                            // Legend rows
-                                            MacroRow("Protein", protein, (pPct * 100).roundToInt(), Color(0xFF4CAF50))
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            MacroRow("Carbs", carbs, (cPct * 100).roundToInt(), Color(0xFFFF9800))
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            MacroRow("Fat", fat, (fPct * 100).roundToInt(), Color(0xFFF44336))
+                                            val insightText = when (dominantMacro) {
+                                                "protein" -> "Your intake is protein-dominant today. Great for muscle recovery and satiety."
+                                                "carbs" -> "Carbs are your primary fuel source today. Good for energy, especially around workouts."
+                                                else -> "Fat is your top macro today. Supports hormone health and sustained energy."
+                                            }
+                                            Text(
+                                                text = insightText,
+                                                color = TextOnSurfaceVariant,
+                                                fontSize = 13.sp,
+                                                lineHeight = 18.sp
+                                            )
                                         }
                                     }
                                 }
@@ -1205,11 +1294,12 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Insights Card (non-sleep, non-steps, non-body-comp, non-exercise)
+                        // Insights Card (non-sleep, non-steps, non-body-comp, non-exercise, non-nutrition)
                         if (metricType != HealthViewModel.MetricType.SLEEP
                             && metricType != HealthViewModel.MetricType.STEPS
                             && !isBodyCompMetric
                             && metricType != HealthViewModel.MetricType.EXERCISE
+                            && metricType != HealthViewModel.MetricType.NUTRITION
                         ) {
                             item {
                                 val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
@@ -1369,8 +1459,8 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Non-sleep, non-steps metrics: show generic charts
-                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
+                        // Non-sleep, non-steps, non-nutrition metrics: show generic charts
+                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION) {
                             // Line Chart - 30 Day Trend
                             if (metricHistory?.last30Days?.isNotEmpty() == true) {
                                 item {
@@ -1551,8 +1641,8 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Statistics Cards (non-sleep, non-steps only)
-                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
+                        // Statistics Cards (non-sleep, non-steps, non-nutrition only)
+                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION) {
                             item {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -2626,6 +2716,57 @@ private fun MacroRow(label: String, grams: Double, percent: Int, color: Color) {
             Text(text = "${grams.roundToInt()}g", color = TextOnSurface, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = "$percent%", color = TextOnSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+private fun NutritionMacroBar(
+    label: String,
+    grams: Double,
+    goal: Double,
+    color: Color
+) {
+    val progress = if (goal > 0) (grams / goal).toFloat().coerceIn(0f, 1f) else 0f
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 800),
+        label = "${label}Progress"
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                color = TextOnSurface,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "${grams.roundToInt()}g / ${goal.roundToInt()}g",
+                color = TextOnSurfaceVariant,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(SurfaceHigh)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(animatedProgress)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(color)
+            )
         }
     }
 }
