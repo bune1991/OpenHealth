@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Refresh
@@ -1450,64 +1451,53 @@ fun DashboardScreen(
 
                     // ─── TAB 3: PROGRESS (Trends & Milestones) — Stitch match ───
                     3 -> {
-                        // Hero: Daily Consistency
+                        // Hero: Active Zone — Stitch progress_remix
                         item {
                             val consistency = readinessScore.score.coerceIn(0, 100)
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                                Column {
-                                    Text("DAILY CONSISTENCY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text("$consistency%", fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Box(modifier = Modifier.background(Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                                            Text("ACTIVE ZONE", fontSize = 9.sp, color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                            Column {
+                                Text("CONSISTENCY SCORE", fontSize = 10.sp, color = ElectricIndigo, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("${consistency}% Active Zone", fontSize = 36.sp, fontWeight = FontWeight.Black, color = TextOnSurface, letterSpacing = (-1).sp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("You're maintaining a steady rhythm. Your physical output is optimizing recovery.", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant, lineHeight = 18.sp)
+                            }
+                        }
+
+                        // Stats bento grid — taller cards with icons
+                        item {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                // Streak
+                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+                                        Icon(Icons.Default.LocalFireDepartment, null, tint = VibrantMagenta, modifier = Modifier.size(24.dp))
+                                        Column {
+                                            Text(if (stepsStreak > 0) "$stepsStreak" else "--", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            Text("STREAK DAYS", fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
                                         }
                                     }
                                 }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Assessment, null, tint = SuccessGreen, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(2.dp))
-                                    Text("+14%", color = SuccessGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                // Status
+                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+                                        Icon(Icons.Default.Favorite, null, tint = ElectricIndigo, modifier = Modifier.size(24.dp))
+                                        Column {
+                                            Text(when { readinessScore.score >= 80 -> "Strong"; readinessScore.score >= 60 -> "Good"; else -> "Building" }, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            Text("STATUS", fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
+                                        }
+                                    }
                                 }
                             }
                         }
 
-                        // Streak + stats row
+                        // Avg Steps wide card
                         item {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                // Streak
-                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                            Box(modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).padding(16.dp)) {
+                                Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+                                    Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null, tint = SoftLavender, modifier = Modifier.size(24.dp))
                                     Column {
-                                        Text("STREAK", fontSize = 9.sp, color = ElectricIndigo, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(if (stepsStreak > 0) "$stepsStreak" else "--", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                        Text("Days", fontSize = 11.sp, color = TextOnSurfaceVariant)
-                                    }
-                                }
-                                // Status
-                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
-                                    Column {
-                                        Text("STATUS", fontSize = 9.sp, color = VibrantMagenta, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            when {
-                                                readinessScore.score >= 80 -> "Elite"
-                                                readinessScore.score >= 60 -> "Strong"
-                                                readinessScore.score >= 40 -> "Building"
-                                                else -> "Starting"
-                                            },
-                                            fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface
-                                        )
-                                    }
-                                }
-                                // Avg Steps
-                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
-                                    Column {
-                                        Text("AVG STEPS", fontSize = 9.sp, color = SoftLavender, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
                                         val avgK = if (healthData.steps.count > 0) String.format("%.1fk", healthData.steps.count / 1000f) else "--"
-                                        Text(avgK, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                        Text(avgK, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                        Text("AVG STEPS", fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
                                     }
                                 }
                             }
@@ -1562,30 +1552,39 @@ fun DashboardScreen(
                             }
                         }
 
-                        // Weekly Insight card with gradient border
+                        // Weekly Insight — ElectricIndigo background (Stitch progress_remix)
                         item {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
-                                    .background(SurfaceLow)
-                                    .padding(20.dp)
+                                    .background(ElectricIndigo)
                                     .clickable { onReportsClick() }
+                                    .padding(24.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.Top) {
-                                    Box(modifier = Modifier.size(44.dp).background(ElectricIndigo.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Default.Assessment, null, tint = ElectricIndigo, modifier = Modifier.size(22.dp))
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text("Weekly Insight", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            "Your training consistency has increased by 14%. To optimize recovery, consider shifting your high-impact sessions to midweek.",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = TextOnSurfaceVariant,
-                                            lineHeight = 18.sp
-                                        )
+                                // Blur circle overlay
+                                Canvas(modifier = Modifier.matchParentSize()) {
+                                    drawCircle(color = Color.White.copy(alpha = 0.08f), radius = 120.dp.toPx(), center = Offset(size.width + 20.dp.toPx(), -20.dp.toPx()))
+                                }
+                                Column {
+                                    Icon(Icons.Default.Lightbulb, null, tint = OnIndigo, modifier = Modifier.size(24.dp))
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text("Weekly Insight", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = OnIndigo)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        "Your training consistency has improved by 12% since last month. High-intensity intervals significantly boosted your recovery rate.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = OnIndigo.copy(alpha = 0.8f),
+                                        lineHeight = 18.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(OnIndigo)
+                                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                                    ) {
+                                        Text("Read Analysis", color = ElectricIndigo, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                     }
                                 }
                             }

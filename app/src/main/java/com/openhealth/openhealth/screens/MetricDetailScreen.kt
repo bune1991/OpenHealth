@@ -704,8 +704,513 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Insights Card (non-sleep, non-steps — they have custom insight cards)
-                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
+                        // ═══════════════════════════════════════
+                        // Body Composition Detail Layout
+                        // ═══════════════════════════════════════
+                        val isBodyCompMetric = metricType in listOf(
+                            HealthViewModel.MetricType.WEIGHT,
+                            HealthViewModel.MetricType.BODY_FAT,
+                            HealthViewModel.MetricType.BASAL_METABOLIC_RATE,
+                            HealthViewModel.MetricType.BODY_WATER_MASS,
+                            HealthViewModel.MetricType.LEAN_BODY_MASS,
+                            HealthViewModel.MetricType.BONE_MASS
+                        )
+
+                        if (isBodyCompMetric && healthData != null) {
+                            // Hero — Current Weight with weekly delta
+                            item {
+                                val currentWeight = healthData.weight.kilograms
+                                val weightStr = currentWeight?.let { String.format("%.1f", it) } ?: "--"
+
+                                val last7 = metricHistory?.allHistoricalData?.takeLast(7)
+                                val weekDelta = if (last7 != null && last7.size >= 2) {
+                                    last7.last().value - last7.first().value
+                                } else null
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .padding(24.dp)
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = "CURRENT WEIGHT",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 2.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "$weightStr kg",
+                                            color = TextOnSurface,
+                                            fontSize = 44.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        if (weekDelta != null) {
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            val deltaStr = String.format("%+.1f", weekDelta)
+                                            val deltaColor = if (weekDelta <= 0) SuccessGreen else ErrorRed
+                                            Text(
+                                                text = "$deltaStr kg since last week",
+                                                color = deltaColor,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 2x2 Body Composition Grid
+                            item {
+                                val bodyFatPct = healthData.bodyFat.percentage?.let { String.format("%.1f", it) + "%" } ?: "--"
+                                val bmrVal = healthData.basalMetabolicRate.caloriesPerDay?.let { String.format("%.0f", it) + " kcal" } ?: "--"
+                                val bodyWaterVal = healthData.bodyWaterMass.kilograms?.let { String.format("%.1f", it) + " kg" } ?: "--"
+                                val leanMassVal = healthData.leanBodyMass.kilograms?.let {
+                                    val totalW = healthData.weight.kilograms
+                                    if (totalW != null && totalW > 0) {
+                                        String.format("%.0f", (it / totalW) * 100) + "%"
+                                    } else String.format("%.1f", it) + " kg"
+                                } ?: "--"
+
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column {
+                                                Text("BODY FAT", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(bodyFatPct, color = CardBodyFat, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column {
+                                                Text("BMR", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(bmrVal, color = CardBMR, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column {
+                                                Text("BODY WATER", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(bodyWaterVal, color = CardBodyWater, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column {
+                                                Text("MUSCLE MASS", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(leanMassVal, color = CardLeanBodyMass, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Weight Trend — mini line chart (last 7 days)
+                            if (metricHistory?.allHistoricalData?.isNotEmpty() == true) {
+                                item {
+                                    val last7Days = metricHistory.allHistoricalData.takeLast(7)
+                                    val values = last7Days.map { it.value.toFloat() }
+                                    val minVal = (values.minOrNull() ?: 0f) - 1f
+                                    val maxVal = (values.maxOrNull() ?: 100f) + 1f
+                                    val range = (maxVal - minVal).coerceAtLeast(1f)
+
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(SurfaceLow)
+                                            .padding(20.dp)
+                                    ) {
+                                        Column {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text("Weight Trend", style = MaterialTheme.typography.titleSmall, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                                Text("LAST 7 DAYS", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                            }
+                                            Spacer(modifier = Modifier.height(16.dp))
+
+                                            val lineColor = CardWeight
+                                            val fillColor = CardWeight.copy(alpha = 0.15f)
+                                            Canvas(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(120.dp)
+                                            ) {
+                                                if (values.size < 2) return@Canvas
+                                                val w = size.width
+                                                val h = size.height
+                                                val stepX = w / (values.size - 1).coerceAtLeast(1)
+
+                                                val fillPath = Path().apply {
+                                                    moveTo(0f, h)
+                                                    values.forEachIndexed { i, v ->
+                                                        val x = i * stepX
+                                                        val y = h - ((v - minVal) / range) * h
+                                                        lineTo(x, y)
+                                                    }
+                                                    lineTo((values.size - 1) * stepX, h)
+                                                    close()
+                                                }
+                                                drawPath(fillPath, fillColor)
+
+                                                val linePath = Path().apply {
+                                                    values.forEachIndexed { i, v ->
+                                                        val x = i * stepX
+                                                        val y = h - ((v - minVal) / range) * h
+                                                        if (i == 0) moveTo(x, y) else lineTo(x, y)
+                                                    }
+                                                }
+                                                drawPath(linePath, lineColor, style = Stroke(width = 3f, cap = StrokeCap.Round))
+
+                                                values.forEachIndexed { i, v ->
+                                                    val x = i * stepX
+                                                    val y = h - ((v - minVal) / range) * h
+                                                    drawCircle(lineColor, radius = 4f, center = Offset(x, y))
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                                last7Days.forEach { dp ->
+                                                    Text(
+                                                        text = dp.date.format(DateTimeFormatter.ofPattern("E", Locale.getDefault())).take(1),
+                                                        color = TextSubtle,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // AI Insight for Body Composition
+                            item {
+                                val bodyFat = healthData.bodyFat.percentage
+                                val leanMass = healthData.leanBodyMass.kilograms
+                                val weight = healthData.weight.kilograms
+                                val insightText = when {
+                                    bodyFat != null && leanMass != null && weight != null -> {
+                                        val leanPct = (leanMass / weight * 100).roundToInt()
+                                        "Your body fat is at ${String.format("%.1f", bodyFat)}% with $leanPct% lean mass. " +
+                                        if (bodyFat < 20) "Excellent composition range. Keep maintaining your current routine."
+                                        else if (bodyFat < 25) "Good composition. Consider adding resistance training to shift the ratio further."
+                                        else "Focus on progressive resistance training and protein intake to improve your lean-to-fat ratio."
+                                    }
+                                    weight != null -> "Tracking your weight consistently is the first step. Add body fat measurements for a complete picture."
+                                    else -> "Start logging body composition data to unlock personalized insights."
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(
+                                                    ElectricIndigo.copy(alpha = 0.15f),
+                                                    VibrantMagenta.copy(alpha = 0.15f)
+                                                )
+                                            )
+                                        )
+                                        .padding(20.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.Top) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .background(Color.White.copy(alpha = 0.1f), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lightbulb,
+                                                contentDescription = null,
+                                                tint = ElectricIndigo,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = "AI Insight",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = TextOnSurface,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = insightText,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = TextOnSurfaceVariant,
+                                                lineHeight = 18.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // ═══════════════════════════════════════
+                        // Exercise Performance Detail Layout
+                        // ═══════════════════════════════════════
+                        if (metricType == HealthViewModel.MetricType.EXERCISE && healthData != null) {
+                            // Hero — Active Energy Today with progress bar
+                            item {
+                                val totalCals = exerciseSessions.sumOf { it.caloriesBurned ?: 0.0 }
+                                val calGoal = 500.0
+                                val progress = (totalCals / calGoal).toFloat().coerceIn(0f, 1f)
+                                val calStr = String.format("%.0f", totalCals)
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .padding(24.dp)
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = "ACTIVE ENERGY TODAY",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 2.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "$calStr kcal",
+                                            color = TextOnSurface,
+                                            fontSize = 44.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "Goal: ${calGoal.toInt()} kcal",
+                                            color = TextOnSurfaceVariant,
+                                            fontSize = 13.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(8.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(SurfaceMid)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth(progress)
+                                                    .fillMaxHeight()
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(
+                                                        Brush.horizontalGradient(
+                                                            listOf(CardExercise, VibrantMagenta)
+                                                        )
+                                                    )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 2x2 Exercise Stats Grid
+                            item {
+                                val totalDurMin = exerciseSessions.sumOf { it.duration.toMinutes() }
+                                val sessionCount = exerciseSessions.size
+                                val totalCals = exerciseSessions.sumOf { it.caloriesBurned ?: 0.0 }
+                                val avgHr = healthData.heartRate.currentBpm
+
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column {
+                                                Text("DURATION", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text("${totalDurMin} min", color = CardExercise, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column {
+                                                Text("SESSIONS", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text("$sessionCount", color = ElectricIndigo, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column {
+                                                Text("HEART RATE", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = if (avgHr != null) "$avgHr bpm" else "-- bpm",
+                                                    color = CardHeartRate,
+                                                    fontSize = 22.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(SurfaceLow)
+                                                .padding(16.dp)
+                                        ) {
+                                            Column {
+                                                Text("CALORIES", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text("${String.format("%.0f", totalCals)} kcal", color = CardCalories, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Training Load — Activity Distribution bars
+                            if (exerciseSessions.isNotEmpty()) {
+                                item {
+                                    val typeMap = exerciseSessions.groupBy { it.exerciseType }
+                                        .mapValues { (_, sessions) -> sessions.sumOf { it.duration.toMinutes() } }
+                                        .toList()
+                                        .sortedByDescending { it.second }
+
+                                    val maxDur = typeMap.maxOfOrNull { it.second }?.toFloat()?.coerceAtLeast(1f) ?: 1f
+
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(SurfaceLow)
+                                            .padding(20.dp)
+                                    ) {
+                                        Column {
+                                            Text("Training Load", style = MaterialTheme.typography.titleSmall, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text("ACTIVITY DISTRIBUTION", color = TextOnSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                            Spacer(modifier = Modifier.height(16.dp))
+
+                                            typeMap.forEach { (type, durMin) ->
+                                                val barFraction = (durMin.toFloat() / maxDur).coerceIn(0.05f, 1f)
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 4.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = type,
+                                                        color = TextOnSurface,
+                                                        fontSize = 13.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        modifier = Modifier.width(80.dp)
+                                                    )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .height(12.dp)
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(SurfaceMid)
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth(barFraction)
+                                                                .fillMaxHeight()
+                                                                .clip(RoundedCornerShape(6.dp))
+                                                                .background(CardExercise)
+                                                        )
+                                                    }
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = "${durMin}m",
+                                                        color = TextOnSurfaceVariant,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Insights Card (non-sleep, non-steps, non-body-comp, non-exercise)
+                        if (metricType != HealthViewModel.MetricType.SLEEP
+                            && metricType != HealthViewModel.MetricType.STEPS
+                            && !isBodyCompMetric
+                            && metricType != HealthViewModel.MetricType.EXERCISE
+                        ) {
                             item {
                                 val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
                                 if (insight != null) {
@@ -714,17 +1219,19 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Exercise Sessions List (only for Exercise metric)
+                        // Exercise Sessions List — Recent Sessions (only for Exercise metric)
                         if (metricType == HealthViewModel.MetricType.EXERCISE && exerciseSessions.isNotEmpty()) {
                             item {
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(24.dp),
-                                    colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceMid)
+                                        .padding(16.dp)
                                 ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
+                                    Column {
                                         Text(
-                                            text = "Today's Sessions",
+                                            text = "Recent Sessions",
                                             style = MaterialTheme.typography.titleMedium,
                                             color = TextOnSurface,
                                             fontWeight = FontWeight.Bold
@@ -735,6 +1242,7 @@ fun MetricDetailScreen(
                                             val startStr = session.startTime.atZone(ZoneId.systemDefault()).format(timeFormatter)
                                             val endStr = session.endTime.atZone(ZoneId.systemDefault()).format(timeFormatter)
                                             val durMin = session.duration.toMinutes()
+                                            val calStr = session.caloriesBurned?.let { String.format("%.0f", it) + " kcal" } ?: ""
                                             val icon = when (session.exerciseType) {
                                                 "Running" -> "🏃"
                                                 "Walking" -> "🚶"
@@ -760,18 +1268,91 @@ fun MetricDetailScreen(
                                                         style = MaterialTheme.typography.bodyLarge
                                                     )
                                                     Text(
-                                                        text = "$startStr → $endStr",
+                                                        text = "$startStr - $endStr",
                                                         color = TextSubtle,
                                                         style = MaterialTheme.typography.bodySmall
                                                     )
                                                 }
-                                                Text(
-                                                    text = "${durMin}m",
-                                                    color = metricInfo.color,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 18.sp
-                                                )
+                                                Column(horizontalAlignment = Alignment.End) {
+                                                    Text(
+                                                        text = "${durMin}m",
+                                                        color = metricInfo.color,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 18.sp
+                                                    )
+                                                    if (calStr.isNotEmpty()) {
+                                                        Text(
+                                                            text = calStr,
+                                                            color = TextOnSurfaceVariant,
+                                                            fontSize = 11.sp
+                                                        )
+                                                    }
+                                                }
                                             }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Neural Performance Insight
+                            item {
+                                val totalCals = exerciseSessions.sumOf { it.caloriesBurned ?: 0.0 }
+                                val totalDurMin = exerciseSessions.sumOf { it.duration.toMinutes() }
+                                val sessionCount = exerciseSessions.size
+                                val insightText = when {
+                                    sessionCount >= 2 && totalDurMin >= 60 ->
+                                        "Strong training day with $sessionCount sessions totaling ${totalDurMin}min. Your consistency is building aerobic capacity. Consider a rest day tomorrow if intensity was high."
+                                    sessionCount == 1 && totalDurMin >= 30 ->
+                                        "Solid session today. ${String.format("%.0f", totalCals)} kcal burned in ${totalDurMin} minutes shows good effort. Try to maintain this frequency throughout the week."
+                                    totalDurMin > 0 ->
+                                        "Light activity logged today. Even short sessions contribute to your weekly training load. Aim for 150+ minutes across the week."
+                                    else ->
+                                        "No exercise sessions recorded today. Movement, even a short walk, supports recovery and metabolic health."
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(
+                                                    CardExercise.copy(alpha = 0.15f),
+                                                    ElectricIndigo.copy(alpha = 0.15f)
+                                                )
+                                            )
+                                        )
+                                        .padding(20.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.Top) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .background(Color.White.copy(alpha = 0.1f), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lightbulb,
+                                                contentDescription = null,
+                                                tint = CardExercise,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = "Neural Performance Insight",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = TextOnSurface,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = insightText,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = TextOnSurfaceVariant,
+                                                lineHeight = 18.sp
+                                            )
                                         }
                                     }
                                 }
