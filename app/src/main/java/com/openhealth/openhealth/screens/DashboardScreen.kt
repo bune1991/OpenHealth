@@ -133,6 +133,7 @@ fun DashboardScreen(
     onReportsClick: () -> Unit = {},
     onStressClick: () -> Unit = {},
     onAiInsightsClick: () -> Unit = {},
+    onHydrationClick: () -> Unit = {},
     weatherData: com.openhealth.openhealth.utils.WeatherData = com.openhealth.openhealth.utils.WeatherData(),
     stepsCalendarData: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
     stepsStreak: Int = 0,
@@ -457,7 +458,7 @@ fun DashboardScreen(
                                             .height(150.dp)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(SurfaceLow)
-                                            .clickable { onMetricClick(HealthViewModel.MetricType.NUTRITION) }
+                                            .clickable { onHydrationClick() }
                                             .padding(20.dp)
                                     ) {
                                         val hydLiters = hydrationLiters ?: 0.0

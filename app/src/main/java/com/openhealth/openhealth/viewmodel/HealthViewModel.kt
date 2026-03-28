@@ -165,6 +165,20 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val _showReadinessDetail = MutableStateFlow(false)
     val showReadinessDetail: StateFlow<Boolean> = _showReadinessDetail.asStateFlow()
 
+    // Hydration tracking
+    private val _showHydration = MutableStateFlow(false)
+    val showHydration: StateFlow<Boolean> = _showHydration.asStateFlow()
+
+    private val _hydrationEntries = MutableStateFlow<List<com.openhealth.openhealth.screens.HydrationEntry>>(emptyList())
+    val hydrationEntries: StateFlow<List<com.openhealth.openhealth.screens.HydrationEntry>> = _hydrationEntries.asStateFlow()
+
+    private val _hydrationDailyTotal = MutableStateFlow(0)
+    val hydrationDailyTotal: StateFlow<Int> = _hydrationDailyTotal.asStateFlow()
+
+    private val hydrationPrefs by lazy {
+        context.getSharedPreferences("hydration_prefs", android.content.Context.MODE_PRIVATE)
+    }
+
     // Required permissions - use all permissions from HealthConnectManager
     val requiredPermissions = HealthConnectManager.PERMISSIONS
 
@@ -614,6 +628,66 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun hideReports() {
         _showReports.value = false
+    }
+
+    // Hydration navigation & data
+    fun showHydration() {
+        _showHydration.value = true
+        loadHydrationEntries()
+    }
+
+    fun hideHydration() {
+        _showHydration.value = false
+    }
+
+    fun addWaterEntry(amountMl: Int) {
+        val entry = com.openhealth.openhealth.screens.HydrationEntry(
+            amount = amountMl,
+            time = System.currentTimeMillis()
+        )
+        val updated = _hydrationEntries.value + entry
+        _hydrationEntries.value = updated
+        _hydrationDailyTotal.value = updated.sumOf { it.amount }
+        saveHydrationEntries(updated)
+    }
+
+    private fun loadHydrationEntries() {
+        val today = LocalDate.now(kuwaitZone)
+        val key = "hydration_${today}"
+        val json = hydrationPrefs.getString(key, null) ?: return
+        try {
+            val arr = org.json.JSONArray(json)
+            val entries = mutableListOf<com.openhealth.openhealth.screens.HydrationEntry>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                entries.add(
+                    com.openhealth.openhealth.screens.HydrationEntry(
+                        amount = obj.getInt("amount"),
+                        time = obj.getLong("time"),
+                        type = obj.optString("type", "Glass of Water")
+                    )
+                )
+            }
+            _hydrationEntries.value = entries
+            _hydrationDailyTotal.value = entries.sumOf { it.amount }
+        } catch (e: Exception) {
+            Log.e("HealthViewModel", "Failed to load hydration entries", e)
+        }
+    }
+
+    private fun saveHydrationEntries(entries: List<com.openhealth.openhealth.screens.HydrationEntry>) {
+        val today = LocalDate.now(kuwaitZone)
+        val key = "hydration_${today}"
+        val arr = org.json.JSONArray()
+        entries.forEach { entry ->
+            val obj = org.json.JSONObject().apply {
+                put("amount", entry.amount)
+                put("time", entry.time)
+                put("type", entry.type)
+            }
+            arr.put(obj)
+        }
+        hydrationPrefs.edit().putString(key, arr.toString()).apply()
     }
 
     private fun loadReportsData() {

@@ -46,6 +46,7 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openhealth.openhealth.screens.DashboardScreen
+import com.openhealth.openhealth.screens.HydrationScreen
 import com.openhealth.openhealth.screens.MetricDetailScreen
 import com.openhealth.openhealth.screens.ReadinessDetailScreen
 import com.openhealth.openhealth.screens.ReportsScreen
@@ -94,11 +95,13 @@ class MainActivity : ComponentActivity() {
                 viewModel.showReadinessDetail.collectAsState().value ||
                 viewModel.showReports.collectAsState().value ||
                 viewModel.showStressDetail.collectAsState().value ||
-                viewModel.showAiInsights.collectAsState().value
+                viewModel.showAiInsights.collectAsState().value ||
+                viewModel.showHydration.collectAsState().value
             androidx.compose.runtime.LaunchedEffect(hasSubScreen) {
                 onBackPressedDispatcher.addCallback(this@MainActivity) {
                     if (::viewModel.isInitialized) {
                         when {
+                            viewModel.showHydration.value -> viewModel.hideHydration()
                             viewModel.showSettings.value -> viewModel.hideSettings()
                             viewModel.showAiInsights.value -> viewModel.hideAiInsights()
                             viewModel.showStressDetail.value -> viewModel.hideStressDetail()
@@ -130,6 +133,9 @@ class MainActivity : ComponentActivity() {
                 val showReports by viewModel.showReports.collectAsState()
                 val showStressDetail by viewModel.showStressDetail.collectAsState()
                 val showAiInsights by viewModel.showAiInsights.collectAsState()
+                val showHydration by viewModel.showHydration.collectAsState()
+                val hydrationEntries by viewModel.hydrationEntries.collectAsState()
+                val hydrationDailyTotal by viewModel.hydrationDailyTotal.collectAsState()
                 val aiInsightText by viewModel.aiInsightText.collectAsState()
                 val aiInsightLoading by viewModel.aiInsightLoading.collectAsState()
                 val aiInsightError by viewModel.aiInsightError.collectAsState()
@@ -161,6 +167,15 @@ class MainActivity : ComponentActivity() {
                                     !settings.onboardingCompleted -> {
                                         OnboardingScreen(
                                             onGetStarted = { viewModel.completeOnboarding() }
+                                        )
+                                    }
+                                    showHydration -> {
+                                        HydrationScreen(
+                                            hydrationEntries = hydrationEntries,
+                                            dailyTotal = hydrationDailyTotal,
+                                            goal = 2500,
+                                            onAddWater = { viewModel.addWaterEntry(it) },
+                                            onBackClick = { viewModel.hideHydration() }
                                         )
                                     }
                                     showSettings -> {
@@ -247,6 +262,7 @@ class MainActivity : ComponentActivity() {
                                             onReportsClick = { viewModel.showReports() },
                                             onStressClick = { viewModel.showStressDetail() },
                                             onAiInsightsClick = { viewModel.showAiInsights() },
+                                            onHydrationClick = { viewModel.showHydration() },
                                             weatherData = weatherData,
                                             stepsCalendarData = stepsCalendarData,
                                             stepsStreak = stepsStreak,
