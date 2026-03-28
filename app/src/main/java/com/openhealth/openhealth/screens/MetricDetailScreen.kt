@@ -1665,33 +1665,7 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Non-sleep, non-steps, non-nutrition metrics: show generic charts
-                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION) {
-                            // Line Chart - 30 Day Trend
-                            if (metricHistory?.last30Days?.isNotEmpty() == true) {
-                                item {
-                                    LineChartCard(
-                                        data = metricHistory.last30Days,
-                                        color = metricInfo.color,
-                                        title = "30 Day Trend",
-                                        isSleep = false
-                                    )
-                                }
-                            }
-
-                            // Bar Chart - Weekly Average
-                            if ((metricHistory?.last30Days?.size ?: 0) >= 7) {
-                                item {
-                                    BarChartCard(
-                                        data = metricHistory!!.last30Days.takeLast(7),
-                                        color = metricInfo.color,
-                                        title = "Last 7 Days",
-                                        isSleep = false,
-                                        decimalPlaces = metricInfo.decimalPlaces
-                                    )
-                                }
-                            }
-                        }
+                        // Generic charts removed — each metric has its own custom layout
 
                         // Sleep Bank FIRST, then Stages (Stitch order)
                         // Sleep Bank (only for Sleep metric)
@@ -1847,55 +1821,7 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Statistics Cards (non-sleep, non-steps, non-nutrition only)
-                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS && metricType != HealthViewModel.MetricType.NUTRITION) {
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    StatCard(
-                                        title = "30-Day Avg",
-                                        value = formatValue(metricHistory?.monthlyAverage ?: 0.0, metricInfo.decimalPlaces),
-                                        unit = metricHistory?.unit ?: "",
-                                        icon = Icons.AutoMirrored.Filled.TrendingUp,
-                                        color = metricInfo.color,
-                                        modifier = Modifier.weight(1f),
-                                        isLoading = isLoading
-                                    )
-                                    StatCard(
-                                        title = metricHistory?.bestDayLabel ?: "Best Day",
-                                        value = metricHistory?.bestDay?.let { formatValue(it.value, metricInfo.decimalPlaces) } ?: "--",
-                                        unit = metricHistory?.unit ?: "",
-                                        icon = Icons.Default.EmojiEvents,
-                                        color = metricInfo.color,
-                                        modifier = Modifier.weight(1f),
-                                        isLoading = isLoading
-                                    )
-                                }
-                            }
-
-                            metricHistory?.bestDay?.let { bestDay ->
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(24.dp))
-                                            .background(SurfaceMid)
-                                            .padding(16.dp)
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(Icons.Default.CalendarToday, null, tint = metricInfo.color, modifier = Modifier.size(24.dp))
-                                            Spacer(modifier = Modifier.width(12.dp))
-                                            Column {
-                                                Text(metricHistory?.bestDayLabel ?: "Best Day", style = MaterialTheme.typography.bodyMedium, color = TextOnSurfaceVariant)
-                                                Text(bestDay.date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())), style = MaterialTheme.typography.bodyLarge, color = TextOnSurface, fontWeight = FontWeight.Medium)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        // Generic stats/best day removed — each metric has its own layout
 
                         // Calendar View with Step Rings (Steps only)
                         if (metricType == HealthViewModel.MetricType.STEPS && metricHistory?.allHistoricalData?.isNotEmpty() == true) {
