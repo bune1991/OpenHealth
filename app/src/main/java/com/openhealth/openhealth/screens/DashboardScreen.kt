@@ -45,7 +45,10 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Refresh
@@ -864,226 +867,617 @@ fun DashboardScreen(
                         }
                     }
 
-                    // ─── TAB 1: ACTIVITY (Movement & Energy) — Stitch remix ───
+                    // ─── TAB 1: ACTIVITY — Alive Stitch Design ───
                     1 -> {
-                        // Hero: "Today's Resonance" with subtitle
-                        item {
-                            Column(modifier = Modifier.padding(bottom = 4.dp)) {
-                                Text(
-                                    "Today's Resonance",
-                                    fontSize = 38.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = TextOnSurface,
-                                    letterSpacing = (-1.5).sp,
-                                    lineHeight = 42.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    "Your biometric rhythm is peaking.",
-                                    fontSize = 16.sp,
-                                    color = TextOnSurfaceVariant
-                                )
-                            }
-                        }
-
-                        // Activity triple-ring card with stat pills beneath
+                        // ── Activity Rings Hero ──
                         item {
                             val stepsProgress = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
                             val calProgress = (healthData.calories.totalBurned.toFloat() / settings.caloriesGoal).coerceIn(0f, 1f)
                             val exerciseMin = healthData.exercise.totalDuration?.toMinutes()?.toInt() ?: 0
                             val exerciseProgress = (exerciseMin / 30f).coerceIn(0f, 1f)
-                            val overallProgress = ((stepsProgress + calProgress + exerciseProgress) / 3f * 100).roundToInt()
+
+                            val animatedCal by animateFloatAsState(calProgress, tween(1200), label = "cal")
+                            val animatedExc by animateFloatAsState(exerciseProgress, tween(1000), label = "exc")
+                            val animatedStand by animateFloatAsState(stepsProgress, tween(800), label = "stand")
+
+                            val movePercent = (calProgress * 100).roundToInt()
+                            val excPercent = (exerciseProgress * 100).roundToInt()
+                            val standPercent = (stepsProgress * 100).roundToInt()
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(28.dp))
+                                    .background(SurfaceLow)
+                                    .padding(28.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    // Rings with glow + center stats
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.size(240.dp)
+                                    ) {
+                                        Canvas(modifier = Modifier.size(240.dp)) {
+                                            val strokeW = 18.dp.toPx()
+                                            val gap = 8.dp.toPx()
+                                            val cx = size.width / 2
+                                            val cy = size.height / 2
+
+                                            // ── Outer ring: Move (ElectricIndigo gradient) ──
+                                            val r1 = cx - strokeW / 2
+                                            val arcSize1 = Size(r1 * 2, r1 * 2)
+                                            val tl1 = Offset(cx - r1, cy - r1)
+                                            // Track
+                                            drawArc(
+                                                color = SurfaceHigh,
+                                                startAngle = 0f, sweepAngle = 360f, useCenter = false,
+                                                style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                topLeft = tl1, size = arcSize1
+                                            )
+                                            // Glow behind arc
+                                            val outerSweep = 360f * animatedCal
+                                            if (animatedCal > 0f) {
+                                                drawArc(
+                                                    brush = Brush.sweepGradient(
+                                                        listOf(ElectricIndigo.copy(alpha = 0.35f), ElectricIndigoDim.copy(alpha = 0.15f))
+                                                    ),
+                                                    startAngle = -90f, sweepAngle = outerSweep, useCenter = false,
+                                                    style = Stroke(strokeW + 10.dp.toPx(), cap = StrokeCap.Round),
+                                                    topLeft = Offset(tl1.x - 5.dp.toPx(), tl1.y - 5.dp.toPx()),
+                                                    size = Size(arcSize1.width + 10.dp.toPx(), arcSize1.height + 10.dp.toPx())
+                                                )
+                                            }
+                                            // Active arc
+                                            drawArc(
+                                                brush = Brush.sweepGradient(listOf(ElectricIndigo, ElectricIndigoDim, ElectricIndigo)),
+                                                startAngle = -90f, sweepAngle = outerSweep, useCenter = false,
+                                                style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                topLeft = tl1, size = arcSize1
+                                            )
+
+                                            // ── Middle ring: Exercise (VibrantMagenta gradient) ──
+                                            val r2 = r1 - strokeW - gap
+                                            val arcSize2 = Size(r2 * 2, r2 * 2)
+                                            val tl2 = Offset(cx - r2, cy - r2)
+                                            drawArc(
+                                                color = SurfaceHigh,
+                                                startAngle = 0f, sweepAngle = 360f, useCenter = false,
+                                                style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                topLeft = tl2, size = arcSize2
+                                            )
+                                            val midSweep = 360f * animatedExc
+                                            if (animatedExc > 0f) {
+                                                drawArc(
+                                                    brush = Brush.sweepGradient(
+                                                        listOf(VibrantMagenta.copy(alpha = 0.3f), MagentaContainer.copy(alpha = 0.12f))
+                                                    ),
+                                                    startAngle = -90f, sweepAngle = midSweep, useCenter = false,
+                                                    style = Stroke(strokeW + 10.dp.toPx(), cap = StrokeCap.Round),
+                                                    topLeft = Offset(tl2.x - 5.dp.toPx(), tl2.y - 5.dp.toPx()),
+                                                    size = Size(arcSize2.width + 10.dp.toPx(), arcSize2.height + 10.dp.toPx())
+                                                )
+                                            }
+                                            drawArc(
+                                                brush = Brush.sweepGradient(listOf(VibrantMagenta, MagentaContainer, VibrantMagenta)),
+                                                startAngle = -90f, sweepAngle = midSweep, useCenter = false,
+                                                style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                topLeft = tl2, size = arcSize2
+                                            )
+
+                                            // ── Inner ring: Stand (SoftLavender gradient) ──
+                                            val r3 = r2 - strokeW - gap
+                                            val arcSize3 = Size(r3 * 2, r3 * 2)
+                                            val tl3 = Offset(cx - r3, cy - r3)
+                                            drawArc(
+                                                color = SurfaceHigh,
+                                                startAngle = 0f, sweepAngle = 360f, useCenter = false,
+                                                style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                topLeft = tl3, size = arcSize3
+                                            )
+                                            val innerSweep = 360f * animatedStand
+                                            if (animatedStand > 0f) {
+                                                drawArc(
+                                                    brush = Brush.sweepGradient(
+                                                        listOf(SoftLavender.copy(alpha = 0.3f), OnIndigo.copy(alpha = 0.12f))
+                                                    ),
+                                                    startAngle = -90f, sweepAngle = innerSweep, useCenter = false,
+                                                    style = Stroke(strokeW + 10.dp.toPx(), cap = StrokeCap.Round),
+                                                    topLeft = Offset(tl3.x - 5.dp.toPx(), tl3.y - 5.dp.toPx()),
+                                                    size = Size(arcSize3.width + 10.dp.toPx(), arcSize3.height + 10.dp.toPx())
+                                                )
+                                            }
+                                            drawArc(
+                                                brush = Brush.sweepGradient(listOf(SoftLavender, OnIndigo, SoftLavender)),
+                                                startAngle = -90f, sweepAngle = innerSweep, useCenter = false,
+                                                style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                topLeft = tl3, size = arcSize3
+                                            )
+                                        }
+
+                                        // Center stats
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                                        ) {
+                                            Text(
+                                                "ACTIVE ENERGY",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextOnSurfaceVariant,
+                                                letterSpacing = 2.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                "${healthData.calories.totalBurned.roundToInt()}",
+                                                fontSize = 48.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = TextOnSurface,
+                                                letterSpacing = (-1).sp
+                                            )
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    "KCAL",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = ElectricIndigo,
+                                                    letterSpacing = 2.sp
+                                                )
+                                                Icon(
+                                                    Icons.Default.ChevronRight,
+                                                    contentDescription = null,
+                                                    tint = ElectricIndigo,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(24.dp))
+
+                                    // ── 3 stat columns below rings ──
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        // Move
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Bolt,
+                                                contentDescription = null,
+                                                tint = ElectricIndigo,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                "MOVE",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextOnSurfaceVariant,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    "$movePercent%",
+                                                    fontSize = 18.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TextOnSurface
+                                                )
+                                                Icon(
+                                                    Icons.Default.ChevronRight,
+                                                    contentDescription = null,
+                                                    tint = TextSubtle,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+
+                                        // Exercise
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.FitnessCenter,
+                                                contentDescription = null,
+                                                tint = VibrantMagenta,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                "EXC",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextOnSurfaceVariant,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    "$excPercent%",
+                                                    fontSize = 18.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TextOnSurface
+                                                )
+                                                Icon(
+                                                    Icons.Default.ChevronRight,
+                                                    contentDescription = null,
+                                                    tint = TextSubtle,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+
+                                        // Stand
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }
+                                        ) {
+                                            Icon(
+                                                Icons.AutoMirrored.Filled.DirectionsWalk,
+                                                contentDescription = null,
+                                                tint = SoftLavender,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                "STAND",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextOnSurfaceVariant,
+                                                letterSpacing = 1.5.sp
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    "$standPercent%",
+                                                    fontSize = 18.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = TextOnSurface
+                                                )
+                                                Icon(
+                                                    Icons.Default.ChevronRight,
+                                                    contentDescription = null,
+                                                    tint = TextSubtle,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // ── Step Intensity Card ──
+                        item {
+                            val stepProgress = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
+                            val intensityLabel = when {
+                                stepProgress >= 0.8f -> "High"
+                                stepProgress >= 0.5f -> "Moderate"
+                                stepProgress >= 0.25f -> "Light"
+                                else -> "Low"
+                            }
+                            val intensityDesc = when {
+                                stepProgress >= 0.8f -> "Excellent pace! You're in a high-intensity movement burst."
+                                stepProgress >= 0.5f -> "Good momentum. Keep it up to hit your daily target."
+                                stepProgress >= 0.25f -> "Warming up — try a brisk walk to boost intensity."
+                                else -> "Get moving to start building your step intensity."
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(SurfaceLow)
+                                    .clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }
+                                    .padding(20.dp)
+                            ) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            "Step Intensity",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextOnSurface
+                                        )
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.TrendingUp,
+                                            contentDescription = null,
+                                            tint = VibrantMagenta,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            "Current Burst",
+                                            fontSize = 13.sp,
+                                            color = TextOnSurfaceVariant
+                                        )
+                                        Text(
+                                            intensityLabel,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ElectricIndigo
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Gradient progress bar with glow
+                                    Box(modifier = Modifier.fillMaxWidth().height(10.dp)) {
+                                        // Glow layer behind bar
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val barWidth = size.width * stepProgress.coerceAtLeast(0.02f)
+                                            drawRoundRect(
+                                                brush = Brush.horizontalGradient(
+                                                    listOf(
+                                                        ElectricIndigo.copy(alpha = 0.4f),
+                                                        VibrantMagenta.copy(alpha = 0.4f)
+                                                    )
+                                                ),
+                                                cornerRadius = CornerRadius(8.dp.toPx()),
+                                                size = Size(barWidth, size.height + 6.dp.toPx()),
+                                                topLeft = Offset(0f, -3.dp.toPx())
+                                            )
+                                        }
+                                        // Track
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(RoundedCornerShape(5.dp))
+                                                .background(SurfaceHigh)
+                                        )
+                                        // Fill
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth(stepProgress.coerceAtLeast(0.02f))
+                                                .fillMaxHeight()
+                                                .clip(RoundedCornerShape(5.dp))
+                                                .background(
+                                                    Brush.horizontalGradient(
+                                                        listOf(ElectricIndigo, VibrantMagenta)
+                                                    )
+                                                )
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        intensityDesc,
+                                        fontSize = 13.sp,
+                                        color = TextOnSurfaceVariant,
+                                        lineHeight = 18.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // ── Distance Traveled Card ──
+                        item {
+                            val distanceKm = healthData.steps.count * 0.0007f // ~0.7m per step
+                            val distanceGoalKm = settings.stepsGoal * 0.0007f
+                            val distProgress = (distanceKm / distanceGoalKm).coerceIn(0f, 1f)
+                            val distPercent = (distProgress * 100).roundToInt()
 
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(SurfaceLow)
-                                    .padding(24.dp)
+                                    .clickable { onMetricClick(HealthViewModel.MetricType.DISTANCE) }
+                                    .padding(20.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    // Triple concentric rings
-                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
-                                        Canvas(modifier = Modifier.size(200.dp)) {
-                                            val strokeW = 16.dp.toPx()
-                                            // Outer ring -- Steps (ElectricIndigo)
-                                            val r1 = size.width / 2 - strokeW / 2
-                                            drawCircle(color = SurfaceHighest.copy(alpha = 0.3f), radius = r1, style = Stroke(strokeW, cap = StrokeCap.Round))
-                                            drawArc(color = ElectricIndigo, startAngle = -90f, sweepAngle = 360f * stepsProgress, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = Offset(strokeW / 2, strokeW / 2), size = Size(r1 * 2, r1 * 2))
-                                            // Middle ring -- Exercise (VibrantMagenta)
-                                            val r2 = r1 - strokeW - 6.dp.toPx()
-                                            val off2 = size.width / 2 - r2
-                                            drawCircle(color = SurfaceHighest.copy(alpha = 0.3f), radius = r2, style = Stroke(strokeW, cap = StrokeCap.Round))
-                                            drawArc(color = VibrantMagenta, startAngle = -90f, sweepAngle = 360f * exerciseProgress, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = Offset(off2, off2), size = Size(r2 * 2, r2 * 2))
-                                            // Inner ring -- Calories (SoftLavender)
-                                            val r3 = r2 - strokeW - 6.dp.toPx()
-                                            val off3 = size.width / 2 - r3
-                                            drawCircle(color = SurfaceHighest.copy(alpha = 0.3f), radius = r3, style = Stroke(strokeW, cap = StrokeCap.Round))
-                                            drawArc(color = SoftLavender, startAngle = -90f, sweepAngle = 360f * calProgress, useCenter = false, style = Stroke(strokeW, cap = StrokeCap.Round), topLeft = Offset(off3, off3), size = Size(r3 * 2, r3 * 2))
-                                        }
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("$overallProgress%", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface)
-                                            Text("DAILY GOAL", fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium, letterSpacing = 2.sp)
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    // 3 legend dots: Move / Exercise / Stand
+                                Column(modifier = Modifier.fillMaxWidth()) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        listOf(
-                                            "Move" to VibrantMagenta,
-                                            "Exercise" to ElectricIndigo,
-                                            "Stand" to SoftLavender
-                                        ).forEach { (label, color) ->
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Box(modifier = Modifier.size(6.dp).background(color, CircleShape))
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(label.uppercase(), fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
-                                            }
+                                        Text(
+                                            "Distance Traveled",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextOnSurface
+                                        )
+                                        Icon(
+                                            Icons.Default.Place,
+                                            contentDescription = null,
+                                            tint = ElectricIndigo,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(verticalAlignment = Alignment.Bottom) {
+                                        Text(
+                                            String.format("%.1f", distanceKm),
+                                            fontSize = 36.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = TextOnSurface,
+                                            letterSpacing = (-1).sp
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            "KM",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ElectricIndigo,
+                                            letterSpacing = 2.sp,
+                                            modifier = Modifier.padding(bottom = 6.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // Gradient progress bar with glow
+                                    Box(modifier = Modifier.fillMaxWidth().height(8.dp)) {
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val barW = size.width * distProgress.coerceAtLeast(0.02f)
+                                            drawRoundRect(
+                                                brush = Brush.horizontalGradient(
+                                                    listOf(
+                                                        ElectricIndigo.copy(alpha = 0.35f),
+                                                        VibrantMagenta.copy(alpha = 0.35f)
+                                                    )
+                                                ),
+                                                cornerRadius = CornerRadius(6.dp.toPx()),
+                                                size = Size(barW, size.height + 4.dp.toPx()),
+                                                topLeft = Offset(0f, -2.dp.toPx())
+                                            )
                                         }
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(SurfaceHigh)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth(distProgress.coerceAtLeast(0.02f))
+                                                .fillMaxHeight()
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(
+                                                    Brush.horizontalGradient(
+                                                        listOf(ElectricIndigo, VibrantMagenta)
+                                                    )
+                                                )
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            "Daily Goal: ${String.format("%.1f", distanceGoalKm)} KM",
+                                            fontSize = 13.sp,
+                                            color = TextOnSurfaceVariant
+                                        )
+                                        Text(
+                                            "$distPercent%",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ElectricIndigo
+                                        )
                                     }
                                 }
                             }
                         }
 
-                        // Active Energy card — clickable, opens Exercise detail
+                        // ── Peak Performance Insight Card ──
                         item {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(SurfaceHigh)
-                                    .clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
-                                    .padding(20.dp)
-                            ) {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Column {
-                                        Text("ACTIVE ENERGY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Medium)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Row(verticalAlignment = Alignment.Bottom) {
-                                            Text("${healthData.calories.totalBurned.roundToInt()}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text("Kcal", color = ElectricIndigo, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 4.dp))
-                                        }
-                                    }
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(modifier = Modifier.size(44.dp).background(ElectricIndigo.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
-                                            Icon(Icons.Default.Bolt, null, tint = ElectricIndigo, modifier = Modifier.size(22.dp))
-                                        }
-                                        Icon(Icons.Default.ChevronRight, null, tint = TextSubtle, modifier = Modifier.size(20.dp))
-                                    }
-                                }
-                            }
-                        }
-
-                        // Exercise + Steps side-by-side cards
-                        item {
-                            val exerciseMin = healthData.exercise.totalDuration?.toMinutes()?.toInt() ?: 0
-                            val exerciseProgress = (exerciseMin / 30f).coerceIn(0f, 1f)
-                            val stepProgress = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                // Exercise card
-                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).clickable { onMetricClick(HealthViewModel.MetricType.EXERCISE) }.padding(16.dp)) {
-                                    Column {
-                                        Text("EXERCISE", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Medium)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Row(verticalAlignment = Alignment.Bottom) {
-                                            Text("$exerciseMin", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text("min", fontSize = 12.sp, color = TextOnSurfaceVariant)
-                                        }
-                                        Spacer(modifier = Modifier.height(10.dp))
-                                        Box(modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(SurfaceHighest)) {
-                                            Box(modifier = Modifier.fillMaxWidth(exerciseProgress.coerceAtLeast(0.01f)).fillMaxHeight().background(VibrantMagenta, RoundedCornerShape(2.dp)))
-                                        }
-                                    }
-                                }
-                                // Steps card
-                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
-                                    Column {
-                                        Text("STEPS", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Medium)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(String.format("%,d", healthData.steps.count), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                        Spacer(modifier = Modifier.height(10.dp))
-                                        Box(modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(SurfaceHighest)) {
-                                            Box(modifier = Modifier.fillMaxWidth(stepProgress.coerceAtLeast(0.01f)).fillMaxHeight().background(ElectricIndigo, RoundedCornerShape(2.dp)))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Neural Insight card
-                        item {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
-                                    .background(Brush.linearGradient(listOf(IndigoContainer.copy(alpha = 0.2f), MagentaContainer.copy(alpha = 0.2f))))
                                     .padding(20.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.Top) {
-                                    Icon(Icons.Default.AutoAwesome, null, tint = ElectricIndigo, modifier = Modifier.size(28.dp))
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column {
-                                        Text("Neural Insight", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text("Your metabolic efficiency is currently peaking. This is the optimal window for a high-intensity session to maximize calorie afterburn.", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant, lineHeight = 18.sp)
+                                    Box(
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .background(MagentaContainer.copy(alpha = 0.2f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Bolt,
+                                            contentDescription = null,
+                                            tint = VibrantMagenta,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(14.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            "Peak Performance",
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ElectricIndigo
+                                        )
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            "Your metabolic efficiency is currently peaking. This is the optimal window for a high-intensity session to maximize calorie afterburn.",
+                                            fontSize = 13.sp,
+                                            color = TextOnSurfaceVariant,
+                                            lineHeight = 19.sp
+                                        )
                                     }
                                 }
                             }
                         }
 
-                        // Intensity Flow bar chart
-                        item {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                                Text("Intensity Flow", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                Text("LAST 12 HOURS", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp)
-                            }
-                        }
-                        item {
-                            val barHeights = listOf(0.2f, 0.35f, 0.65f, 0.45f, 0.85f, 0.95f, 0.6f, 0.3f, 0.25f, 0.4f, 0.55f, 0.15f)
-                            Box(modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
-                                Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
-                                    barHeights.forEachIndexed { i, h ->
-                                        val isActive = i in 4..6
-                                        Box(modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(h).clip(RoundedCornerShape(50)).background(if (isActive) ElectricIndigo else SurfaceHighest))
-                                    }
-                                }
-                            }
-                        }
-
-                        // Latest Sessions
+                        // ── Latest Sessions ──
                         if (healthData.exercise.sessions.isNotEmpty()) {
                             item {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Latest Sessions", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                    Text("VIEW ALL", fontSize = 10.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "Latest Sessions",
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextOnSurface
+                                    )
+                                    Text(
+                                        "VIEW ALL",
+                                        fontSize = 10.sp,
+                                        color = ElectricIndigo,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.sp
+                                    )
                                 }
                             }
                             items(healthData.exercise.sessions.take(3).size) { index ->
                                 val session = healthData.exercise.sessions[index]
                                 val durMin = session.duration.toMinutes()
-                                val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
-                                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).clickable { onSessionClick(session) }.padding(16.dp)) {
-                                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                        Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(SurfaceLow), contentAlignment = Alignment.Center) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceHigh)
+                                        .clickable { onSessionClick(session) }
+                                        .padding(16.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(SurfaceLow),
+                                            contentAlignment = Alignment.Center
+                                        ) {
                                             Icon(Icons.Default.Bolt, null, tint = ElectricIndigo, modifier = Modifier.size(24.dp))
                                         }
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(session.exerciseType, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                            Row {
-                                                Text("${durMin}m", fontSize = 12.sp, color = TextOnSurfaceVariant)
-                                            }
+                                            Text("${durMin}m", fontSize = 12.sp, color = TextOnSurfaceVariant)
                                         }
                                         Column(horizontalAlignment = Alignment.End) {
-                                            Text("${session.caloriesBurned?.roundToInt() ?: (durMin * 7)}", fontWeight = FontWeight.Bold, color = ElectricIndigo)
+                                            Text(
+                                                "${session.caloriesBurned?.roundToInt() ?: (durMin * 7)}",
+                                                fontWeight = FontWeight.Bold,
+                                                color = ElectricIndigo
+                                            )
                                             Text("KCAL", fontSize = 10.sp, color = TextOnSurfaceVariant)
                                         }
                                         Icon(Icons.Default.ChevronRight, null, tint = TextSubtle, modifier = Modifier.size(20.dp))
