@@ -1369,8 +1369,8 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Non-sleep metrics: show charts
-                        if (metricType != HealthViewModel.MetricType.SLEEP) {
+                        // Non-sleep, non-steps metrics: show generic charts
+                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
                             // Line Chart - 30 Day Trend
                             if (metricHistory?.last30Days?.isNotEmpty() == true) {
                                 item {
@@ -1551,8 +1551,8 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Statistics Cards (non-sleep only)
-                        if (metricType != HealthViewModel.MetricType.SLEEP) {
+                        // Statistics Cards (non-sleep, non-steps only)
+                        if (metricType != HealthViewModel.MetricType.SLEEP && metricType != HealthViewModel.MetricType.STEPS) {
                             item {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
