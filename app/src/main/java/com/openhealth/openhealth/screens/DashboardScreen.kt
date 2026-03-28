@@ -936,103 +936,515 @@ fun DashboardScreen(
                         }
                     }
 
-                    // ─── TAB 2: VITALS (Biometric Health) — Stitch match ───
+                    // ─── TAB 2: VITALS (Biometric Health) — Stitch remix ───
                     2 -> {
-                        // Hero: "PULSE RHYTHM"
-                        item {
-                            Column {
-                                Text("LIVE STATUS", fontSize = 10.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("PULSE", fontSize = 44.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface, letterSpacing = (-1).sp)
-                                Text("RHYTHM", fontSize = 44.sp, fontWeight = FontWeight.ExtraBold, color = VibrantMagenta, letterSpacing = (-1).sp)
-                            }
-                        }
-
-                        // Resting HR card with magenta left border
-                        item {
-                            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(SurfaceLow)) {
-                                // Left magenta border
-                                Box(modifier = Modifier.width(4.dp).height(80.dp).background(VibrantMagenta).align(Alignment.CenterStart))
-                                Row(modifier = Modifier.padding(20.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Column {
-                                        Text("Resting Heart Rate", fontSize = 14.sp, color = TextOnSurfaceVariant)
-                                        Row(verticalAlignment = Alignment.Bottom) {
-                                            Text(healthData.heartRate.currentBpm?.toString() ?: "--", fontSize = 36.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text("BPM", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = VibrantMagenta, modifier = Modifier.padding(bottom = 4.dp))
-                                        }
-                                    }
-                                    Icon(Icons.Default.Favorite, null, tint = CardHeartRate, modifier = Modifier.size(32.dp).clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE) })
-                                }
-                            }
-                        }
-
-                        // HRV bento card with bar chart
-                        if (healthData.heartRateVariability.rmssdMs != null) {
-                            item { HrvChartCard(healthData = healthData, onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }) }
-                        }
-
-                        // SpO2 card — gradient magenta background
+                        // Hero: SpO2 card with "CURRENT SATURATION" label
                         if (healthData.oxygenSaturation.percentage != null) {
                             item {
-                                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Brush.linearGradient(listOf(MagentaContainer, SurfaceHigh))).padding(24.dp).clickable { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }) {
-                                    Column {
-                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                            Text("SpO2", color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
-                                        }
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .clickable { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
+                                        .padding(vertical = 32.dp, horizontal = 24.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            "CURRENT SATURATION",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ElectricIndigo,
+                                            letterSpacing = 3.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
                                         Row(verticalAlignment = Alignment.Bottom) {
-                                            Text("${healthData.oxygenSaturation.percentage?.roundToInt()}", fontSize = 52.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
-                                            Text("%", fontSize = 24.sp, color = VibrantMagenta, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                                            Text(
+                                                "${healthData.oxygenSaturation.percentage?.roundToInt()}",
+                                                fontSize = 72.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = TextOnSurface,
+                                                letterSpacing = (-2).sp
+                                            )
+                                            Text(
+                                                "%",
+                                                fontSize = 28.sp,
+                                                color = ElectricIndigo,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(bottom = 10.dp, start = 2.dp)
+                                            )
                                         }
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text("Optimal oxygenation detected", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant)
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        // "Optimal SpO2" badge
+                                        Box(
+                                            modifier = Modifier
+                                                .background(SurfaceHighest, RoundedCornerShape(20.dp))
+                                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Default.Favorite, null, tint = VibrantMagenta, modifier = Modifier.size(14.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("Optimal SpO2", fontSize = 13.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Medium)
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
 
-                        // Stress card
+                        // Daily Stress + Body Energy bento grid
                         if (healthData.heartRateVariability.rmssdMs != null) {
                             item {
                                 val hrv = healthData.heartRateVariability.rmssdMs!!
                                 val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
-                                val stressLabel = when { stressLevel < 25 -> "Low"; stressLevel < 50 -> "Moderate"; stressLevel < 75 -> "High"; else -> "Very High" }
-                                val stressColor = when { stressLevel < 25 -> SuccessGreen; stressLevel < 50 -> Color(0xFFFFCC00); stressLevel < 75 -> WarningOrange; else -> ErrorRed }
-                                StressEnergyCard(stressLevel = stressLevel, stressLabel = stressLabel, stressColor = stressColor, energyPercent = readinessScore.score.coerceIn(0, 100), onClick = onStressClick)
+                                val stressLabel = when { stressLevel < 25 -> "Low Stress"; stressLevel < 50 -> "Moderate"; stressLevel < 75 -> "High Stress State"; else -> "Very High Stress" }
+                                val energyPercent = readinessScore.score.coerceIn(0, 100)
+                                val energyLabel = when { energyPercent >= 75 -> "Charging Rapidly"; energyPercent >= 50 -> "Stable Energy"; energyPercent >= 25 -> "Depleting"; else -> "Low Energy" }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Stress card
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(SurfaceHigh)
+                                            .clickable { onStressClick() }
+                                            .padding(20.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.Top
+                                            ) {
+                                                Text("DAILY STRESS", fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Icon(Icons.Default.Favorite, null, tint = VibrantMagenta, modifier = Modifier.size(18.dp))
+                                            }
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Text("$stressLevel", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(stressLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = VibrantMagenta)
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            // Stress progress bar
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(6.dp)
+                                                    .clip(RoundedCornerShape(3.dp))
+                                                    .background(SurfaceLowest)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth(stressLevel / 100f)
+                                                        .fillMaxHeight()
+                                                        .background(VibrantMagenta, RoundedCornerShape(3.dp))
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // Body Energy card
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(SurfaceHigh)
+                                            .padding(20.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.Top
+                                            ) {
+                                                Text("BODY ENERGY", fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                                                Icon(Icons.Default.Assessment, null, tint = ElectricIndigo, modifier = Modifier.size(18.dp))
+                                            }
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Row(verticalAlignment = Alignment.Bottom) {
+                                                Text("$energyPercent", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                                Text("%", fontSize = 18.sp, color = ElectricIndigo, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 6.dp, start = 2.dp))
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(energyLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = ElectricIndigo)
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            // Energy gradient bar
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(12.dp)
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(
+                                                        Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)),
+                                                        RoundedCornerShape(6.dp)
+                                                    )
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
 
-                        // Sleep metric card
+                        // Sleep Analysis card with stages breakdown
                         item {
                             val sleepHours = healthData.sleep.totalDuration?.toHours()?.toInt() ?: 0
                             val sleepMinutes = healthData.sleep.totalDuration?.let { ((it.toMinutes() % 60).toInt()) } ?: 0
-                            MetricCard(title = "Sleep", value = if (sleepHours > 0 || sleepMinutes > 0) "${sleepHours}h ${sleepMinutes}m" else "--", unit = "", icon = Icons.Default.NightsStay, accentColor = CardSleep, sparklineData = generateSleepSparklineData(sleepHours * 60 + sleepMinutes), onClick = { onMetricClick(HealthViewModel.MetricType.SLEEP) })
+                            val hasSleepData = sleepHours > 0 || sleepMinutes > 0
+                            val deepMin = healthData.sleep.sessions.filter { it.stage == com.openhealth.openhealth.model.SleepStage.DEEP }.sumOf { it.duration.toMinutes() }
+                            val lightMin = healthData.sleep.sessions.filter { it.stage == com.openhealth.openhealth.model.SleepStage.LIGHT }.sumOf { it.duration.toMinutes() }
+                            val remMin = healthData.sleep.sessions.filter { it.stage == com.openhealth.openhealth.model.SleepStage.REM }.sumOf { it.duration.toMinutes() }
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(SurfaceLow)
+                                    .clickable { onMetricClick(HealthViewModel.MetricType.SLEEP) }
+                                    .padding(20.dp)
+                            ) {
+                                Column {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.Bottom
+                                    ) {
+                                        Column {
+                                            Text("SLEEP QUALITY", fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                if (hasSleepData) "${sleepHours}h ${sleepMinutes}m" else "--",
+                                                fontSize = 32.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextOnSurface
+                                            )
+                                        }
+                                        // Mini bar chart decoration
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                            verticalAlignment = Alignment.Bottom,
+                                            modifier = Modifier.height(40.dp)
+                                        ) {
+                                            listOf(0.6f, 0.8f, 0.4f, 1f, 0.6f, 0.8f, 0.4f).forEachIndexed { i, h ->
+                                                val color = if (i % 2 == 1) ElectricIndigo else SurfaceHighest
+                                                Box(
+                                                    modifier = Modifier
+                                                        .width(3.dp)
+                                                        .fillMaxHeight(h)
+                                                        .background(color, RoundedCornerShape(2.dp))
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    // Sleep stages grid
+                                    if (hasSleepData) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            // Deep
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(SurfaceHighest.copy(alpha = 0.5f))
+                                                    .padding(10.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text("DEEP", fontSize = 9.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        if (deepMin > 0) "${deepMin / 60}h ${deepMin % 60}m" else "--",
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextOnSurface
+                                                    )
+                                                }
+                                            }
+                                            // REM
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(SurfaceHighest.copy(alpha = 0.5f))
+                                                    .drawBehind {
+                                                        drawRoundRect(
+                                                            color = ElectricIndigo,
+                                                            cornerRadius = CornerRadius(12.dp.toPx()),
+                                                            size = Size(size.width, 2.dp.toPx()),
+                                                            topLeft = Offset(0f, size.height - 2.dp.toPx())
+                                                        )
+                                                    }
+                                                    .padding(10.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text("REM", fontSize = 9.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        if (remMin > 0) "${remMin / 60}h ${remMin % 60}m" else "--",
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextOnSurface
+                                                    )
+                                                }
+                                            }
+                                            // Light
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(SurfaceHighest.copy(alpha = 0.5f))
+                                                    .padding(10.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text("LIGHT", fontSize = 9.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold)
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        if (lightMin > 0) "${lightMin / 60}h ${lightMin % 60}m" else "--",
+                                                        fontSize = 14.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextOnSurface
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
-                        // Vitals detail card
-                        val hasHRV = settings.showHRV && healthData.heartRateVariability.rmssdMs != null
-                        val hasBloodOxygen = settings.showOxygenSaturation && healthData.oxygenSaturation.percentage != null
-                        val hasBloodPressure = settings.showBloodPressure && healthData.bloodPressure.systolicMmHg != null
-                        val hasBodyTemp = settings.showBodyTemperature && healthData.bodyTemperature.temperatureCelsius != null
-                        val hasRespiratoryRate = settings.showRespiratoryRate && healthData.respiratoryRate.ratePerMinute != null
-                        val hasSkinTemp = settings.showSkinTemperature && healthData.skinTemperature.temperatureCelsius != null
-                        val hasBloodGlucose = settings.showBloodGlucose && healthData.bloodGlucose.levelMgPerDl != null
-                        val hasAnyVitals = hasHRV || hasBloodOxygen || hasBloodPressure || hasBodyTemp || hasRespiratoryRate || hasSkinTemp || hasBloodGlucose
-                        if (hasAnyVitals) {
-                            item { VitalsCard(healthData = healthData, hasHRV = hasHRV, hasBloodOxygen = hasBloodOxygen, hasBloodPressure = hasBloodPressure, hasBodyTemp = hasBodyTemp, hasRespiratoryRate = hasRespiratoryRate, hasSkinTemp = hasSkinTemp, hasBloodGlucose = hasBloodGlucose, expanded = vitalsExpanded, onExpandedChange = onVitalsExpandedChange, onMetricClick = onMetricClick) }
+                        // Key Vitals section header + grid
+                        item {
+                            Text(
+                                "Key Vitals",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextOnSurface,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                            )
                         }
 
-                        // Body composition
+                        item {
+                            @Composable
+                            fun VitalTile(label: String, value: String, unit: String, icon: ImageVector, iconTint: Color, onClick: () -> Unit) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(SurfaceHigh)
+                                        .clickable(onClick = onClick)
+                                        .padding(14.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(icon, null, tint = iconTint, modifier = Modifier.size(22.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(label, fontSize = 10.sp, color = TextOnSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                            if (unit.isNotEmpty()) {
+                                                Text(unit, fontSize = 9.sp, color = TextOnSurfaceVariant, modifier = Modifier.padding(bottom = 2.dp, start = 2.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3-column vitals grid
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // HRV
+                                Box(modifier = Modifier.weight(1f)) {
+                                    VitalTile(
+                                        label = "HRV",
+                                        value = healthData.heartRateVariability.rmssdMs?.toInt()?.toString() ?: "--",
+                                        unit = "ms",
+                                        icon = Icons.Default.Favorite,
+                                        iconTint = ElectricIndigo,
+                                        onClick = { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
+                                    )
+                                }
+                                // Respiration
+                                Box(modifier = Modifier.weight(1f)) {
+                                    VitalTile(
+                                        label = "RESP",
+                                        value = healthData.respiratoryRate.ratePerMinute?.roundToInt()?.toString() ?: "--",
+                                        unit = "brpm",
+                                        icon = Icons.Default.Refresh,
+                                        iconTint = VibrantMagenta,
+                                        onClick = { onMetricClick(HealthViewModel.MetricType.RESPIRATORY_RATE) }
+                                    )
+                                }
+                                // Temp
+                                Box(modifier = Modifier.weight(1f)) {
+                                    VitalTile(
+                                        label = "TEMP",
+                                        value = healthData.bodyTemperature.temperatureCelsius?.let { String.format("%.1f", it) } ?: "--",
+                                        unit = "\u00B0C",
+                                        icon = Icons.Default.LocalFireDepartment,
+                                        iconTint = SoftLavender,
+                                        onClick = { onMetricClick(HealthViewModel.MetricType.BODY_TEMPERATURE) }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Body Composition section
                         val hasWeight = settings.showWeight && healthData.weight.kilograms != null
                         val hasBodyFat = settings.showBodyFat && healthData.bodyFat.percentage != null
+                        val hasLeanMass = settings.showLeanBodyMass && healthData.leanBodyMass.kilograms != null
                         val hasBMR = settings.showBMR && healthData.basalMetabolicRate.caloriesPerDay != null
                         val hasBodyWater = settings.showBodyWater && healthData.bodyWaterMass.kilograms != null
                         val hasBoneMass = settings.showBoneMass && healthData.boneMass.kilograms != null
-                        val hasLeanMass = settings.showLeanBodyMass && healthData.leanBodyMass.kilograms != null
-                        val hasAnyBody = hasWeight || hasBodyFat || hasBMR || hasBodyWater || hasBoneMass || hasLeanMass
+                        val hasAnyBody = hasWeight || hasBodyFat || hasLeanMass || hasBMR || hasBodyWater || hasBoneMass
+
                         if (hasAnyBody) {
-                            item { BodyCompositionCard(healthData = healthData, hasWeight = hasWeight, hasBodyFat = hasBodyFat, hasBMR = hasBMR, hasBodyWater = hasBodyWater, hasBoneMass = hasBoneMass, hasLeanMass = hasLeanMass, expanded = bodyExpanded, onExpandedChange = onBodyExpandedChange, onMetricClick = onMetricClick) }
+                            item {
+                                Text(
+                                    "Body Composition",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = TextOnSurface,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                                )
+                            }
+
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                ) {
+                                    Column {
+                                        // Weight row
+                                        if (hasWeight) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { onMetricClick(HealthViewModel.MetricType.WEIGHT) }
+                                                    .padding(16.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(40.dp)
+                                                                .background(SurfaceHighest, CircleShape),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(Icons.Default.Assessment, null, tint = ElectricIndigo, modifier = Modifier.size(20.dp))
+                                                        }
+                                                        Spacer(modifier = Modifier.width(12.dp))
+                                                        Text("Total Weight", fontWeight = FontWeight.Medium, color = TextOnSurface)
+                                                    }
+                                                    Text(
+                                                        String.format("%.1f kg", healthData.weight.kilograms),
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextOnSurface
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        // Body Fat row
+                                        if (hasBodyFat) {
+                                            if (hasWeight) {
+                                                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(SurfaceHighest.copy(alpha = 0.3f)))
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { onMetricClick(HealthViewModel.MetricType.BODY_FAT) }
+                                                    .padding(16.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(40.dp)
+                                                                .background(SurfaceHighest, CircleShape),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(Icons.Default.Favorite, null, tint = VibrantMagenta, modifier = Modifier.size(20.dp))
+                                                        }
+                                                        Spacer(modifier = Modifier.width(12.dp))
+                                                        Text("Body Fat Percentage", fontWeight = FontWeight.Medium, color = TextOnSurface)
+                                                    }
+                                                    Text(
+                                                        String.format("%.1f%%", healthData.bodyFat.percentage),
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextOnSurface
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        // Lean Muscle Mass row
+                                        if (hasLeanMass) {
+                                            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(SurfaceHighest.copy(alpha = 0.3f)))
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { onMetricClick(HealthViewModel.MetricType.LEAN_BODY_MASS) }
+                                                    .padding(16.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(40.dp)
+                                                                .background(SurfaceHighest, CircleShape),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(Icons.Default.Assessment, null, tint = SoftLavender, modifier = Modifier.size(20.dp))
+                                                        }
+                                                        Spacer(modifier = Modifier.width(12.dp))
+                                                        Text("Lean Muscle Mass", fontWeight = FontWeight.Medium, color = TextOnSurface)
+                                                    }
+                                                    Text(
+                                                        String.format("%.1f kg", healthData.leanBodyMass.kilograms),
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextOnSurface
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
