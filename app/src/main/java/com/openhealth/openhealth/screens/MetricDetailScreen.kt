@@ -558,53 +558,82 @@ fun MetricDetailScreen(
                         if (metricType == HealthViewModel.MetricType.SLEEP && metricHistory?.allHistoricalData?.isNotEmpty() == true) {
                             item {
                                 val last7 = metricHistory.allHistoricalData.takeLast(7)
-                                // Sleep bank: sum of (actual - 8h target) for last 7 days
                                 val bankHours = last7.sumOf { it.value - 8.0 }
                                 val isDebt = bankHours < 0
                                 val absHours = kotlin.math.abs(bankHours)
                                 val h = absHours.toInt()
                                 val m = ((absHours - h) * 60).toInt()
+                                val bankText = "${if (isDebt) "-" else "+"}${h}.${m / 6}h ${if (isDebt) "Debt" else "Surplus"}"
+                                val maxSleep = last7.maxOfOrNull { it.value }?.coerceAtLeast(1.0) ?: 8.0
+                                val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
 
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(24.dp),
-                                    colors = CardDefaults.cardColors(containerColor = SurfaceMid)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(SurfaceLow)
+                                        .padding(20.dp)
                                 ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
-                                        Text(
-                                            text = "Sleep Bank",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = TextOnSurface,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Text(
-                                            text = "Last 7 days vs 8h target",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = TextSubtle
-                                        )
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        Row(verticalAlignment = Alignment.Bottom) {
+                                    Column {
+                                        // Header: title + surplus/debt
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
                                             Text(
-                                                text = "${if (isDebt) "-" else "+"}${h}h ${m}m",
-                                                color = if (isDebt) Color(0xFFFF9500) else SuccessGreen,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 32.sp
+                                                text = "Sleep Bank",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = TextOnSurface,
+                                                fontWeight = FontWeight.Bold
                                             )
-                                            Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = if (isDebt) "Debt" else "Surplus",
-                                                color = if (isDebt) Color(0xFFFF9500) else SuccessGreen,
-                                                fontSize = 16.sp,
-                                                modifier = Modifier.padding(bottom = 4.dp)
+                                                text = bankText,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isDebt) ErrorRed else VibrantMagenta
                                             )
                                         }
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = if (isDebt) "You're behind on sleep. Try to get extra rest this week."
-                                                   else "Great job! You're meeting or exceeding your sleep target.",
-                                            color = TextOnSurfaceVariant,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+
+                                        // 7 bars
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(80.dp),
+                                            horizontalArrangement = Arrangement.SpaceEvenly,
+                                            verticalAlignment = Alignment.Bottom
+                                        ) {
+                                            last7.forEachIndexed { index, day ->
+                                                val barHeight = (day.value / maxSleep).toFloat().coerceIn(0.1f, 1f)
+                                                val isGood = day.value >= 7.0
+                                                val barColor = when {
+                                                    day.value >= 8.0 -> VibrantMagenta
+                                                    day.value >= 7.0 -> ElectricIndigo
+                                                    else -> ErrorRed
+                                                }
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .width(6.dp)
+                                                            .fillMaxHeight(barHeight)
+                                                            .clip(RoundedCornerShape(3.dp))
+                                                            .background(barColor)
+                                                    )
+                                                    Spacer(modifier = Modifier.height(6.dp))
+                                                    Text(
+                                                        text = dayLabels.getOrElse(index) { "" },
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextOnSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
