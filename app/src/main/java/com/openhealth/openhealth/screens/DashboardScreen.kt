@@ -135,6 +135,7 @@ fun DashboardScreen(
     onStressClick: () -> Unit = {},
     onAiInsightsClick: () -> Unit = {},
     onHydrationClick: () -> Unit = {},
+    hydrationDailyTotalMl: Int = 0,
     onSessionClick: (com.openhealth.openhealth.model.ExerciseSession) -> Unit = {},
     weatherData: com.openhealth.openhealth.utils.WeatherData = com.openhealth.openhealth.utils.WeatherData(),
     stepsCalendarData: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
@@ -255,7 +256,7 @@ fun DashboardScreen(
                             val restingHr = healthData.heartRate.minBpm
                             val hrvVal = healthData.heartRateVariability.rmssdMs
                             val nutritionCal = healthData.nutrition.calories
-                            val hydrationLiters = healthData.hydration.liters
+                            val hydrationLiters: Double? = if (hydrationDailyTotalMl > 0) hydrationDailyTotalMl / 1000.0 else healthData.hydration.liters
                             val HydrationBlue = Color(0xFF4DABFF)
 
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

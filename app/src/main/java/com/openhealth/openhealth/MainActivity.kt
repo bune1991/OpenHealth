@@ -277,6 +277,7 @@ class MainActivity : ComponentActivity() {
                                             onStressClick = { viewModel.showStressDetail() },
                                             onAiInsightsClick = { viewModel.showAiInsights() },
                                             onHydrationClick = { viewModel.showHydration() },
+                                            hydrationDailyTotalMl = hydrationDailyTotal,
                                             onSessionClick = { viewModel.showWorkoutDetail(it) },
                                             weatherData = weatherData,
                                             stepsCalendarData = stepsCalendarData,
