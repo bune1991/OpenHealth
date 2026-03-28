@@ -135,6 +135,7 @@ fun DashboardScreen(
     onStressClick: () -> Unit = {},
     onAiInsightsClick: () -> Unit = {},
     onHydrationClick: () -> Unit = {},
+    onSessionClick: (com.openhealth.openhealth.model.ExerciseSession) -> Unit = {},
     weatherData: com.openhealth.openhealth.utils.WeatherData = com.openhealth.openhealth.utils.WeatherData(),
     stepsCalendarData: List<com.openhealth.openhealth.model.DailyDataPoint> = emptyList(),
     stepsStreak: Int = 0,
@@ -882,7 +883,7 @@ fun DashboardScreen(
                                 val session = healthData.exercise.sessions[index]
                                 val durMin = session.duration.toMinutes()
                                 val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("h:mm a")
-                                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).padding(16.dp)) {
+                                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(SurfaceHigh).clickable { onSessionClick(session) }.padding(16.dp)) {
                                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                         Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(SurfaceLow), contentAlignment = Alignment.Center) {
                                             Icon(Icons.Default.Bolt, null, tint = ElectricIndigo, modifier = Modifier.size(24.dp))

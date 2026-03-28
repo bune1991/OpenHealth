@@ -179,6 +179,13 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         context.getSharedPreferences("hydration_prefs", android.content.Context.MODE_PRIVATE)
     }
 
+    // Workout detail navigation
+    private val _showWorkoutDetail = MutableStateFlow(false)
+    val showWorkoutDetail: StateFlow<Boolean> = _showWorkoutDetail.asStateFlow()
+
+    private val _selectedWorkoutSession = MutableStateFlow<ExerciseSession?>(null)
+    val selectedWorkoutSession: StateFlow<ExerciseSession?> = _selectedWorkoutSession.asStateFlow()
+
     // Required permissions - use all permissions from HealthConnectManager
     val requiredPermissions = HealthConnectManager.PERMISSIONS
 
@@ -638,6 +645,17 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun hideHydration() {
         _showHydration.value = false
+    }
+
+    // Workout detail navigation
+    fun showWorkoutDetail(session: ExerciseSession) {
+        _selectedWorkoutSession.value = session
+        _showWorkoutDetail.value = true
+    }
+
+    fun hideWorkoutDetail() {
+        _showWorkoutDetail.value = false
+        _selectedWorkoutSession.value = null
     }
 
     fun addWaterEntry(amountMl: Int) {

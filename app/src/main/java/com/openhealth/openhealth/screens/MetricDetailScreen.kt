@@ -103,7 +103,8 @@ fun MetricDetailScreen(
     stepsGoal: Int = 10000,
     weightTargetKg: Float = 70.0f,
     exerciseSessions: List<com.openhealth.openhealth.model.ExerciseSession> = emptyList(),
-    healthData: com.openhealth.openhealth.model.HealthData? = null
+    healthData: com.openhealth.openhealth.model.HealthData? = null,
+    onSessionClick: (com.openhealth.openhealth.model.ExerciseSession) -> Unit = {}
 ) {
     val metricInfo = getMetricInfo(metricType)
 
@@ -1878,6 +1879,7 @@ fun MetricDetailScreen(
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
                                         .background(SurfaceLow)
+                                        .clickable { onSessionClick(session) }
                                         .padding(14.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {

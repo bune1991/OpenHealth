@@ -55,6 +55,7 @@ import com.openhealth.openhealth.screens.AiInsightsScreen
 import com.openhealth.openhealth.screens.OnboardingScreen
 import com.openhealth.openhealth.viewmodel.ReportsData
 import com.openhealth.openhealth.screens.SettingsScreen
+import com.openhealth.openhealth.screens.WorkoutDetailScreen
 import com.openhealth.openhealth.ui.theme.*
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 
@@ -96,11 +97,13 @@ class MainActivity : ComponentActivity() {
                 viewModel.showReports.collectAsState().value ||
                 viewModel.showStressDetail.collectAsState().value ||
                 viewModel.showAiInsights.collectAsState().value ||
-                viewModel.showHydration.collectAsState().value
+                viewModel.showHydration.collectAsState().value ||
+                viewModel.showWorkoutDetail.collectAsState().value
             androidx.compose.runtime.LaunchedEffect(hasSubScreen) {
                 onBackPressedDispatcher.addCallback(this@MainActivity) {
                     if (::viewModel.isInitialized) {
                         when {
+                            viewModel.showWorkoutDetail.value -> viewModel.hideWorkoutDetail()
                             viewModel.showHydration.value -> viewModel.hideHydration()
                             viewModel.showSettings.value -> viewModel.hideSettings()
                             viewModel.showAiInsights.value -> viewModel.hideAiInsights()
@@ -134,6 +137,8 @@ class MainActivity : ComponentActivity() {
                 val showStressDetail by viewModel.showStressDetail.collectAsState()
                 val showAiInsights by viewModel.showAiInsights.collectAsState()
                 val showHydration by viewModel.showHydration.collectAsState()
+                val showWorkoutDetail by viewModel.showWorkoutDetail.collectAsState()
+                val selectedWorkoutSession by viewModel.selectedWorkoutSession.collectAsState()
                 val hydrationEntries by viewModel.hydrationEntries.collectAsState()
                 val hydrationDailyTotal by viewModel.hydrationDailyTotal.collectAsState()
                 val aiInsightText by viewModel.aiInsightText.collectAsState()
@@ -167,6 +172,13 @@ class MainActivity : ComponentActivity() {
                                     !settings.onboardingCompleted -> {
                                         OnboardingScreen(
                                             onGetStarted = { viewModel.completeOnboarding() }
+                                        )
+                                    }
+                                    showWorkoutDetail && selectedWorkoutSession != null -> {
+                                        WorkoutDetailScreen(
+                                            session = selectedWorkoutSession!!,
+                                            healthData = healthData,
+                                            onBackClick = { viewModel.hideWorkoutDetail() }
                                         )
                                     }
                                     showHydration -> {
@@ -231,7 +243,8 @@ class MainActivity : ComponentActivity() {
                                             stepsGoal = settings.stepsGoal,
                                             weightTargetKg = settings.weightTargetKg,
                                             exerciseSessions = healthData.exercise.sessions,
-                                            healthData = healthData
+                                            healthData = healthData,
+                                            onSessionClick = { viewModel.showWorkoutDetail(it) }
                                         )
                                     }
                                     else -> {
@@ -264,6 +277,7 @@ class MainActivity : ComponentActivity() {
                                             onStressClick = { viewModel.showStressDetail() },
                                             onAiInsightsClick = { viewModel.showAiInsights() },
                                             onHydrationClick = { viewModel.showHydration() },
+                                            onSessionClick = { viewModel.showWorkoutDetail(it) },
                                             weatherData = weatherData,
                                             stepsCalendarData = stepsCalendarData,
                                             stepsStreak = stepsStreak,
