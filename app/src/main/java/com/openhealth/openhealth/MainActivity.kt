@@ -250,20 +250,6 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                     }
-                                    showReadinessDetail -> {
-                                        ReadinessDetailScreen(
-                                            healthData = healthData,
-                                            onBackClick = { viewModel.hideReadinessDetail() },
-                                            onMetricClick = { metricType ->
-                                                viewModel.hideReadinessDetail()
-                                                viewModel.selectMetric(metricType)
-                                            },
-                                            onStartSession = {
-                                                viewModel.hideReadinessDetail()
-                                                viewModel.selectMetric(HealthViewModel.MetricType.EXERCISE)
-                                            }
-                                        )
-                                    }
                                     selectedMetric != null -> {
                                         // Show detail screen
                                         MetricDetailScreen(
@@ -278,6 +264,18 @@ class MainActivity : ComponentActivity() {
                                             exerciseSessions = healthData.exercise.sessions,
                                             healthData = healthData,
                                             onSessionClick = { viewModel.showWorkoutDetail(it) }
+                                        )
+                                    }
+                                    showReadinessDetail -> {
+                                        ReadinessDetailScreen(
+                                            healthData = healthData,
+                                            onBackClick = { viewModel.hideReadinessDetail() },
+                                            onMetricClick = { metricType ->
+                                                viewModel.selectMetric(metricType)
+                                            },
+                                            onStartSession = {
+                                                viewModel.selectMetric(HealthViewModel.MetricType.EXERCISE)
+                                            }
                                         )
                                     }
                                     else -> {
