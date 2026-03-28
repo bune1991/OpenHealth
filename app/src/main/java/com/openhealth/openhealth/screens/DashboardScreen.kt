@@ -493,7 +493,7 @@ fun DashboardScreen(
                                 Column {
                                     Text("DAILY CONSISTENCY", fontSize = 10.sp, color = TextOnSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    Row(verticalAlignment = Alignment.Bottom) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text("$consistency%", fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = TextOnSurface)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Box(modifier = Modifier.background(Brush.horizontalGradient(listOf(ElectricIndigo, VibrantMagenta)), RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
@@ -504,7 +504,7 @@ fun DashboardScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.Assessment, null, tint = SuccessGreen, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(2.dp))
-                                    Text("+4%", color = SuccessGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Text("+14%", color = SuccessGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -512,48 +512,124 @@ fun DashboardScreen(
                         // Streak + stats row
                         item {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                listOf(
-                                    Triple("STREAK", if (stepsStreak > 0) "$stepsStreak" else "0", "Days") to ElectricIndigo,
-                                    Triple("STATUS", "Elite", "") to VibrantMagenta,
-                                    Triple("AVG STEPS", "${healthData.steps.count / 1000}k", "") to SoftLavender
-                                ).forEach { (data, color) ->
-                                    Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
-                                        Column {
-                                            Text(data.first, fontSize = 9.sp, color = TextOnSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(data.second, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
-                                            if (data.third.isNotEmpty()) Text(data.third, fontSize = 11.sp, color = TextOnSurfaceVariant)
-                                        }
+                                // Streak
+                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                    Column {
+                                        Text("STREAK", fontSize = 9.sp, color = ElectricIndigo, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(if (stepsStreak > 0) "$stepsStreak" else "--", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
+                                        Text("Days", fontSize = 11.sp, color = TextOnSurfaceVariant)
+                                    }
+                                }
+                                // Status
+                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                    Column {
+                                        Text("STATUS", fontSize = 9.sp, color = VibrantMagenta, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            when {
+                                                readinessScore.score >= 80 -> "Elite"
+                                                readinessScore.score >= 60 -> "Strong"
+                                                readinessScore.score >= 40 -> "Building"
+                                                else -> "Starting"
+                                            },
+                                            fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface
+                                        )
+                                    }
+                                }
+                                // Avg Steps
+                                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(24.dp)).background(SurfaceLow).padding(16.dp)) {
+                                    Column {
+                                        Text("AVG STEPS", fontSize = 9.sp, color = SoftLavender, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        val avgK = if (healthData.steps.count > 0) String.format("%.1fk", healthData.steps.count / 1000f) else "--"
+                                        Text(avgK, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextOnSurface)
                                     }
                                 }
                             }
                         }
 
-                        // Steps overview
+                        // Step Trends — density circle
                         item {
-                            MetricCard(title = "Steps", value = healthData.steps.count.toString(), unit = "steps", icon = Icons.AutoMirrored.Filled.DirectionsWalk, accentColor = CardSteps, sparklineData = generateSparklineData(healthData.steps.count, 20000), onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) }, subtitle = if (settings.showStepsStreak && stepsStreak > 0) "$stepsStreak day streak" else "")
+                            NocturneCard(surfaceColor = SurfaceLow) {
+                                Text("Step Trends", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Info text
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Density", fontSize = 12.sp, color = TextOnSurfaceVariant)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("Peak activity times are clustered in the morning hours", fontSize = 12.sp, color = TextSubtle, lineHeight = 16.sp)
+                                    }
+
+                                    Spacer(modifier = Modifier.width(16.dp))
+
+                                    // Density gauge circle
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(80.dp)) {
+                                        Canvas(modifier = Modifier.size(80.dp)) {
+                                            val strokeW = 8.dp.toPx()
+                                            drawCircle(color = SurfaceHighest, radius = size.minDimension / 2 - strokeW / 2, style = Stroke(strokeW))
+                                            drawArc(
+                                                brush = Brush.sweepGradient(listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)),
+                                                startAngle = -90f, sweepAngle = 270f,
+                                                useCenter = false,
+                                                style = Stroke(strokeW, cap = StrokeCap.Round),
+                                                topLeft = Offset(strokeW / 2, strokeW / 2),
+                                                size = Size(size.width - strokeW, size.height - strokeW)
+                                            )
+                                        }
+                                        val avgStepsK = if (healthData.steps.count > 0) String.format("%.1f", healthData.steps.count / 1000f) else "0"
+                                        Text(avgStepsK, fontSize = 18.sp, fontWeight = FontWeight.Black, color = TextOnSurface)
+                                    }
+                                }
+                            }
                         }
 
-                        // Weather
-                        if (weatherData.isAvailable) {
-                            item { WeatherCard(weatherData = weatherData) }
+                        // Milestones section
+                        item {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Milestones", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
+                                Text("View Gallery", color = ElectricIndigo, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
 
-                        // Weekly Summary link
+                        // Weekly Insight card with gradient border
                         item {
-                            NocturneCard(onClick = onReportsClick) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(SurfaceLow)
+                                    .padding(20.dp)
+                                    .clickable { onReportsClick() }
+                            ) {
                                 Row(verticalAlignment = Alignment.Top) {
                                     Box(modifier = Modifier.size(44.dp).background(ElectricIndigo.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
                                         Icon(Icons.Default.Assessment, null, tint = ElectricIndigo, modifier = Modifier.size(22.dp))
                                     }
                                     Spacer(modifier = Modifier.width(12.dp))
-                                    Column {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text("Weekly Insight", style = MaterialTheme.typography.titleMedium, color = TextOnSurface, fontWeight = FontWeight.Bold)
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("View your weekly summary, trends, and milestones", style = MaterialTheme.typography.bodySmall, color = TextOnSurfaceVariant)
+                                        Text(
+                                            "Your training consistency has increased by 14%. To optimize recovery, consider shifting your high-impact sessions to midweek.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = TextOnSurfaceVariant,
+                                            lineHeight = 18.sp
+                                        )
                                     }
                                 }
                             }
+                        }
+
+                        // Weather
+                        if (weatherData.isAvailable) {
+                            item { WeatherCard(weatherData = weatherData) }
                         }
                     }
                 }
