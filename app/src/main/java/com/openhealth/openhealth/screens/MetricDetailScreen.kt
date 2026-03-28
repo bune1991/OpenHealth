@@ -29,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -287,17 +288,20 @@ fun MetricDetailScreen(
                                 } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
                             } else formatValue(selectedDateValue, metricInfo.decimalPlaces)
 
-                            TodayValueCard(
-                                value = selectedDateValue,
-                                valueFormatted = displayValue,
-                                unit = metricHistory?.unit ?: "",
-                                color = metricInfo.color,
-                                dateLabel = dateLabel,
-                                isLoading = isLoading,
-                                isSleep = metricType == HealthViewModel.MetricType.SLEEP,
-                                sleepStartTime = sleepStartTime,
-                                sleepEndTime = sleepEndTime
-                            )
+                            // Skip TodayValueCard for sleep — SleepClockCard is the hero
+                            if (metricType != HealthViewModel.MetricType.SLEEP) {
+                                TodayValueCard(
+                                    value = selectedDateValue,
+                                    valueFormatted = displayValue,
+                                    unit = metricHistory?.unit ?: "",
+                                    color = metricInfo.color,
+                                    dateLabel = dateLabel,
+                                    isLoading = isLoading,
+                                    isSleep = false,
+                                    sleepStartTime = null,
+                                    sleepEndTime = null
+                                )
+                            }
                         }
 
                         // Daily Stats Summary for HR, HRV, SpO2, RR
@@ -434,11 +438,13 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Insights Card
-                        item {
-                            val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
-                            if (insight != null) {
-                                InsightCard(insight = insight)
+                        // Insights Card (non-sleep — sleep shows insight after stages)
+                        if (metricType != HealthViewModel.MetricType.SLEEP) {
+                            item {
+                                val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
+                                if (insight != null) {
+                                    InsightCard(insight = insight)
+                                }
                             }
                         }
 
@@ -506,7 +512,7 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Sleep Clock Visualization (only for Sleep metric)
+                        // Sleep: show clock FIRST, then skip generic charts
                         if (metricType == HealthViewModel.MetricType.SLEEP && sleepStartTime != null && sleepEndTime != null) {
                             item {
                                 SleepClockCard(
@@ -516,104 +522,35 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // Line Chart - 30 Day Trend
-                        if (metricHistory?.last30Days?.isNotEmpty() == true) {
-                            item {
-                                LineChartCard(
-                                    data = metricHistory.last30Days,
-                                    color = metricInfo.color,
-                                    title = "30 Day Trend",
-                                    isSleep = metricType == HealthViewModel.MetricType.SLEEP
-                                )
-                            }
-                        }
-
-                        // Bar Chart - Weekly Average
-                        if ((metricHistory?.last30Days?.size ?: 0) >= 7) {
-                            item {
-                                BarChartCard(
-                                    data = metricHistory!!.last30Days.takeLast(7),
-                                    color = metricInfo.color,
-                                    title = "Last 7 Days",
-                                    isSleep = metricType == HealthViewModel.MetricType.SLEEP,
-                                    decimalPlaces = metricInfo.decimalPlaces
-                                )
-                            }
-                        }
-
-                        // Statistics Cards
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                StatCard(
-                                    title = "30-Day Avg",
-                                    value = formatValue(metricHistory?.monthlyAverage ?: 0.0, metricInfo.decimalPlaces),
-                                    unit = metricHistory?.unit ?: "",
-                                    icon = Icons.AutoMirrored.Filled.TrendingUp,
-                                    color = metricInfo.color,
-                                    modifier = Modifier.weight(1f),
-                                    isLoading = isLoading
-                                )
-
-                                StatCard(
-                                    title = metricHistory?.bestDayLabel ?: "Best Day",
-                                    value = metricHistory?.bestDay?.let {
-                                        formatValue(it.value, metricInfo.decimalPlaces)
-                                    } ?: "--",
-                                    unit = metricHistory?.unit ?: "",
-                                    icon = Icons.Default.EmojiEvents,
-                                    color = metricInfo.color,
-                                    modifier = Modifier.weight(1f),
-                                    isLoading = isLoading
-                                )
-                            }
-                        }
-
-                        // Best Day Info
-                        metricHistory?.bestDay?.let { bestDay ->
-                            item {
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(24.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = SurfaceMid
+                        // Non-sleep metrics: show charts
+                        if (metricType != HealthViewModel.MetricType.SLEEP) {
+                            // Line Chart - 30 Day Trend
+                            if (metricHistory?.last30Days?.isNotEmpty() == true) {
+                                item {
+                                    LineChartCard(
+                                        data = metricHistory.last30Days,
+                                        color = metricInfo.color,
+                                        title = "30 Day Trend",
+                                        isSleep = false
                                     )
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CalendarToday,
-                                            contentDescription = null,
-                                            tint = metricInfo.color,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Column {
-                                            Text(
-                                                text = metricHistory?.bestDayLabel ?: "Best Day",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = TextOnSurfaceVariant
-                                            )
-                                            Text(
-                                                text = bestDay.date.format(
-                                                    DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
-                                                ),
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                color = TextOnSurface,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        }
-                                    }
+                                }
+                            }
+
+                            // Bar Chart - Weekly Average
+                            if ((metricHistory?.last30Days?.size ?: 0) >= 7) {
+                                item {
+                                    BarChartCard(
+                                        data = metricHistory!!.last30Days.takeLast(7),
+                                        color = metricInfo.color,
+                                        title = "Last 7 Days",
+                                        isSleep = false,
+                                        decimalPlaces = metricInfo.decimalPlaces
+                                    )
                                 }
                             }
                         }
 
+                        // Sleep Stages + Sleep Bank — BEFORE stats for sleep metric (Stitch order)
                         // Sleep Stages Chart (only for Sleep metric — per selected day)
                         if (metricType == HealthViewModel.MetricType.SLEEP) {
                             val dayStages = metricHistory?.allHistoricalData
@@ -678,6 +615,111 @@ fun MetricDetailScreen(
                                             color = TextOnSurfaceVariant,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Pulse Insight for sleep (gradient card — Stitch design)
+                        if (metricType == HealthViewModel.MetricType.SLEEP) {
+                            item {
+                                val insight = getInsightForMetric(metricType, selectedDateValue, stepsGoal, healthData)
+                                if (insight != null) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(
+                                                Brush.linearGradient(
+                                                    listOf(
+                                                        ElectricIndigo.copy(alpha = 0.2f),
+                                                        VibrantMagenta.copy(alpha = 0.2f)
+                                                    )
+                                                )
+                                            )
+                                            .padding(20.dp)
+                                    ) {
+                                        Row(verticalAlignment = Alignment.Top) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(44.dp)
+                                                    .background(Color.White.copy(alpha = 0.1f), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Lightbulb,
+                                                    contentDescription = null,
+                                                    tint = ElectricIndigo,
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Column {
+                                                Text(
+                                                    text = "Pulse Insight",
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    color = TextOnSurface,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = insight.meaning,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = TextOnSurfaceVariant,
+                                                    lineHeight = 18.sp
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Statistics Cards (non-sleep only)
+                        if (metricType != HealthViewModel.MetricType.SLEEP) {
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    StatCard(
+                                        title = "30-Day Avg",
+                                        value = formatValue(metricHistory?.monthlyAverage ?: 0.0, metricInfo.decimalPlaces),
+                                        unit = metricHistory?.unit ?: "",
+                                        icon = Icons.AutoMirrored.Filled.TrendingUp,
+                                        color = metricInfo.color,
+                                        modifier = Modifier.weight(1f),
+                                        isLoading = isLoading
+                                    )
+                                    StatCard(
+                                        title = metricHistory?.bestDayLabel ?: "Best Day",
+                                        value = metricHistory?.bestDay?.let { formatValue(it.value, metricInfo.decimalPlaces) } ?: "--",
+                                        unit = metricHistory?.unit ?: "",
+                                        icon = Icons.Default.EmojiEvents,
+                                        color = metricInfo.color,
+                                        modifier = Modifier.weight(1f),
+                                        isLoading = isLoading
+                                    )
+                                }
+                            }
+
+                            metricHistory?.bestDay?.let { bestDay ->
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(24.dp))
+                                            .background(SurfaceMid)
+                                            .padding(16.dp)
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.CalendarToday, null, tint = metricInfo.color, modifier = Modifier.size(24.dp))
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Column {
+                                                Text(metricHistory?.bestDayLabel ?: "Best Day", style = MaterialTheme.typography.bodyMedium, color = TextOnSurfaceVariant)
+                                                Text(bestDay.date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())), style = MaterialTheme.typography.bodyLarge, color = TextOnSurface, fontWeight = FontWeight.Medium)
+                                            }
+                                        }
                                     }
                                 }
                             }
