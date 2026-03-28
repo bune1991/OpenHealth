@@ -251,10 +251,17 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                     showReadinessDetail -> {
-                                        // Show readiness detail screen
                                         ReadinessDetailScreen(
                                             healthData = healthData,
-                                            onBackClick = { viewModel.hideReadinessDetail() }
+                                            onBackClick = { viewModel.hideReadinessDetail() },
+                                            onMetricClick = { metricType ->
+                                                viewModel.hideReadinessDetail()
+                                                viewModel.selectMetric(metricType)
+                                            },
+                                            onStartSession = {
+                                                viewModel.hideReadinessDetail()
+                                                viewModel.selectMetric(HealthViewModel.MetricType.EXERCISE)
+                                            }
                                         )
                                     }
                                     selectedMetric != null -> {

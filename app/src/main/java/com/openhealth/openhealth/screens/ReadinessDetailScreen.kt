@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,6 +65,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.HealthData
+import com.openhealth.openhealth.viewmodel.HealthViewModel
 
 data class ScoreFactor(
     val icon: ImageVector,
@@ -77,21 +79,25 @@ data class ScoreFactor(
 @Composable
 fun ReadinessDetailScreen(
     healthData: HealthData,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onMetricClick: (HealthViewModel.MetricType) -> Unit = {},
+    onStartSession: () -> Unit = {}
 ) {
     val readinessInfo = calculateReadinessInfo(healthData)
 
     // Derive recommendation based on score
     val recommendationTitle = when {
-        readinessInfo.score >= 80 -> "High-Intensity Interval Session"
-        readinessInfo.score >= 60 -> "Moderate Activity Session"
-        readinessInfo.score >= 40 -> "Light Recovery Walk"
+        readinessInfo.score >= 81 -> "High-Intensity Interval Session"
+        readinessInfo.score >= 61 -> "Moderate Activity Session"
+        readinessInfo.score >= 41 -> "Light Recovery Walk"
+        readinessInfo.score >= 21 -> "Gentle Stretching & Rest"
         else -> "Rest & Recovery"
     }
     val recommendationDescription = when {
-        readinessInfo.score >= 80 -> "Your body is primed for peak performance. Push your limits with a challenging HIIT session to maximize today's recovery window."
-        readinessInfo.score >= 60 -> "You have solid energy reserves. A moderate workout will keep your momentum without overloading your system."
-        readinessInfo.score >= 40 -> "Your body needs gentle movement. A light walk will promote circulation and aid recovery without adding stress."
+        readinessInfo.score >= 81 -> "Your body is primed for peak performance. Push your limits with a challenging HIIT session to maximize today's recovery window."
+        readinessInfo.score >= 61 -> "You have solid energy reserves. A moderate workout will keep your momentum without overloading your system."
+        readinessInfo.score >= 41 -> "Your body needs gentle movement. A light walk will promote circulation and aid recovery without adding stress."
+        readinessInfo.score >= 21 -> "Your body is fatigued. Light stretching and hydration will help you recover without adding stress."
         else -> "Focus on rest today. Gentle stretching, hydration, and an early bedtime will help restore your readiness."
     }
 
@@ -262,6 +268,7 @@ fun ReadinessDetailScreen(
                             .weight(2f)
                             .clip(RoundedCornerShape(20.dp))
                             .background(SurfaceLow)
+                            .clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
                             .padding(20.dp)
                     ) {
                         Column {
@@ -430,7 +437,8 @@ fun ReadinessDetailScreen(
                         text = "View All",
                         style = MaterialTheme.typography.labelMedium,
                         color = ElectricIndigo,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable { }
                     )
                 }
             }
@@ -452,6 +460,10 @@ fun ReadinessDetailScreen(
                                 .width(220.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(SurfaceHigh)
+                                .then(
+                                    if (index == 0) Modifier.clickable { onMetricClick(HealthViewModel.MetricType.SLEEP) }
+                                    else Modifier
+                                )
                                 .padding(20.dp)
                         ) {
                             Column {
@@ -539,6 +551,7 @@ fun ReadinessDetailScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
                                 .background(ElectricIndigo)
+                                .clickable { onStartSession() }
                                 .padding(horizontal = 28.dp, vertical = 14.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -579,54 +592,109 @@ private fun calculateReadinessInfo(healthData: HealthData): ReadinessInfo {
         java.time.Duration.between(lastWakeTime, now).toHours()
     }
 
-    var score = 100
-
-    val awakePenalty = when {
-        hoursSinceLastSleep == null -> { factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", "No sleep data", -50, false)); 50 }
-        hoursSinceLastSleep >= 16 -> { factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", "${hoursSinceLastSleep}h awake - exhausted", -90, false)); 90 }
-        hoursSinceLastSleep >= 14 -> { factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", "${hoursSinceLastSleep}h awake - very tired", -85, false)); 85 }
-        hoursSinceLastSleep >= 12 -> { factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", "${hoursSinceLastSleep}h awake - tired", -75, false)); 75 }
-        hoursSinceLastSleep >= 10 -> { factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", "${hoursSinceLastSleep}h awake - fatigued", -65, false)); 65 }
-        hoursSinceLastSleep >= 8 -> { factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", "${hoursSinceLastSleep}h awake - declining", -25, false)); 25 }
-        hoursSinceLastSleep >= 2 -> { factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", "${hoursSinceLastSleep}h awake", -5, false)); 5 }
-        else -> { factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", "Just woke up", 0, true)); 0 }
-    }
-    score -= awakePenalty
-
-    healthData.sleep.totalDuration?.let { sleepDuration ->
-        val sleepHours = sleepDuration.toHours()
-        val sleepMinutes = (sleepDuration.toMinutes() % 60).toInt()
-        when {
-            sleepHours >= 7 -> factors.add(ScoreFactor(Icons.Default.Bedtime, "Sleep Duration", "${sleepHours}h ${sleepMinutes}m - good", 0, true))
-            sleepHours >= 5 -> { factors.add(ScoreFactor(Icons.Default.Bedtime, "Sleep Duration", "${sleepHours}h ${sleepMinutes}m - short", -10, false)); score -= 10 }
-            else -> { factors.add(ScoreFactor(Icons.Default.Bedtime, "Sleep Duration", "${sleepHours}h ${sleepMinutes}m - poor", -20, false)); score -= 20 }
+    // ── HRV Score (40%) ──
+    val hrv = healthData.heartRateVariability.rmssdMs
+    val hrvScore = if (hrv != null) {
+        ((hrv - 20.0) / 60.0 * 100.0).toInt().coerceIn(0, 100)
+    } else 0
+    val hrvPoints = (hrvScore * 0.40).toInt()
+    hrv?.let {
+        val status = when {
+            hrvScore >= 80 -> "excellent"
+            hrvScore >= 50 -> "normal"
+            hrvScore >= 25 -> "low"
+            else -> "very low"
         }
-    } ?: run { factors.add(ScoreFactor(Icons.Default.Bedtime, "Sleep Duration", "No data", -15, false)); score -= 15 }
+        factors.add(ScoreFactor(Icons.Default.FavoriteBorder, "Heart Rate Variability", "${it.toInt()}ms - $status", hrvPoints, hrvScore >= 50))
+    } ?: factors.add(ScoreFactor(Icons.Default.FavoriteBorder, "Heart Rate Variability", "No data", 0, false))
 
+    // ── Sleep Score (25%) ──
+    val sleepDuration = healthData.sleep.totalDuration
+    val sleepHoursTotal = sleepDuration?.toHours() ?: 0L
+    val sleepMinutesRem = (sleepDuration?.toMinutes()?.rem(60))?.toInt() ?: 0
+    val sleepScore = when {
+        sleepDuration == null -> 10
+        sleepHoursTotal >= 8 -> 100
+        sleepHoursTotal >= 7 -> 85
+        sleepHoursTotal >= 6 -> 65
+        sleepHoursTotal >= 5 -> 45
+        sleepHoursTotal >= 4 -> 25
+        else -> 10
+    }
+    val sleepPoints = (sleepScore * 0.25).toInt()
+    val sleepStatus = when {
+        sleepDuration == null -> "No data"
+        sleepScore >= 85 -> "${sleepHoursTotal}h ${sleepMinutesRem}m - good"
+        sleepScore >= 45 -> "${sleepHoursTotal}h ${sleepMinutesRem}m - short"
+        else -> "${sleepHoursTotal}h ${sleepMinutesRem}m - poor"
+    }
+    factors.add(ScoreFactor(Icons.Default.Bedtime, "Sleep Duration", sleepStatus, sleepPoints, sleepScore >= 65))
+
+    // ── Awake Score (20%) ──
+    val awakeScore = when {
+        hoursSinceLastSleep == null -> 50
+        hoursSinceLastSleep >= 18 -> 5
+        hoursSinceLastSleep >= 16 -> 10
+        hoursSinceLastSleep >= 14 -> 20
+        hoursSinceLastSleep >= 12 -> 30
+        hoursSinceLastSleep >= 10 -> 45
+        hoursSinceLastSleep >= 8 -> 60
+        hoursSinceLastSleep >= 4 -> 80
+        hoursSinceLastSleep >= 2 -> 90
+        else -> 100
+    }
+    val awakePoints = (awakeScore * 0.20).toInt()
+    val awakeStatus = when {
+        hoursSinceLastSleep == null -> "No sleep data"
+        hoursSinceLastSleep >= 16 -> "${hoursSinceLastSleep}h awake - exhausted"
+        hoursSinceLastSleep >= 12 -> "${hoursSinceLastSleep}h awake - tired"
+        hoursSinceLastSleep >= 8 -> "${hoursSinceLastSleep}h awake - declining"
+        hoursSinceLastSleep >= 2 -> "${hoursSinceLastSleep}h awake"
+        else -> "Just woke up"
+    }
+    factors.add(ScoreFactor(Icons.Default.AccessTime, "Awake Time", awakeStatus, awakePoints, awakeScore >= 60))
+
+    // ── RHR Score (10%) ──
     val rhr = healthData.restingHeartRate.bpm ?: healthData.heartRate.restingBpm
-    rhr?.let { rate ->
-        when {
-            rate <= 75 -> factors.add(ScoreFactor(Icons.Default.Favorite, "Resting Heart Rate", "$rate bpm - normal", 0, true))
-            rate <= 85 -> { factors.add(ScoreFactor(Icons.Default.Favorite, "Resting Heart Rate", "$rate bpm - elevated", -5, false)); score -= 5 }
-            else -> { factors.add(ScoreFactor(Icons.Default.Favorite, "Resting Heart Rate", "$rate bpm - high", -10, false)); score -= 10 }
-        }
-    } ?: factors.add(ScoreFactor(Icons.Default.Favorite, "Resting Heart Rate", "No data", 0, true))
-
-    healthData.heartRateVariability.rmssdMs?.let { hrv ->
-        when {
-            hrv >= 40 -> factors.add(ScoreFactor(Icons.Default.FavoriteBorder, "Heart Rate Variability", "${hrv.toInt()}ms - normal", 0, true))
-            hrv >= 30 -> { factors.add(ScoreFactor(Icons.Default.FavoriteBorder, "Heart Rate Variability", "${hrv.toInt()}ms - low", -3, false)); score -= 3 }
-            else -> { factors.add(ScoreFactor(Icons.Default.FavoriteBorder, "Heart Rate Variability", "${hrv.toInt()}ms - very low", -8, false)); score -= 8 }
-        }
+    val rhrScore = when {
+        rhr == null -> 50
+        rhr <= 50 -> 100
+        rhr <= 55 -> 90
+        rhr <= 60 -> 80
+        rhr <= 65 -> 70
+        rhr <= 70 -> 55
+        rhr <= 75 -> 40
+        rhr <= 80 -> 25
+        else -> 10
     }
+    val rhrPoints = (rhrScore * 0.10).toInt()
+    val rhrStatus = when {
+        rhr == null -> "No data"
+        rhrScore >= 70 -> "$rhr bpm - normal"
+        rhrScore >= 40 -> "$rhr bpm - elevated"
+        else -> "$rhr bpm - high"
+    }
+    factors.add(ScoreFactor(Icons.Default.Favorite, "Resting Heart Rate", rhrStatus, rhrPoints, rhrScore >= 55))
 
+    // ── Activity Score (5%) ──
     val steps = healthData.steps.count
-    when {
-        steps >= 1000 -> factors.add(ScoreFactor(Icons.Default.DirectionsWalk, "Activity Level", "$steps steps - sufficient", 0, true))
-        else -> { factors.add(ScoreFactor(Icons.Default.DirectionsWalk, "Activity Level", "$steps steps - very low", -2, false)); score -= 2 }
+    val activityScore = when {
+        steps >= 8000 -> 100
+        steps >= 5000 -> 75
+        steps >= 3000 -> 50
+        steps >= 1000 -> 30
+        else -> 10
     }
+    val activityPoints = (activityScore * 0.05).toInt()
+    val activityStatus = when {
+        activityScore >= 75 -> "$steps steps - sufficient"
+        activityScore >= 30 -> "$steps steps - low"
+        else -> "$steps steps - very low"
+    }
+    factors.add(ScoreFactor(Icons.Default.DirectionsWalk, "Activity Level", activityStatus, activityPoints, activityScore >= 50))
 
-    score = score.coerceIn(5, 100)
+    // ── Total Weighted Score ──
+    val score = (hrvScore * 0.40 + sleepScore * 0.25 + awakeScore * 0.20 + rhrScore * 0.10 + activityScore * 0.05).toInt().coerceIn(0, 100)
 
     val label = when {
         score >= 81 -> "Optimal"
