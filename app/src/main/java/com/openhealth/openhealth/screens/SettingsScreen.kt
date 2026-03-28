@@ -315,6 +315,9 @@ fun SettingsScreen(
             item {
                 GoalInputPill("Distance Goal", settings.distanceGoalKm.toString(), "km", CardDistance) { onSettingsChanged(settings.copy(distanceGoalKm = it.toFloatOrNull() ?: 5.0f)) }
             }
+            item {
+                GoalInputPill("Weight Target", settings.weightTargetKg.toString(), "kg", CardWeight) { onSettingsChanged(settings.copy(weightTargetKg = it.toFloatOrNull() ?: 70.0f)) }
+            }
 
             // ═══════════════════════════════════════════
             // DASHBOARD METRICS

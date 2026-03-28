@@ -229,6 +229,7 @@ class MainActivity : ComponentActivity() {
                                             onHomeClick = { viewModel.clearSelectedMetric() },
                                             onDateChange = { _ -> },
                                             stepsGoal = settings.stepsGoal,
+                                            weightTargetKg = settings.weightTargetKg,
                                             exerciseSessions = healthData.exercise.sessions,
                                             healthData = healthData
                                         )

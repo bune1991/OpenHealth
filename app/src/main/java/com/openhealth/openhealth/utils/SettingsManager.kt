@@ -88,6 +88,7 @@ class SettingsManager private constructor(context: Context) {
         private const val KEY_FLOORS_GOAL = "floors_goal"
         private const val KEY_CALORIES_GOAL = "calories_goal"
         private const val KEY_DISTANCE_GOAL_KM = "distance_goal_km"
+        private const val KEY_WEIGHT_TARGET_KG = "weight_target_kg"
 
         @Volatile
         private var instance: SettingsManager? = null
@@ -170,7 +171,8 @@ class SettingsManager private constructor(context: Context) {
             stepsGoal = prefs.getInt(KEY_STEPS_GOAL, 10000),
             floorsGoal = prefs.getInt(KEY_FLOORS_GOAL, 10),
             caloriesGoal = prefs.getInt(KEY_CALORIES_GOAL, 500),
-            distanceGoalKm = prefs.getFloat(KEY_DISTANCE_GOAL_KM, 5.0f)
+            distanceGoalKm = prefs.getFloat(KEY_DISTANCE_GOAL_KM, 5.0f),
+            weightTargetKg = prefs.getFloat(KEY_WEIGHT_TARGET_KG, 70.0f)
         )
     }
 
@@ -244,6 +246,7 @@ class SettingsManager private constructor(context: Context) {
             putInt(KEY_FLOORS_GOAL, settings.floorsGoal)
             putInt(KEY_CALORIES_GOAL, settings.caloriesGoal)
             putFloat(KEY_DISTANCE_GOAL_KM, settings.distanceGoalKm)
+            putFloat(KEY_WEIGHT_TARGET_KG, settings.weightTargetKg)
 
             apply()
         }

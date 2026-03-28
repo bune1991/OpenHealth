@@ -78,7 +78,8 @@ data class SettingsData(
     val stepsGoal: Int = 10000,
     val floorsGoal: Int = 10,
     val caloriesGoal: Int = 500,
-    val distanceGoalKm: Float = 5.0f
+    val distanceGoalKm: Float = 5.0f,
+    val weightTargetKg: Float = 70.0f
 ) {
     companion object {
         val DEFAULT = SettingsData()

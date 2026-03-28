@@ -98,6 +98,7 @@ fun MetricDetailScreen(
     onHomeClick: (() -> Unit)? = null,
     onDateChange: ((LocalDate) -> Unit)? = null,
     stepsGoal: Int = 10000,
+    weightTargetKg: Float = 70.0f,
     exerciseSessions: List<com.openhealth.openhealth.model.ExerciseSession> = emptyList(),
     healthData: com.openhealth.openhealth.model.HealthData? = null
 ) {
@@ -870,7 +871,7 @@ fun MetricDetailScreen(
                             item {
                                 val currentWeight = healthData.weight.kilograms
                                 val weightStr = currentWeight?.let { String.format("%.1f", it) } ?: "--"
-                                val targetWeight = 59.0
+                                val targetWeight = weightTargetKg.toDouble()
                                 val progress = currentWeight?.let {
                                     val maxRange = 20.0 // assume +-20 kg range
                                     (1.0 - ((it - targetWeight) / maxRange).coerceIn(0.0, 1.0)).toFloat()
