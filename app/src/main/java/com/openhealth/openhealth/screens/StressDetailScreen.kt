@@ -191,10 +191,11 @@ fun StressDetailScreen(
                                 fontSize = 56.sp
                             )
                             Text(
-                                text = stressLabel,
-                                color = TextOnSurfaceVariant,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
+                                text = stressLabel.uppercase(),
+                                color = VibrantMagenta,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp
                             )
                         }
                     }
@@ -205,21 +206,14 @@ fun StressDetailScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        ElectricIndigo.copy(alpha = 0.15f),
-                                        VibrantMagenta.copy(alpha = 0.15f)
-                                    )
-                                )
-                            )
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                            .background(SurfaceLow)
+                            .padding(horizontal = 20.dp, vertical = 8.dp)
                     ) {
                         Text(
                             text = "Optimal Recovery Zone",
-                            color = ElectricIndigo,
+                            color = TextOnSurfaceVariant,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -231,84 +225,96 @@ fun StressDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // HRV Card
+                    // HRV Card — centered, uppercase label
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
                             .background(SurfaceLow)
-                            .padding(16.dp)
+                            .padding(20.dp)
                     ) {
-                        Column {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text(
                                 text = "HRV",
-                                color = TextSubtle,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
+                                color = ElectricIndigo,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
                                     text = if (hrv > 0) String.format("%.0f", hrv) else "--",
-                                    color = ElectricIndigo,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 28.sp
+                                    color = TextOnSurface,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 32.sp
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "ms",
-                                    color = TextSubtle,
+                                    color = TextOnSurfaceVariant,
                                     fontSize = 14.sp,
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
+                            val hrvTrend = if (hrv > 50) "+12%" else if (hrv > 30) "Stable" else "-8%"
+                            val hrvTrendColor = if (hrv > 50) SuccessGreen else if (hrv > 30) TextOnSurfaceVariant else ErrorRed
                             Text(
-                                text = if (hrv > 50) "Trending up" else if (hrv > 30) "Stable" else "Trending down",
-                                color = if (hrv > 50) SuccessGreen else if (hrv > 30) TextOnSurfaceVariant else ErrorRed,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
+                                text = hrvTrend,
+                                color = hrvTrendColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
 
-                    // Resting HR Card
+                    // Resting HR Card — centered, uppercase label
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
                             .background(SurfaceLow)
-                            .padding(16.dp)
+                            .padding(20.dp)
                     ) {
-                        Column {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text(
-                                text = "Resting HR",
-                                color = TextSubtle,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
+                                text = "RESTING HR",
+                                color = VibrantMagenta,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
                                     text = if (rhr > 0) rhr.toString() else "--",
-                                    color = VibrantMagenta,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 28.sp
+                                    color = TextOnSurface,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 32.sp
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "bpm",
-                                    color = TextSubtle,
+                                    color = TextOnSurfaceVariant,
                                     fontSize = 14.sp,
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
+                            val rhrTrend = if (rhr in 50..65) "Stable" else if (rhr in 66..75) "Stable" else "+4%"
+                            val rhrTrendColor = if (rhr <= 75) TextOnSurfaceVariant else ErrorRed
                             Text(
-                                text = if (rhr in 50..65) "Trending down" else if (rhr in 66..75) "Stable" else "Trending up",
-                                color = if (rhr in 50..65) SuccessGreen else if (rhr in 66..75) TextOnSurfaceVariant else ErrorRed,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
+                                text = rhrTrend,
+                                color = rhrTrendColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
