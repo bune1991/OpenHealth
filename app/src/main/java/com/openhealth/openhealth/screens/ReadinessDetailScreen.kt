@@ -6,10 +6,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,6 +34,9 @@ import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -56,6 +60,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.model.HealthData
@@ -75,6 +80,41 @@ fun ReadinessDetailScreen(
     onBackClick: () -> Unit
 ) {
     val readinessInfo = calculateReadinessInfo(healthData)
+
+    // Derive recommendation based on score
+    val recommendationTitle = when {
+        readinessInfo.score >= 80 -> "High-Intensity Interval Session"
+        readinessInfo.score >= 60 -> "Moderate Activity Session"
+        readinessInfo.score >= 40 -> "Light Recovery Walk"
+        else -> "Rest & Recovery"
+    }
+    val recommendationDescription = when {
+        readinessInfo.score >= 80 -> "Your body is primed for peak performance. Push your limits with a challenging HIIT session to maximize today's recovery window."
+        readinessInfo.score >= 60 -> "You have solid energy reserves. A moderate workout will keep your momentum without overloading your system."
+        readinessInfo.score >= 40 -> "Your body needs gentle movement. A light walk will promote circulation and aid recovery without adding stress."
+        else -> "Focus on rest today. Gentle stretching, hydration, and an early bedtime will help restore your readiness."
+    }
+
+    // Compute recovery time from sleep data
+    val sleepHours = healthData.sleep.totalDuration?.toHours() ?: 0L
+    val sleepMinutes = (healthData.sleep.totalDuration?.toMinutes()?.rem(60)) ?: 0L
+    val recoveryHours = String.format("%02d", sleepHours)
+    val recoveryMinutes = String.format("%02d", sleepMinutes)
+    val recoveryProgress = (sleepHours * 60 + sleepMinutes).toFloat() / (8f * 60f) // target 8h
+
+    // HRV status
+    val hrv = healthData.heartRateVariability.rmssdMs
+    val hrvStatus = when {
+        hrv == null -> "No Data"
+        hrv >= 50 -> "Excellent"
+        hrv >= 40 -> "Stable"
+        hrv >= 30 -> "Low"
+        else -> "Very Low"
+    }
+
+    // Insight cards from tips
+    val insightIcons = listOf(Icons.Default.Bedtime, Icons.Default.Psychology, Icons.Default.Thermostat)
+    val insightTitles = listOf("Sleep Efficiency", "Cognitive Load", "Thermal Balance")
 
     Scaffold(
         topBar = {
@@ -105,27 +145,28 @@ fun ReadinessDetailScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ─── Hero: "Optimal Condition" + Score Ring ───
+            // ─── 1. Hero Section ───
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // Status label
+                    // "MORNING STATUS" magenta label
                     Text(
-                        text = VibrantMagenta.let { "Morning Status" }.uppercase(),
+                        text = "MORNING STATUS",
                         style = MaterialTheme.typography.labelSmall,
                         color = VibrantMagenta,
-                        letterSpacing = 2.sp,
+                        letterSpacing = 3.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    // Big title
+                    Spacer(modifier = Modifier.height(12.dp))
+                    // Big title line 1: label (white)
                     Text(
-                        text = "${readinessInfo.label}",
+                        text = readinessInfo.label,
                         fontSize = 40.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = TextOnSurface,
                         letterSpacing = (-1).sp,
                         lineHeight = 44.sp
                     )
+                    // Big title line 2: "Condition" (primary)
                     Text(
                         text = "Condition",
                         fontSize = 40.sp,
@@ -135,8 +176,9 @@ fun ReadinessDetailScreen(
                         lineHeight = 44.sp
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    // Description
                     Text(
-                        text = readinessInfo.explanation.take(100) + if (readinessInfo.explanation.length > 100) "..." else "",
+                        text = readinessInfo.explanation,
                         style = MaterialTheme.typography.bodySmall,
                         color = TextOnSurfaceVariant,
                         lineHeight = 20.sp
@@ -144,12 +186,12 @@ fun ReadinessDetailScreen(
                 }
             }
 
-            // ─── Score Ring ───
+            // ─── 2. Score Ring ───
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
+                        .clip(CircleShape)
                         .background(SurfaceHigh)
                         .padding(32.dp),
                     contentAlignment = Alignment.Center
@@ -160,21 +202,23 @@ fun ReadinessDetailScreen(
                         label = "score_ring"
                     )
 
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(160.dp)) {
-                        Canvas(modifier = Modifier.size(160.dp)) {
-                            val strokeWidth = 12.dp.toPx()
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(180.dp)) {
+                        Canvas(modifier = Modifier.size(180.dp)) {
+                            val strokeWidth = 14.dp.toPx()
                             val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
                             val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
 
-                            // Background
+                            // Background track
                             drawArc(
                                 color = SurfaceLowest,
-                                startAngle = -90f, sweepAngle = 360f,
+                                startAngle = -90f,
+                                sweepAngle = 360f,
                                 useCenter = false,
                                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                                topLeft = topLeft, size = arcSize
+                                topLeft = topLeft,
+                                size = arcSize
                             )
-                            // Progress with gradient
+                            // Gradient progress arc
                             drawArc(
                                 brush = Brush.sweepGradient(
                                     listOf(ElectricIndigo, VibrantMagenta, ElectricIndigo)
@@ -183,225 +227,333 @@ fun ReadinessDetailScreen(
                                 sweepAngle = 360f * animatedScore,
                                 useCenter = false,
                                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                                topLeft = topLeft, size = arcSize
+                                topLeft = topLeft,
+                                size = arcSize
                             )
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = readinessInfo.score.toString(),
-                                fontSize = 48.sp,
+                                fontSize = 56.sp,
                                 fontWeight = FontWeight.Black,
                                 color = TextOnSurface
                             )
                             Text(
-                                text = "Ready",
+                                text = "READY",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = TextOnSurfaceVariant,
-                                letterSpacing = 2.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            // ─── Score Breakdown ───
-            item {
-                Text(
-                    text = "SCORE BREAKDOWN",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = ElectricIndigo,
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            items(readinessInfo.factors.size) { index ->
-                val factor = readinessInfo.factors[index]
-                FactorRow(factor)
-            }
-
-            // ─── Deep Dive Insights ───
-            item {
-                Text(
-                    text = "DEEP DIVE INSIGHTS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = ElectricIndigo,
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            // Explanation card
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(SurfaceLow)
-                        .padding(20.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.Top) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(ElectricIndigo.copy(alpha = 0.15f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Lightbulb,
-                                contentDescription = null,
-                                tint = ElectricIndigo,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                text = "Recovery Insight",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = TextOnSurface,
+                                letterSpacing = 3.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = readinessInfo.explanation,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextOnSurfaceVariant,
-                                lineHeight = 22.sp
-                            )
                         }
                     }
                 }
             }
 
-            // ─── Tips ───
+            // ─── 3. Bento Grid: HRV Card + Recovery Time Card ───
             item {
-                Text(
-                    text = "RECOMMENDED ACTIONS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = ElectricIndigo,
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // HRV Card (2/3 width)
+                    Box(
+                        modifier = Modifier
+                            .weight(2f)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(SurfaceLow)
+                            .padding(20.dp)
+                    ) {
+                        Column {
+                            // Header
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Favorite,
+                                    contentDescription = null,
+                                    tint = ElectricIndigo,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Heart Rate Variability",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextOnSurface,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            // "Stable" badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(ElectricIndigo.copy(alpha = 0.10f))
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = hrvStatus,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = ElectricIndigo,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            // 8-bar chart
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                val barHeights = listOf(0.4f, 0.6f, 0.5f, 0.7f, 0.55f, 0.85f, 0.65f, 0.75f)
+                                val highlightIndex = 5 // highest bar gets the glow
+                                barHeights.forEachIndexed { index, height ->
+                                    val isHighlighted = index == highlightIndex
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight(height)
+                                            .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                            .background(
+                                                if (isHighlighted) {
+                                                    Brush.verticalGradient(
+                                                        listOf(VibrantMagenta, ElectricIndigo)
+                                                    )
+                                                } else {
+                                                    Brush.verticalGradient(
+                                                        listOf(SurfaceHighest, SurfaceHighest)
+                                                    )
+                                                }
+                                            )
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Recovery Time Card (1/3 width)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(MagentaContainer, SurfaceHigh)
+                                )
+                            )
+                            .padding(20.dp)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Restore,
+                                contentDescription = null,
+                                tint = TextOnSurface,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            // Time display
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(
+                                    text = recoveryHours,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = TextOnSurface
+                                )
+                                Text(
+                                    text = "h ",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextOnSurface.copy(alpha = 0.5f)
+                                )
+                                Text(
+                                    text = recoveryMinutes,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = TextOnSurface
+                                )
+                                Text(
+                                    text = "m",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextOnSurface.copy(alpha = 0.5f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "RECOVERY\nNEEDED",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextOnSurface.copy(alpha = 0.7f),
+                                letterSpacing = 2.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 14.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            // Progress bar
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(Color.Black.copy(alpha = 0.20f))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(recoveryProgress.coerceIn(0f, 1f))
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(TextOnSurface)
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
-            items(readinessInfo.tips.size) { index ->
-                val tip = readinessInfo.tips[index]
+            // ─── 4. Deep Dive Insights ───
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Deep Dive Insights",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextOnSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "View All",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ElectricIndigo,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            // Horizontal scrollable insight cards
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(end = 20.dp)
+                ) {
+                    val tips = readinessInfo.tips
+                    items(minOf(tips.size, 3)) { index ->
+                        val icon = insightIcons.getOrElse(index) { Icons.Default.AutoAwesome }
+                        val title = insightTitles.getOrElse(index) { "Insight" }
+                        val description = tips[index]
+
+                        Box(
+                            modifier = Modifier
+                                .width(220.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(SurfaceHigh)
+                                .padding(20.dp)
+                        ) {
+                            Column {
+                                // Icon circle
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(ElectricIndigo.copy(alpha = 0.12f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        tint = ElectricIndigo,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextOnSurface,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextOnSurfaceVariant,
+                                    lineHeight = 18.sp,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ─── 5. Recommendation Card ───
+            item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
+                        .clip(RoundedCornerShape(20.dp))
                         .background(SurfaceMid)
-                        .padding(16.dp)
+                        .padding(24.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.Top) {
+                    Column {
+                        // "RECOMMENDED ACTION" badge
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
-                                .background(
-                                    when (index) {
-                                        0 -> ElectricIndigo.copy(alpha = 0.15f)
-                                        1 -> VibrantMagenta.copy(alpha = 0.15f)
-                                        else -> SoftLavender.copy(alpha = 0.15f)
-                                    },
-                                    CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
+                                .clip(RoundedCornerShape(50))
+                                .background(VibrantMagenta)
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = when (index) {
-                                    0 -> ElectricIndigo
-                                    1 -> VibrantMagenta
-                                    else -> SoftLavender
-                                },
-                                modifier = Modifier.size(18.dp)
+                            Text(
+                                text = "RECOMMENDED ACTION",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = OnMagenta,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        // Title
                         Text(
-                            text = tip,
+                            text = recommendationTitle,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = TextOnSurface,
+                            lineHeight = 30.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        // Description
+                        Text(
+                            text = recommendationDescription,
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextOnSurfaceVariant,
-                            lineHeight = 22.sp,
-                            modifier = Modifier.weight(1f)
+                            lineHeight = 22.sp
                         )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        // "Start Session" pill button
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(ElectricIndigo)
+                                .padding(horizontal = 28.dp, vertical = 14.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Start Session",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = OnIndigo,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
 
             item { Spacer(modifier = Modifier.height(32.dp)) }
-        }
-    }
-}
-
-@Composable
-private fun FactorRow(factor: ScoreFactor) {
-    val pointsColor = if (factor.isPositive) SuccessGreen else ErrorRed
-    val pointsText = if (factor.points == 0) "OK" else if (factor.isPositive) "+${factor.points}" else "${factor.points}"
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(SurfaceMid)
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            if (factor.isPositive) SuccessGreen.copy(alpha = 0.12f) else ErrorRed.copy(alpha = 0.12f),
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = factor.icon,
-                        contentDescription = null,
-                        tint = if (factor.isPositive) SuccessGreen else ErrorRed,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = factor.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextOnSurface,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = factor.value,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextOnSurfaceVariant
-                    )
-                }
-            }
-
-            // Points badge
-            Box(
-                modifier = Modifier
-                    .background(pointsColor.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = pointsText,
-                    color = pointsColor,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
     }
 }
