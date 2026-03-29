@@ -96,6 +96,7 @@ class SettingsManager private constructor(context: Context) {
         // Features
         private const val KEY_SHOW_STEPS_STREAK = "show_steps_streak"
         private const val KEY_DAILY_SUMMARY_NOTIFICATION = "daily_summary_notification"
+        private const val KEY_WEEKLY_AI_SUMMARY = "weekly_ai_summary"
 
         // Daily Goals
         private const val KEY_STEPS_GOAL = "steps_goal"
@@ -183,6 +184,7 @@ class SettingsManager private constructor(context: Context) {
             // Daily Goals
             showStepsStreak = prefs.getBoolean(KEY_SHOW_STEPS_STREAK, true),
             dailySummaryNotification = prefs.getBoolean(KEY_DAILY_SUMMARY_NOTIFICATION, true),
+            weeklyAiSummary = prefs.getBoolean(KEY_WEEKLY_AI_SUMMARY, false),
             stepsGoal = prefs.getInt(KEY_STEPS_GOAL, 10000),
             floorsGoal = prefs.getInt(KEY_FLOORS_GOAL, 10),
             caloriesGoal = prefs.getInt(KEY_CALORIES_GOAL, 500),
@@ -263,6 +265,7 @@ class SettingsManager private constructor(context: Context) {
             // Daily Goals
             putBoolean(KEY_SHOW_STEPS_STREAK, settings.showStepsStreak)
             putBoolean(KEY_DAILY_SUMMARY_NOTIFICATION, settings.dailySummaryNotification)
+            putBoolean(KEY_WEEKLY_AI_SUMMARY, settings.weeklyAiSummary)
             putInt(KEY_STEPS_GOAL, settings.stepsGoal)
             putInt(KEY_FLOORS_GOAL, settings.floorsGoal)
             putInt(KEY_CALORIES_GOAL, settings.caloriesGoal)

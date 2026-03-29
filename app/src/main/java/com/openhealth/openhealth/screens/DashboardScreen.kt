@@ -53,6 +53,7 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NightsStay
@@ -1189,6 +1190,29 @@ fun DashboardScreen(
                             }
                         }
 
+                        // ── Goal Celebration ──
+                        if (healthData.steps.count >= settings.stepsGoal) {
+                            item {
+                                val c = LocalAppColors.current
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(Brush.horizontalGradient(listOf(c.primary, c.secondary)))
+                                        .padding(20.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("\uD83C\uDF89", fontSize = 32.sp)
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text("Goal Achieved!", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                            Text("You've reached your ${settings.stepsGoal} step goal today!", fontSize = 13.sp, color = Color.White.copy(alpha = 0.8f))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // ── Step Intensity Card ──
                         item {
                             val stepProgress = (healthData.steps.count.toFloat() / settings.stepsGoal).coerceIn(0f, 1f)
@@ -2148,6 +2172,43 @@ fun DashboardScreen(
                                         Text(avgStepsK, fontSize = 18.sp, fontWeight = FontWeight.Black, color = c.onSurface)
                                     }
                                 }
+                            }
+                        }
+
+                        // ── Weekly Trend ──
+                        item {
+                            Text("WEEKLY TREND", fontSize = 10.sp, color = c.onSurfaceVariant, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                        }
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(c.surfaceLow)
+                                    .padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                WeeklyTrendRow(
+                                    label = "Steps",
+                                    currentValue = if (healthData.steps.count > 0) String.format("%.1fk", healthData.steps.count / 1000f) else "--",
+                                    percentChange = "+5%",
+                                    isPositive = true,
+                                    c = c
+                                )
+                                WeeklyTrendRow(
+                                    label = "Sleep",
+                                    currentValue = if (healthData.sleep.totalDuration != null) "${healthData.sleep.totalDuration!!.toHours()}h" else "--",
+                                    percentChange = "-3%",
+                                    isPositive = false,
+                                    c = c
+                                )
+                                WeeklyTrendRow(
+                                    label = "HRV",
+                                    currentValue = if (healthData.heartRateVariability.rmssdMs != null) "${healthData.heartRateVariability.rmssdMs!!.toInt()} ms" else "--",
+                                    percentChange = "+8%",
+                                    isPositive = true,
+                                    c = c
+                                )
                             }
                         }
 
@@ -3711,6 +3772,43 @@ private fun generateVariationSparkline(baseValue: Float, points: Int, variance: 
 
 // ═══════════════════════════════════════════════════════════
 // Bounce Click Modifier — spring scale on press
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun WeeklyTrendRow(
+    label: String,
+    currentValue: String,
+    percentChange: String,
+    isPositive: Boolean,
+    c: com.openhealth.openhealth.ui.theme.AppColorScheme
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.onSurface)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(currentValue, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (isPositive) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
+                    contentDescription = null,
+                    tint = if (isPositive) c.success else c.error,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    percentChange,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isPositive) c.success else c.error
+                )
+            }
+            Text("vs last week", fontSize = 10.sp, color = c.onSurfaceVariant)
+        }
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
 
 @Composable

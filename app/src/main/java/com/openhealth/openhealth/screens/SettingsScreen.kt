@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
@@ -128,6 +129,18 @@ fun SettingsScreen(
                     subtitle = "Evening notification",
                     isEnabled = settings.dailySummaryNotification,
                     onToggle = { onSettingsChanged(settings.copy(dailySummaryNotification = it)) }
+                )
+            }
+
+            // Weekly AI Summary
+            item {
+                FeatureTogglePill(
+                    icon = Icons.Default.Assessment,
+                    iconColor = c.primary,
+                    title = "Weekly AI Summary",
+                    subtitle = "AI health report every Sunday",
+                    isEnabled = settings.weeklyAiSummary,
+                    onToggle = { onSettingsChanged(settings.copy(weeklyAiSummary = it)) }
                 )
             }
 
