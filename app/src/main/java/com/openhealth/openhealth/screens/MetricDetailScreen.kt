@@ -3008,8 +3008,15 @@ fun MetricDetailScreen(
                             }
                         }
 
-                        // All History Header
+                        // All History — skip for metrics with custom history
+                        val hasCustomHistory = metricType in listOf(
+                            HealthViewModel.MetricType.HEART_RATE_VARIABILITY,
+                            HealthViewModel.MetricType.RESPIRATORY_RATE,
+                            HealthViewModel.MetricType.EXERCISE,
+                            HealthViewModel.MetricType.NUTRITION
+                        ) || isBodyCompMetric
                         val totalRecords = metricHistory?.allHistoricalData?.size ?: 0
+                        if (!hasCustomHistory) {
                         item {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -3045,6 +3052,7 @@ fun MetricDetailScreen(
                                 )
                             }
                         }
+                        } // end hasCustomHistory check
 
                         // Bottom spacing
                         item {
