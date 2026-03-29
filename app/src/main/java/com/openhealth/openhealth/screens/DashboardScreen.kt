@@ -14,6 +14,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -882,9 +885,9 @@ fun DashboardScreen(
                             val exerciseMin = healthData.exercise.totalDuration?.toMinutes()?.toInt() ?: 0
                             val exerciseProgress = (exerciseMin / 30f).coerceIn(0f, 1f)
 
-                            val animatedCal by animateFloatAsState(calProgress, tween(1200), label = "cal")
-                            val animatedExc by animateFloatAsState(exerciseProgress, tween(1000), label = "exc")
-                            val animatedStand by animateFloatAsState(stepsProgress, tween(800), label = "stand")
+                            val animatedCal by animateFloatAsState(calProgress, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow), label = "cal")
+                            val animatedExc by animateFloatAsState(exerciseProgress, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow), label = "exc")
+                            val animatedStand by animateFloatAsState(stepsProgress, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow), label = "stand")
 
                             val movePercent = (calProgress * 100).roundToInt()
                             val excPercent = (exerciseProgress * 100).roundToInt()
@@ -2310,7 +2313,7 @@ private fun ReadinessHeroCard(
             ) {
                 val animatedScore by animateFloatAsState(
                     targetValue = readinessScore.score / 100f,
-                    animationSpec = tween(1200),
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow),
                     label = "readiness_arc"
                 )
                 val animatedNumber by animateIntAsState(
@@ -2755,10 +2758,17 @@ private fun MetricCard(
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
+    val entranceScale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0.95f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "metric_entrance"
+    )
+
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { it / 3 }
     ) {
+        Box(modifier = Modifier.graphicsLayer { scaleX = entranceScale; scaleY = entranceScale }) {
         NocturneCard(onClick = onClick) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2837,6 +2847,7 @@ private fun MetricCard(
                         .height(44.dp)
                 )
             }
+        }
         }
     }
 }
@@ -3329,6 +3340,17 @@ private fun BottomNavItem(
     onClick: () -> Unit
 ) {
     val c = LocalAppColors.current
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.9f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "nav_press"
+    )
+    val activeScale by animateFloatAsState(
+        targetValue = if (isActive) 1f else 0.92f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "nav_active"
+    )
     val iconVector = when (icon) {
         "bolt" -> Icons.Default.Favorite  // Readiness
         "fitness" -> Icons.AutoMirrored.Filled.DirectionsWalk  // Activity
@@ -3341,6 +3363,7 @@ private fun BottomNavItem(
         // Active: gradient pill
         Box(
             modifier = Modifier
+                .graphicsLayer { scaleX = scale * activeScale; scaleY = scale * activeScale }
                 .clip(RoundedCornerShape(24.dp))
                 .background(
                     Brush.horizontalGradient(
@@ -3348,6 +3371,14 @@ private fun BottomNavItem(
                     )
                 )
                 .clickable(onClick = onClick)
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown()
+                        pressed = true
+                        waitForUpOrCancellation()
+                        pressed = false
+                    }
+                }
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -3371,7 +3402,16 @@ private fun BottomNavItem(
         // Inactive
         Box(
             modifier = Modifier
+                .graphicsLayer { scaleX = scale * activeScale; scaleY = scale * activeScale }
                 .clickable(onClick = onClick)
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown()
+                        pressed = true
+                        waitForUpOrCancellation()
+                        pressed = false
+                    }
+                }
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -3408,12 +3448,27 @@ private fun NocturneCard(
 ) {
     val c = LocalAppColors.current
     val bgColor = surfaceColor ?: c.surface
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "card_press"
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(RoundedCornerShape(24.dp))
             .background(bgColor)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown()
+                    pressed = true
+                    waitForUpOrCancellation()
+                    pressed = false
+                }
+            }
             .padding(20.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
