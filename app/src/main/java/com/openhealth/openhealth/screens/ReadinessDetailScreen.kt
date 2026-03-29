@@ -439,7 +439,7 @@ fun ReadinessDetailScreen(
                         style = MaterialTheme.typography.labelMedium,
                         color = c.primary,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable { }
+                        modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.SLEEP) }
                     )
                 }
             }
