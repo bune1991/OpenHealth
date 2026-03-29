@@ -477,8 +477,8 @@ fun DashboardScreen(
                                     }
                                 }
 
-                                // Row 2: Nutrition + Hydration — square with mini rings + pulsing dots
-                                Row(
+                                // Row 2: Nutrition + Hydration (optional)
+                                if (settings.showNutrition || settings.showHydration) Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
