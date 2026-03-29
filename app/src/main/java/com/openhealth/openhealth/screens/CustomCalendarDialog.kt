@@ -391,10 +391,10 @@ fun CustomCalendarDialog(
                                 value = "${(selectedSteps * 0.04).toInt()} kcal"
                             )
                             RecapStatItem(
-                                icon = Icons.Default.Bedtime,
+                                icon = Icons.Default.DirectionsWalk,
                                 iconColor = c.tertiary,
-                                label = "Sleep",
-                                value = "--"
+                                label = "Distance",
+                                value = "${String.format("%.1f", selectedSteps * 0.0007)} km"
                             )
                         }
                     }
