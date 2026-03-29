@@ -3460,10 +3460,18 @@ private fun NocturneCard(
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(RoundedCornerShape(24.dp))
             .background(bgColor)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                        indication = null,
+                        onClick = onClick
+                    )
+                } else Modifier
+            )
             .pointerInput(Unit) {
                 awaitEachGesture {
-                    awaitFirstDown()
+                    val down = awaitFirstDown(requireUnconsumed = false)
                     pressed = true
                     waitForUpOrCancellation()
                     pressed = false
