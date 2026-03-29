@@ -104,7 +104,8 @@ fun MetricDetailScreen(
     weightTargetKg: Float = 70.0f,
     exerciseSessions: List<com.openhealth.openhealth.model.ExerciseSession> = emptyList(),
     healthData: com.openhealth.openhealth.model.HealthData? = null,
-    onSessionClick: (com.openhealth.openhealth.model.ExerciseSession) -> Unit = {}
+    onSessionClick: (com.openhealth.openhealth.model.ExerciseSession) -> Unit = {},
+    onMetricNavigate: ((HealthViewModel.MetricType) -> Unit)? = null
 ) {
     val c = LocalAppColors.current
     val metricInfo = getMetricInfo(metricType)
@@ -2298,7 +2299,7 @@ fun MetricDetailScreen(
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(50))
                                                 .background(c.surfaceHighest)
-                                                .clickable { onBackClick() }
+                                                .clickable { onMetricNavigate?.invoke(HealthViewModel.MetricType.NUTRITION) ?: onBackClick() }
                                                 .padding(vertical = 14.dp),
                                             contentAlignment = Alignment.Center
                                         ) {

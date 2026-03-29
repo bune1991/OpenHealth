@@ -295,7 +295,8 @@ class MainActivity : ComponentActivity() {
                                                 weightTargetKg = settings.weightTargetKg,
                                                 exerciseSessions = healthData.exercise.sessions,
                                                 healthData = healthData,
-                                                onSessionClick = { viewModel.showWorkoutDetail(it) }
+                                                onSessionClick = { viewModel.showWorkoutDetail(it) },
+                                                onMetricNavigate = { viewModel.selectMetric(it) }
                                             )
                                         }
                                     }
