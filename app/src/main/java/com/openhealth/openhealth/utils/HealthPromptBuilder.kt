@@ -4,7 +4,7 @@ import com.openhealth.openhealth.model.HealthData
 
 object HealthPromptBuilder {
 
-    fun buildDailySummaryPrompt(data: HealthData): String {
+    fun buildDailySummaryPrompt(data: HealthData, hydrationMl: Int = 0): String {
         val sb = StringBuilder()
         sb.appendLine("You are a personal health analyst. Analyze the following daily health data and provide personalized insights. Be concise, actionable, and encouraging. Use simple language that anyone can understand.")
         sb.appendLine()
@@ -108,6 +108,11 @@ object HealthPromptBuilder {
             if (it > 0) {
                 sb.appendLine("Nutrition: ${String.format("%.0f", it)} kcal (P:${String.format("%.0f", data.nutrition.proteinGrams ?: 0.0)}g C:${String.format("%.0f", data.nutrition.carbsGrams ?: 0.0)}g F:${String.format("%.0f", data.nutrition.fatGrams ?: 0.0)}g)")
             }
+        }
+
+        // Hydration
+        if (hydrationMl > 0) {
+            sb.appendLine("Hydration: ${hydrationMl}ml (${String.format("%.1f", hydrationMl / 1000.0)}L) of 2.5L goal (${(hydrationMl * 100 / 2500)}%)")
         }
 
         // Blood Pressure

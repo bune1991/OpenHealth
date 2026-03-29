@@ -616,7 +616,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
             _aiInsightLoading.value = true
             _aiInsightError.value = null
 
-            val prompt = HealthPromptBuilder.buildDailySummaryPrompt(_healthData.value)
+            val prompt = HealthPromptBuilder.buildDailySummaryPrompt(_healthData.value, _hydrationDailyTotal.value)
             Log.d("AiInsights", "Prompt length: ${prompt.length} chars")
 
             val result = aiHealthService.getInsights(
