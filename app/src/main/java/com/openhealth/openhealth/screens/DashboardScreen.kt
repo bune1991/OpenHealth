@@ -885,9 +885,9 @@ fun DashboardScreen(
                             val exerciseMin = healthData.exercise.totalDuration?.toMinutes()?.toInt() ?: 0
                             val exerciseProgress = (exerciseMin / 30f).coerceIn(0f, 1f)
 
-                            val animatedCal by animateFloatAsState(calProgress, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow), label = "cal")
-                            val animatedExc by animateFloatAsState(exerciseProgress, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow), label = "exc")
-                            val animatedStand by animateFloatAsState(stepsProgress, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow), label = "stand")
+                            val animatedCal by animateFloatAsState(calProgress, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow), label = "cal")
+                            val animatedExc by animateFloatAsState(exerciseProgress, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow), label = "exc")
+                            val animatedStand by animateFloatAsState(stepsProgress, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow), label = "stand")
 
                             val movePercent = (calProgress * 100).roundToInt()
                             val excPercent = (exerciseProgress * 100).roundToInt()
@@ -2313,7 +2313,7 @@ private fun ReadinessHeroCard(
             ) {
                 val animatedScore by animateFloatAsState(
                     targetValue = readinessScore.score / 100f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessVeryLow),
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
                     label = "readiness_arc"
                 )
                 val animatedNumber by animateIntAsState(
@@ -2760,7 +2760,7 @@ private fun MetricCard(
 
     val entranceScale by animateFloatAsState(
         targetValue = if (visible) 1f else 0.95f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
         label = "metric_entrance"
     )
 
@@ -3343,12 +3343,12 @@ private fun BottomNavItem(
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.9f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
         label = "nav_press"
     )
     val activeScale by animateFloatAsState(
         targetValue = if (isActive) 1f else 0.92f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
         label = "nav_active"
     )
     val iconVector = when (icon) {
@@ -3451,7 +3451,7 @@ private fun NocturneCard(
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
         label = "card_press"
     )
     Box(
