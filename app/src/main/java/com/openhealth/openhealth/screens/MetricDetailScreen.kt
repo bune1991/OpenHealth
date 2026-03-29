@@ -722,7 +722,7 @@ fun MetricDetailScreen(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
                                                     .background(c.surfaceHighest)
-                                                    .clickable { }
+                                                    .clickable { onMetricNavigate?.invoke(HealthViewModel.MetricType.SLEEP) }
                                                     .padding(horizontal = 20.dp, vertical = 10.dp)
                                             ) {
                                                 Text(
@@ -1133,7 +1133,7 @@ fun MetricDetailScreen(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
                                                     .background(c.surfaceHighest)
-                                                    .clickable { }
+                                                    .clickable { onMetricNavigate?.invoke(HealthViewModel.MetricType.SLEEP) }
                                                     .padding(horizontal = 20.dp, vertical = 10.dp)
                                             ) {
                                                 Text(
