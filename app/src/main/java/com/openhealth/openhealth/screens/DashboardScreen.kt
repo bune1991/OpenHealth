@@ -2022,8 +2022,8 @@ fun DashboardScreen(
                         // Stats bento grid — taller cards with icons
                         item {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                // Streak
-                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).padding(16.dp)) {
+                                // Streak → Steps detail
+                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
                                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                                         Icon(Icons.Default.LocalFireDepartment, null, tint = c.secondary, modifier = Modifier.size(24.dp))
                                         Column {
@@ -2032,8 +2032,8 @@ fun DashboardScreen(
                                         }
                                     }
                                 }
-                                // Status
-                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).padding(16.dp)) {
+                                // Status → Readiness detail
+                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).clickable { onReadinessClick() }.padding(16.dp)) {
                                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                                         Icon(Icons.Default.Favorite, null, tint = c.primary, modifier = Modifier.size(24.dp))
                                         Column {
@@ -2047,7 +2047,7 @@ fun DashboardScreen(
 
                         // Avg Steps wide card
                         item {
-                            Box(modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceHigh).padding(16.dp)) {
+                            Box(modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceHigh).clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
                                 Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                                     Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null, tint = c.tertiary, modifier = Modifier.size(24.dp))
                                     Column {
@@ -2061,7 +2061,7 @@ fun DashboardScreen(
 
                         // Step Trends — density circle
                         item {
-                            NocturneCard(surfaceColor = c.surfaceLow) {
+                            NocturneCard(surfaceColor = c.surfaceLow, onClick = { onMetricClick(HealthViewModel.MetricType.STEPS) }) {
                                 Text("Step Trends", style = MaterialTheme.typography.titleMedium, color = c.onSurface, fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -2104,7 +2104,7 @@ fun DashboardScreen(
                         item {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                 Text("Milestones", style = MaterialTheme.typography.titleMedium, color = c.onSurface, fontWeight = FontWeight.Bold)
-                                Text("View Gallery", color = c.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("View Gallery", color = c.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onReportsClick() })
                             }
                         }
 
