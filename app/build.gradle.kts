@@ -87,8 +87,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    // Compose Material 3
-    implementation("androidx.compose.material3:material3")
+    // Compose Material 3 Expressive (alpha — spring animations, expressive motion)
+    implementation("androidx.compose.material3:material3:1.5.0-alpha16")
 
     // Compose Activity
     implementation("androidx.activity:activity-compose:1.8.2")
