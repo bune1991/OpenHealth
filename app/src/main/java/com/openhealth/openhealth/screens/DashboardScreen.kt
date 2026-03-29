@@ -284,7 +284,7 @@ fun DashboardScreen(
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(20.dp))
                                         .background(c.secondary)
-                                        .clickable { onReadinessClick() }
+                                        .bounceClick { onReadinessClick() }
                                         .padding(24.dp)
                                 ) {
                                     // Semi-transparent bolt icon on the right
@@ -353,7 +353,7 @@ fun DashboardScreen(
                                             .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(c.surfaceLow)
-                                            .clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE) }
+                                            .bounceClick { onMetricClick(HealthViewModel.MetricType.HEART_RATE) }
                                             .padding(16.dp)
                                     ) {
                                         Column(
@@ -412,7 +412,7 @@ fun DashboardScreen(
                                             .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(c.surfaceLow)
-                                            .clickable { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
+                                            .bounceClick { onMetricClick(HealthViewModel.MetricType.HEART_RATE_VARIABILITY) }
                                             .padding(16.dp)
                                     ) {
                                         Column(
@@ -477,7 +477,7 @@ fun DashboardScreen(
                                             .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(c.surfaceLow)
-                                            .clickable { onMetricClick(HealthViewModel.MetricType.NUTRITION) }
+                                            .bounceClick { onMetricClick(HealthViewModel.MetricType.NUTRITION) }
                                             .padding(16.dp)
                                     ) {
                                         val nutCalories = nutritionCal ?: 0.0
@@ -585,7 +585,7 @@ fun DashboardScreen(
                                             .aspectRatio(1f)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(c.surfaceLow)
-                                            .clickable { onHydrationClick() }
+                                            .bounceClick { onHydrationClick() }
                                             .padding(16.dp)
                                     ) {
                                         val hydLiters = hydrationLiters ?: 0.0
@@ -712,7 +712,7 @@ fun DashboardScreen(
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
                                         .background(c.surfaceLow)
-                                        .clickable { onStressClick() }
+                                        .bounceClick { onStressClick() }
                                         .padding(20.dp)
                                 ) {
                                     Row(
@@ -802,7 +802,7 @@ fun DashboardScreen(
                                             )
                                         )
                                     )
-                                    .clickable { onAiInsightsClick() }
+                                    .bounceClick { onAiInsightsClick() }
                                     .padding(24.dp)
                             ) {
                                 Column {
@@ -860,7 +860,7 @@ fun DashboardScreen(
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(50))
                                             .background(c.primary)
-                                            .clickable { onAiInsightsClick() }
+                                            .bounceClick { onAiInsightsClick() }
                                             .padding(vertical = 14.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -898,7 +898,7 @@ fun DashboardScreen(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(28.dp))
                                     .background(c.surfaceLow)
-                                    .clickable { onPerformanceClick() }
+                                    .bounceClick { onPerformanceClick() }
                                     .padding(28.dp)
                             ) {
                                 Column(
@@ -1010,7 +1010,7 @@ fun DashboardScreen(
                                         // Center stats
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.clickable { onPerformanceClick() }
+                                            modifier = Modifier.bounceClick { onPerformanceClick() }
                                         ) {
                                             Text(
                                                 "ACTIVE ENERGY",
@@ -1057,7 +1057,7 @@ fun DashboardScreen(
                                         // Move
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.clickable { onPerformanceClick() }
+                                            modifier = Modifier.bounceClick { onPerformanceClick() }
                                         ) {
                                             Icon(
                                                 Icons.Default.Bolt,
@@ -1093,7 +1093,7 @@ fun DashboardScreen(
                                         // Exercise
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.clickable { onPerformanceClick() }
+                                            modifier = Modifier.bounceClick { onPerformanceClick() }
                                         ) {
                                             Icon(
                                                 Icons.Default.FitnessCenter,
@@ -1129,7 +1129,7 @@ fun DashboardScreen(
                                         // Stand
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }
+                                            modifier = Modifier.bounceClick { onMetricClick(HealthViewModel.MetricType.STEPS) }
                                         ) {
                                             Icon(
                                                 Icons.AutoMirrored.Filled.DirectionsWalk,
@@ -1186,7 +1186,7 @@ fun DashboardScreen(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(c.surfaceLow)
-                                    .clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }
+                                    .bounceClick { onMetricClick(HealthViewModel.MetricType.STEPS) }
                                     .padding(20.dp)
                             ) {
                                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -1288,7 +1288,7 @@ fun DashboardScreen(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(c.surfaceLow)
-                                    .clickable { onMetricClick(HealthViewModel.MetricType.DISTANCE) }
+                                    .bounceClick { onMetricClick(HealthViewModel.MetricType.DISTANCE) }
                                     .padding(20.dp)
                             ) {
                                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -1507,7 +1507,7 @@ fun DashboardScreen(
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(24.dp))
                                         .background(c.surfaceLow)
-                                        .clickable { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
+                                        .bounceClick { onMetricClick(HealthViewModel.MetricType.OXYGEN_SATURATION) }
                                         .padding(vertical = 32.dp, horizontal = 24.dp)
                                 ) {
                                     Column(
@@ -1575,7 +1575,7 @@ fun DashboardScreen(
                                             .weight(1f)
                                             .clip(RoundedCornerShape(24.dp))
                                             .background(c.surfaceHigh)
-                                            .clickable { onStressClick() }
+                                            .bounceClick { onStressClick() }
                                             .padding(20.dp)
                                     ) {
                                         Column(
@@ -1673,7 +1673,7 @@ fun DashboardScreen(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(c.surfaceLow)
-                                    .clickable { onMetricClick(HealthViewModel.MetricType.SLEEP) }
+                                    .bounceClick { onMetricClick(HealthViewModel.MetricType.SLEEP) }
                                     .padding(20.dp)
                             ) {
                                 Column {
@@ -1901,7 +1901,7 @@ fun DashboardScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .clickable { onMetricClick(HealthViewModel.MetricType.WEIGHT) }
+                                                    .bounceClick { onMetricClick(HealthViewModel.MetricType.WEIGHT) }
                                                     .padding(16.dp)
                                             ) {
                                                 Row(
@@ -2028,7 +2028,7 @@ fun DashboardScreen(
                         item {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 // Streak → Steps detail
-                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
+                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).bounceClick { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
                                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                                         Icon(Icons.Default.LocalFireDepartment, null, tint = c.secondary, modifier = Modifier.size(24.dp))
                                         Column {
@@ -2038,7 +2038,7 @@ fun DashboardScreen(
                                     }
                                 }
                                 // Status → Readiness detail
-                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).clickable { onReadinessClick() }.padding(16.dp)) {
+                                Box(modifier = Modifier.weight(1f).height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceLow).bounceClick { onReadinessClick() }.padding(16.dp)) {
                                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                                         Icon(Icons.Default.Favorite, null, tint = c.primary, modifier = Modifier.size(24.dp))
                                         Column {
@@ -2052,7 +2052,7 @@ fun DashboardScreen(
 
                         // Avg Steps wide card
                         item {
-                            Box(modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceHigh).clickable { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
+                            Box(modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceHigh).bounceClick { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
                                 Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                                     Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null, tint = c.tertiary, modifier = Modifier.size(24.dp))
                                     Column {
@@ -2109,7 +2109,7 @@ fun DashboardScreen(
                         item {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                 Text("Milestones", style = MaterialTheme.typography.titleMedium, color = c.onSurface, fontWeight = FontWeight.Bold)
-                                Text("View Gallery", color = c.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onReportsClick() })
+                                Text("View Gallery", color = c.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.bounceClick { onReportsClick() })
                             }
                         }
 
@@ -2120,7 +2120,7 @@ fun DashboardScreen(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(c.primary)
-                                    .clickable { onReportsClick() }
+                                    .bounceClick { onReportsClick() }
                                     .padding(24.dp)
                             ) {
                                 // Blur circle overlay
@@ -3661,4 +3661,33 @@ private fun generateVariationSparkline(baseValue: Float, points: Int, variance: 
         val variation = 1f + (random.nextFloat() * 2 - 1) * variance
         baseValue * variation
     }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Bounce Click Modifier — spring scale on press
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+fun Modifier.bounceClick(onClick: () -> Unit): Modifier {
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
+        label = "bounce"
+    )
+    return this
+        .graphicsLayer { scaleX = scale; scaleY = scale }
+        .pointerInput(Unit) {
+            awaitEachGesture {
+                awaitFirstDown(requireUnconsumed = false)
+                pressed = true
+                waitForUpOrCancellation()
+                pressed = false
+            }
+        }
+        .clickable(
+            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+            indication = null,
+            onClick = onClick
+        )
 }
