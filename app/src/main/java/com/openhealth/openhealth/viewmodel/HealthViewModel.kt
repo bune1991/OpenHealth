@@ -197,6 +197,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         // Initialize PermissionManager
         PermissionManager.init(context)
         checkHealthConnectAvailability()
+        loadHydrationEntries()
     }
 
     private fun checkHealthConnectAvailability() {
