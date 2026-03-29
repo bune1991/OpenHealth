@@ -555,12 +555,20 @@ fun HealthConnectNotAvailableScreen(
 
 @Composable
 fun SlideInScreen(content: @Composable () -> Unit) {
-    var visible by remember { androidx.compose.runtime.mutableStateOf(false) }
+    val c = com.openhealth.openhealth.ui.theme.LocalAppColors.current
+    var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(200)) + slideInHorizontally { it / 3 }
+    // Fill background to prevent black gap during slide
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(c.background)
     ) {
-        content()
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(150)) + slideInHorizontally { it / 5 }
+        ) {
+            content()
+        }
     }
 }
