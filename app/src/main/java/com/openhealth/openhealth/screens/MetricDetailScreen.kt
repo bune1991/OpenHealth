@@ -1200,8 +1200,8 @@ fun MetricDetailScreen(
                         // ── Steps Custom Hero: Circular Progress Ring ──
                         if (metricType == HealthViewModel.MetricType.STEPS) {
                             item {
-                                val stepsCount = healthData?.steps?.count ?: selectedDateValue.toLong()
-                                val goal = healthData?.steps?.goal ?: stepsGoal.toLong()
+                                val stepsCount = if (isToday) healthData?.steps?.count ?: selectedDateValue.toLong() else selectedDateValue.toLong()
+                                val goal = stepsGoal.toLong()
                                 val progress = if (goal > 0) (stepsCount.toFloat() / goal.toFloat()).coerceIn(0f, 1.5f) else 0f
                                 val animatedProgress by animateFloatAsState(
                                     targetValue = progress,
