@@ -3489,8 +3489,8 @@ private fun SkeletonCard(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        color = color.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(8.dp)
+                        color = c.surfaceHigh,
+                        shape = RoundedCornerShape(12.dp)
                     )
             )
         }

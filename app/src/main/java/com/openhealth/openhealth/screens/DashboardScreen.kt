@@ -1839,21 +1839,29 @@ fun DashboardScreen(
                             fun VitalTile(label: String, value: String, unit: String, icon: ImageVector, iconTint: Color, onClick: () -> Unit) {
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(c.surfaceHigh)
-                                        .clickable(onClick = onClick)
-                                        .padding(14.dp),
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(c.surfaceLow)
+                                        .bounceClick(onClick)
+                                        .padding(20.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(icon, null, tint = iconTint, modifier = Modifier.size(22.dp))
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .background(iconTint.copy(alpha = 0.15f), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(icon, null, tint = iconTint, modifier = Modifier.size(18.dp))
+                                        }
+                                        Spacer(modifier = Modifier.height(10.dp))
                                         Text(label, fontSize = 10.sp, color = c.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Spacer(modifier = Modifier.height(6.dp))
                                         Row(verticalAlignment = Alignment.Bottom) {
-                                            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
+                                            Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
                                             if (unit.isNotEmpty()) {
-                                                Text(unit, fontSize = 9.sp, color = c.onSurfaceVariant, modifier = Modifier.padding(bottom = 2.dp, start = 2.dp))
+                                                Text(unit, fontSize = 10.sp, color = c.onSurfaceVariant, modifier = Modifier.padding(bottom = 3.dp, start = 2.dp))
                                             }
                                         }
                                     }
