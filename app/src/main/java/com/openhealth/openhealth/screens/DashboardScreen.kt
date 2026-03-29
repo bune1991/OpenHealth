@@ -336,6 +336,18 @@ fun DashboardScreen(
                         item {
                             val restingHr = healthData.heartRate.minBpm
                             val hrvVal = healthData.heartRateVariability.rmssdMs
+
+                            // Animated count-up values
+                            val animatedRestingHr by animateIntAsState(
+                                targetValue = restingHr?.toInt() ?: 0,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
+                                label = "resting_hr_counter"
+                            )
+                            val animatedHrvVal by animateIntAsState(
+                                targetValue = hrvVal?.toInt() ?: 0,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
+                                label = "hrv_counter"
+                            )
                             val nutritionCal = healthData.nutrition.calories
                             val hydrationLiters: Double? = if (hydrationDailyTotalMl > 0) hydrationDailyTotalMl / 1000.0 else healthData.hydration.liters
                             val HydrationBlue = Color(0xFF4DABFF)
@@ -390,7 +402,7 @@ fun DashboardScreen(
                                             }
                                             Column {
                                                 Text(
-                                                    text = if (restingHr != null) "${restingHr.toInt()}" else "--",
+                                                    text = if (restingHr != null) "$animatedRestingHr" else "--",
                                                     fontSize = 36.sp,
                                                     fontWeight = FontWeight.Black,
                                                     color = c.onSurface,
@@ -449,7 +461,7 @@ fun DashboardScreen(
                                             }
                                             Column {
                                                 Text(
-                                                    text = if (hrvVal != null) "${hrvVal.toInt()}" else "--",
+                                                    text = if (hrvVal != null) "$animatedHrvVal" else "--",
                                                     fontSize = 36.sp,
                                                     fontWeight = FontWeight.Black,
                                                     color = c.onSurface,
@@ -694,6 +706,11 @@ fun DashboardScreen(
                             item {
                                 val hrv = healthData.heartRateVariability.rmssdMs!!
                                 val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
+                                val animatedStressLevel by animateIntAsState(
+                                    targetValue = stressLevel,
+                                    animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
+                                    label = "pulse_stress_counter"
+                                )
                                 val stressLabel = when {
                                     stressLevel < 25 -> "Stable Mindset"
                                     stressLevel < 50 -> "Balanced State"
@@ -769,7 +786,7 @@ fun DashboardScreen(
                                                 )
                                             }
                                             Text(
-                                                "$stressLevel",
+                                                "$animatedStressLevel",
                                                 fontSize = 18.sp,
                                                 fontWeight = FontWeight.Black,
                                                 color = c.onSurface,
@@ -888,6 +905,12 @@ fun DashboardScreen(
                             val animatedCal by animateFloatAsState(calProgress, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow), label = "cal")
                             val animatedExc by animateFloatAsState(exerciseProgress, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow), label = "exc")
                             val animatedStand by animateFloatAsState(stepsProgress, spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow), label = "stand")
+
+                            val animatedCalories by animateIntAsState(
+                                targetValue = healthData.calories.totalBurned.roundToInt(),
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
+                                label = "calories_counter"
+                            )
 
                             val movePercent = (calProgress * 100).roundToInt()
                             val excPercent = (exerciseProgress * 100).roundToInt()
@@ -1021,7 +1044,7 @@ fun DashboardScreen(
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
                                             Text(
-                                                "${healthData.calories.totalBurned.roundToInt()}",
+                                                "$animatedCalories",
                                                 fontSize = 48.sp,
                                                 fontWeight = FontWeight.Black,
                                                 color = c.onSurface,
@@ -1502,6 +1525,11 @@ fun DashboardScreen(
                         // Hero: SpO2 card with "CURRENT SATURATION" label
                         if (healthData.oxygenSaturation.percentage != null) {
                             item {
+                                val animatedSpo2 by animateIntAsState(
+                                    targetValue = healthData.oxygenSaturation.percentage?.roundToInt() ?: 0,
+                                    animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
+                                    label = "spo2_counter"
+                                )
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -1524,7 +1552,7 @@ fun DashboardScreen(
                                         Spacer(modifier = Modifier.height(12.dp))
                                         Row(verticalAlignment = Alignment.Bottom) {
                                             Text(
-                                                "${healthData.oxygenSaturation.percentage?.roundToInt()}",
+                                                "$animatedSpo2",
                                                 fontSize = 72.sp,
                                                 fontWeight = FontWeight.Black,
                                                 color = c.onSurface,
@@ -1561,6 +1589,11 @@ fun DashboardScreen(
                             item {
                                 val hrv = healthData.heartRateVariability.rmssdMs!!
                                 val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
+                                val animatedVitalsStress by animateIntAsState(
+                                    targetValue = stressLevel,
+                                    animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
+                                    label = "vitals_stress_counter"
+                                )
                                 val stressLabel = when { stressLevel < 25 -> "Low Stress"; stressLevel < 50 -> "Moderate"; stressLevel < 75 -> "High Stress State"; else -> "Very High Stress" }
                                 val energyPercent = readinessScore.score.coerceIn(0, 100)
                                 val energyLabel = when { energyPercent >= 75 -> "Charging Rapidly"; energyPercent >= 50 -> "Stable Energy"; energyPercent >= 25 -> "Depleting"; else -> "Low Energy" }
@@ -1591,7 +1624,7 @@ fun DashboardScreen(
                                                 Icon(Icons.Default.Favorite, null, tint = c.secondary, modifier = Modifier.size(18.dp))
                                             }
                                             Spacer(modifier = Modifier.height(16.dp))
-                                            Text("$stressLevel", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
+                                            Text("$animatedVitalsStress", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
                                             Spacer(modifier = Modifier.height(2.dp))
                                             Text(stressLabel, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = c.secondary)
                                             Spacer(modifier = Modifier.height(12.dp))
@@ -2052,11 +2085,16 @@ fun DashboardScreen(
 
                         // Avg Steps wide card
                         item {
+                            val animatedStepsCount by animateIntAsState(
+                                targetValue = healthData.steps.count.toInt(),
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessVeryLow),
+                                label = "steps_counter"
+                            )
                             Box(modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(24.dp)).background(c.surfaceHigh).bounceClick { onMetricClick(HealthViewModel.MetricType.STEPS) }.padding(16.dp)) {
                                 Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                                     Icon(Icons.AutoMirrored.Filled.DirectionsWalk, null, tint = c.tertiary, modifier = Modifier.size(24.dp))
                                     Column {
-                                        val avgK = if (healthData.steps.count > 0) String.format("%.1fk", healthData.steps.count / 1000f) else "--"
+                                        val avgK = if (animatedStepsCount > 0) String.format("%.1fk", animatedStepsCount / 1000f) else "--"
                                         Text(avgK, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = c.onSurface)
                                         Text("AVG STEPS", fontSize = 9.sp, color = c.onSurfaceVariant, letterSpacing = 1.sp)
                                     }

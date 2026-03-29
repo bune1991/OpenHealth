@@ -34,6 +34,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -179,115 +183,160 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                     showWorkoutDetail && selectedWorkoutSession != null -> {
-                                        WorkoutDetailScreen(
-                                            session = selectedWorkoutSession!!,
-                                            healthData = healthData,
-                                            onBackClick = { viewModel.hideWorkoutDetail() }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            WorkoutDetailScreen(
+                                                session = selectedWorkoutSession!!,
+                                                healthData = healthData,
+                                                onBackClick = { viewModel.hideWorkoutDetail() }
+                                            )
+                                        }
                                     }
                                     showPerformance -> {
-                                        PerformanceScreen(
-                                            healthData = healthData,
-                                            settings = settings,
-                                            onBackClick = { viewModel.hidePerformance() },
-                                            onMetricClick = { metricType ->
-                                                viewModel.hidePerformance()
-                                                viewModel.selectMetric(metricType)
-                                            },
-                                            onSessionClick = { viewModel.showWorkoutDetail(it) }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            PerformanceScreen(
+                                                healthData = healthData,
+                                                settings = settings,
+                                                onBackClick = { viewModel.hidePerformance() },
+                                                onMetricClick = { metricType ->
+                                                    viewModel.hidePerformance()
+                                                    viewModel.selectMetric(metricType)
+                                                },
+                                                onSessionClick = { viewModel.showWorkoutDetail(it) }
+                                            )
+                                        }
                                     }
                                     showHydration -> {
-                                        HydrationScreen(
-                                            hydrationEntries = hydrationEntries,
-                                            dailyTotal = hydrationDailyTotal,
-                                            goal = 2500,
-                                            onAddWater = { viewModel.addWaterEntry(it) },
-                                            onRemoveEntry = { viewModel.removeWaterEntry(it) },
-                                            onClearAll = { viewModel.clearAllWaterEntries() },
-                                            onBackClick = { viewModel.hideHydration() }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            HydrationScreen(
+                                                hydrationEntries = hydrationEntries,
+                                                dailyTotal = hydrationDailyTotal,
+                                                goal = 2500,
+                                                onAddWater = { viewModel.addWaterEntry(it) },
+                                                onRemoveEntry = { viewModel.removeWaterEntry(it) },
+                                                onClearAll = { viewModel.clearAllWaterEntries() },
+                                                onBackClick = { viewModel.hideHydration() }
+                                            )
+                                        }
                                     }
                                     showSettings -> {
-                                        // Show settings screen
-                                        SettingsScreen(
-                                            settings = settings,
-                                            onSettingsChanged = { viewModel.updateSettings(it) },
-                                            onBackClick = { viewModel.hideSettings() },
-                                            onExportClick = {
-                                                val file = com.openhealth.openhealth.utils.DataExporter.exportToCsv(this@MainActivity, healthData)
-                                                file?.let { com.openhealth.openhealth.utils.DataExporter.shareFile(this@MainActivity, it) }
-                                            }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            // Show settings screen
+                                            SettingsScreen(
+                                                settings = settings,
+                                                onSettingsChanged = { viewModel.updateSettings(it) },
+                                                onBackClick = { viewModel.hideSettings() },
+                                                onExportClick = {
+                                                    val file = com.openhealth.openhealth.utils.DataExporter.exportToCsv(this@MainActivity, healthData)
+                                                    file?.let { com.openhealth.openhealth.utils.DataExporter.shareFile(this@MainActivity, it) }
+                                                }
+                                            )
+                                        }
                                     }
                                     showAiInsights -> {
-                                        // Calculate readiness for AI screen
-                                        val hrv = healthData.heartRateVariability.rmssdMs ?: 30.0
-                                        val sleepH = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
-                                        val rhr = healthData.restingHeartRate.bpm ?: 70
-                                        val hrvS = ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0) * 0.40
-                                        val sleepS = (if (sleepH >= 8) 100.0 else if (sleepH >= 7) 85.0 else if (sleepH >= 6) 65.0 else if (sleepH >= 5) 45.0 else 20.0) * 0.25
-                                        val rhrS = (if (rhr <= 55) 90.0 else if (rhr <= 60) 80.0 else if (rhr <= 65) 70.0 else if (rhr <= 70) 55.0 else 30.0) * 0.10
-                                        val aiReadiness = (hrvS + sleepS + rhrS + 50.0 * 0.25).toInt().coerceIn(5, 100)
-                                        AiInsightsScreen(
-                                            insightText = aiInsightText,
-                                            isLoading = aiInsightLoading,
-                                            error = aiInsightError,
-                                            providerName = settings.aiProvider.name,
-                                            readinessScore = aiReadiness,
-                                            onRefreshClick = { viewModel.refreshAiInsight() },
-                                            onBackClick = { viewModel.hideAiInsights() }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            // Calculate readiness for AI screen
+                                            val hrv = healthData.heartRateVariability.rmssdMs ?: 30.0
+                                            val sleepH = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+                                            val rhr = healthData.restingHeartRate.bpm ?: 70
+                                            val hrvS = ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0) * 0.40
+                                            val sleepS = (if (sleepH >= 8) 100.0 else if (sleepH >= 7) 85.0 else if (sleepH >= 6) 65.0 else if (sleepH >= 5) 45.0 else 20.0) * 0.25
+                                            val rhrS = (if (rhr <= 55) 90.0 else if (rhr <= 60) 80.0 else if (rhr <= 65) 70.0 else if (rhr <= 70) 55.0 else 30.0) * 0.10
+                                            val aiReadiness = (hrvS + sleepS + rhrS + 50.0 * 0.25).toInt().coerceIn(5, 100)
+                                            AiInsightsScreen(
+                                                insightText = aiInsightText,
+                                                isLoading = aiInsightLoading,
+                                                error = aiInsightError,
+                                                providerName = settings.aiProvider.name,
+                                                readinessScore = aiReadiness,
+                                                onRefreshClick = { viewModel.refreshAiInsight() },
+                                                onBackClick = { viewModel.hideAiInsights() }
+                                            )
+                                        }
                                     }
                                     showStressDetail -> {
-                                        StressDetailScreen(
-                                            healthData = healthData,
-                                            onBackClick = { viewModel.hideStressDetail() },
-                                            onStartExercise = {
-                                                viewModel.hideStressDetail()
-                                                viewModel.selectMetric(HealthViewModel.MetricType.EXERCISE)
-                                            }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            StressDetailScreen(
+                                                healthData = healthData,
+                                                onBackClick = { viewModel.hideStressDetail() },
+                                                onStartExercise = {
+                                                    viewModel.hideStressDetail()
+                                                    viewModel.selectMetric(HealthViewModel.MetricType.EXERCISE)
+                                                }
+                                            )
+                                        }
                                     }
                                     showReports -> {
-                                        ReportsScreen(
-                                            reportsData = reportsData,
-                                            onBackClick = { viewModel.hideReports() },
-                                            onMetricClick = { metricType ->
-                                                viewModel.hideReports()
-                                                viewModel.selectMetric(metricType)
-                                            }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            ReportsScreen(
+                                                reportsData = reportsData,
+                                                onBackClick = { viewModel.hideReports() },
+                                                onMetricClick = { metricType ->
+                                                    viewModel.hideReports()
+                                                    viewModel.selectMetric(metricType)
+                                                }
+                                            )
+                                        }
                                     }
                                     selectedMetric != null -> {
-                                        // Show detail screen
-                                        MetricDetailScreen(
-                                            metricType = selectedMetric!!,
-                                            metricHistory = metricHistory,
-                                            isLoading = isMetricDetailLoading,
-                                            onBackClick = { viewModel.clearSelectedMetric() },
-                                            onHomeClick = { viewModel.clearSelectedMetric() },
-                                            onDateChange = { _ -> },
-                                            stepsGoal = settings.stepsGoal,
-                                            weightTargetKg = settings.weightTargetKg,
-                                            exerciseSessions = healthData.exercise.sessions,
-                                            healthData = healthData,
-                                            onSessionClick = { viewModel.showWorkoutDetail(it) }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            // Show detail screen
+                                            MetricDetailScreen(
+                                                metricType = selectedMetric!!,
+                                                metricHistory = metricHistory,
+                                                isLoading = isMetricDetailLoading,
+                                                onBackClick = { viewModel.clearSelectedMetric() },
+                                                onHomeClick = { viewModel.clearSelectedMetric() },
+                                                onDateChange = { _ -> },
+                                                stepsGoal = settings.stepsGoal,
+                                                weightTargetKg = settings.weightTargetKg,
+                                                exerciseSessions = healthData.exercise.sessions,
+                                                healthData = healthData,
+                                                onSessionClick = { viewModel.showWorkoutDetail(it) }
+                                            )
+                                        }
                                     }
                                     showReadinessDetail -> {
-                                        ReadinessDetailScreen(
-                                            healthData = healthData,
-                                            onBackClick = { viewModel.hideReadinessDetail() },
-                                            onMetricClick = { metricType ->
-                                                viewModel.hideReadinessDetail()
-                                                viewModel.selectMetricFromReadiness(metricType)
-                                            },
-                                            onStartSession = {
-                                                viewModel.hideReadinessDetail()
-                                                viewModel.selectMetricFromReadiness(HealthViewModel.MetricType.EXERCISE)
-                                            }
-                                        )
+                                        AnimatedVisibility(
+                                            visible = true,
+                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
+                                        ) {
+                                            ReadinessDetailScreen(
+                                                healthData = healthData,
+                                                onBackClick = { viewModel.hideReadinessDetail() },
+                                                onMetricClick = { metricType ->
+                                                    viewModel.hideReadinessDetail()
+                                                    viewModel.selectMetricFromReadiness(metricType)
+                                                },
+                                                onStartSession = {
+                                                    viewModel.hideReadinessDetail()
+                                                    viewModel.selectMetricFromReadiness(HealthViewModel.MetricType.EXERCISE)
+                                                }
+                                            )
+                                        }
                                     }
                                     else -> {
                                         // Show dashboard with restored scroll position
