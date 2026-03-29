@@ -2298,7 +2298,7 @@ fun MetricDetailScreen(
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(50))
                                                 .background(c.surfaceHighest)
-                                                .clickable { }
+                                                .clickable { onBackClick() }
                                                 .padding(vertical = 14.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
