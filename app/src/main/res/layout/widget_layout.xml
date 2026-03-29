@@ -2,10 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF000000"
+    android:background="@drawable/widget_background"
     android:gravity="center"
     android:orientation="horizontal"
-    android:padding="12dp">
+    android:padding="16dp">
 
     <!-- Steps -->
     <LinearLayout
@@ -20,16 +20,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="--"
-            android:textColor="#FF00B4D8"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textColor="#FFB89FFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="steps"
-            android:textColor="#FF8E8E93"
-            android:textSize="12sp" />
+            android:text="STEPS"
+            android:textColor="#FF737373"
+            android:textSize="9sp"
+            android:letterSpacing="0.1"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Heart Rate -->
@@ -45,16 +48,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="--"
-            android:textColor="#FFFF6B6B"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textColor="#FFFF51FA"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="bpm"
-            android:textColor="#FF8E8E93"
-            android:textSize="12sp" />
+            android:text="BPM"
+            android:textColor="#FF737373"
+            android:textSize="9sp"
+            android:letterSpacing="0.1"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Sleep -->
@@ -70,16 +76,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="--"
-            android:textColor="#FF9B59B6"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textColor="#FFAE89FF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="sleep"
-            android:textColor="#FF8E8E93"
-            android:textSize="12sp" />
+            android:text="SLEEP"
+            android:textColor="#FF737373"
+            android:textSize="9sp"
+            android:letterSpacing="0.1"
+            android:textStyle="bold" />
     </LinearLayout>
 
 </LinearLayout>
