@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Bolt
@@ -330,36 +332,32 @@ fun SettingsScreen(
             }
 
             // ═══════════════════════════════════════════
-            // DASHBOARD METRICS
+            // DASHBOARD CARDS
             // ═══════════════════════════════════════════
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                SectionHeader("Dashboard Metrics")
+                SectionHeader("Dashboard Cards")
             }
 
-            // Metric toggles — simplified pill style
-            val unsupportedMetrics = setOf(MetricType.SPEED, MetricType.POWER, MetricType.HYDRATION, MetricType.MINDFULNESS)
-            val groupedMetrics = MetricType.values()
-                .filter { it !in unsupportedMetrics }
-                .groupBy { it.category() }
-
-            groupedMetrics.forEach { (category, metrics) ->
-                item {
-                    Text(
-                        text = category,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = c.outline,
-                        modifier = Modifier.padding(top = 8.dp, start = 4.dp)
-                    )
-                }
-
-                items(metrics) { metric ->
-                    MetricTogglePill(
-                        label = metric.displayName(),
-                        isEnabled = getMetricEnabled(settings, metric),
-                        onToggle = { onSettingsChanged(setMetricEnabled(settings, metric, it)) }
-                    )
-                }
+            item {
+                FeatureTogglePill(
+                    icon = Icons.Default.Restaurant,
+                    iconColor = c.tertiary,
+                    title = "Nutrition",
+                    subtitle = "Track food intake on dashboard",
+                    isEnabled = settings.showNutrition,
+                    onToggle = { onSettingsChanged(settings.copy(showNutrition = it)) }
+                )
+            }
+            item {
+                FeatureTogglePill(
+                    icon = Icons.Default.WaterDrop,
+                    iconColor = Color(0xFF4DABFF),
+                    title = "Hydration",
+                    subtitle = "Track water intake on dashboard",
+                    isEnabled = settings.showHydration,
+                    onToggle = { onSettingsChanged(settings.copy(showHydration = it)) }
+                )
             }
 
             // ═══════════════════════════════════════════
