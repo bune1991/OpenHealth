@@ -325,6 +325,9 @@ fun SettingsScreen(
             item {
                 GoalInputPill("Weight Target", settings.weightTargetKg.toString(), "kg", CardWeight) { onSettingsChanged(settings.copy(weightTargetKg = it.toFloatOrNull() ?: 70.0f)) }
             }
+            item {
+                GoalInputPill("Hydration Goal", (settings.hydrationGoalMl / 1000f).toString(), "L", Color(0xFF4DABFF)) { onSettingsChanged(settings.copy(hydrationGoalMl = ((it.toFloatOrNull() ?: 2.5f) * 1000).toInt())) }
+            }
 
             // ═══════════════════════════════════════════
             // DASHBOARD METRICS

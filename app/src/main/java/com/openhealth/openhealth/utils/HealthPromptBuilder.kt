@@ -112,7 +112,7 @@ object HealthPromptBuilder {
 
         // Hydration
         if (hydrationMl > 0) {
-            sb.appendLine("Hydration: ${hydrationMl}ml (${String.format("%.1f", hydrationMl / 1000.0)}L) of 2.5L goal (${(hydrationMl * 100 / 2500)}%)")
+            sb.appendLine("Hydration: ${hydrationMl}ml (${String.format("%.1f", hydrationMl / 1000.0)}L)")
         }
 
         // Blood Pressure

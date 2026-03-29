@@ -214,7 +214,7 @@ class MainActivity : ComponentActivity() {
                                             HydrationScreen(
                                                 hydrationEntries = hydrationEntries,
                                                 dailyTotal = hydrationDailyTotal,
-                                                goal = 2500,
+                                                goal = settings.hydrationGoalMl,
                                                 onAddWater = { viewModel.addWaterEntry(it) },
                                                 onRemoveEntry = { viewModel.removeWaterEntry(it) },
                                                 onClearAll = { viewModel.clearAllWaterEntries() },
