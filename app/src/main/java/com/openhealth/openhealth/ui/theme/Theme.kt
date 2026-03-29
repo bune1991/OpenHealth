@@ -318,6 +318,177 @@ private val ForestColorScheme = darkColorScheme(
 )
 
 // ═══════════════════════════════════════════════════════════
+// Solar Dark (warm dark) — Orange / gold on deep brown
+// ═══════════════════════════════════════════════════════════
+
+val SolarDarkAppColors = AppColorScheme(
+    background = Color(0xFF1A1000),
+    surfaceLow = Color(0xFF2A1A00),
+    surface = Color(0xFF332200),
+    surfaceHigh = Color(0xFF3D2A00),
+    surfaceHighest = Color(0xFF4D3300),
+    surfaceVariant = Color(0xFF3D2A00),
+    cardBackground = Color(0xFF332200),
+    primary = Color(0xFFFF8C00),
+    primaryDim = Color(0xFFCC7000),
+    primaryContainer = Color(0xFFCC7000),
+    onPrimary = Color(0xFF1A0A00),
+    secondary = Color(0xFFFFD700),
+    onSecondary = Color(0xFF1A1400),
+    secondaryContainer = Color(0xFFCC8800),
+    tertiary = Color(0xFFFF6B35),
+    onSurface = Color(0xFFFFF0D0),
+    onSurfaceVariant = Color(0xFFCCAA77),
+    outline = Color(0xFF997744),
+    success = SuccessGreen,
+    warning = WarningOrange,
+    error = ErrorRed,
+    textPrimary = Color(0xFFFFF0D0),
+    textSecondary = Color(0xFFCCAA77),
+    textTertiary = Color(0xFF997744),
+    fabColor = Color(0xFF3D2A00),
+    isDark = true
+)
+
+private val SolarDarkColorScheme = darkColorScheme(
+    primary = Color(0xFFFF8C00),
+    onPrimary = Color(0xFF1A0A00),
+    primaryContainer = Color(0xFFCC7000),
+    onPrimaryContainer = Color(0xFFFFF0D0),
+    secondary = Color(0xFFFFD700),
+    onSecondary = Color(0xFF1A1400),
+    secondaryContainer = Color(0xFFCC8800),
+    onSecondaryContainer = Color(0xFFFFF0D0),
+    tertiary = Color(0xFFFF6B35),
+    background = Color(0xFF1A1000),
+    onBackground = Color(0xFFFFF0D0),
+    surface = Color(0xFF332200),
+    onSurface = Color(0xFFFFF0D0),
+    surfaceVariant = Color(0xFF3D2A00),
+    onSurfaceVariant = Color(0xFFCCAA77),
+    error = ErrorRed,
+    onError = Color(0xFFFFF0D0),
+    outline = Color(0xFF997744),
+    outlineVariant = Color(0xFF3A2800),
+    surfaceContainer = Color(0xFF332200),
+    surfaceContainerHigh = Color(0xFF3D2A00),
+    surfaceContainerHighest = Color(0xFF4D3300),
+    surfaceContainerLow = Color(0xFF2A1A00),
+    surfaceContainerLowest = Color(0xFF1A1000),
+    surfaceBright = Color(0xFF5D4400)
+)
+
+// ═══════════════════════════════════════════════════════════
+// Ocean Light (cool light) — Blue / cyan on light blue
+// ═══════════════════════════════════════════════════════════
+
+val OceanLightAppColors = AppColorScheme(
+    background = Color(0xFFF0F8FF),
+    surfaceLow = Color(0xFFE0F0FF),
+    surface = Color(0xFFFFFFFF),
+    surfaceHigh = Color(0xFFD0E8FF),
+    surfaceHighest = Color(0xFFC0D8F0),
+    surfaceVariant = Color(0xFFD0E8FF),
+    cardBackground = Color(0xFFFFFFFF),
+    primary = Color(0xFF0077B6),
+    primaryDim = Color(0xFF005580),
+    primaryContainer = Color(0xFF005580),
+    onPrimary = Color.White,
+    secondary = Color(0xFF00B4D8),
+    onSecondary = Color(0xFF003040),
+    secondaryContainer = Color(0xFF006080),
+    tertiary = Color(0xFF0096C7),
+    onSurface = Color(0xFF001830),
+    onSurfaceVariant = Color(0xFF406080),
+    outline = Color(0xFF8099AA),
+    success = SuccessGreen,
+    warning = WarningOrange,
+    error = ErrorRed,
+    textPrimary = Color(0xFF001830),
+    textSecondary = Color(0xFF406080),
+    textTertiary = Color(0xFF8099AA),
+    fabColor = Color(0xFFD0E8FF),
+    isDark = false
+)
+
+private val OceanLightColorScheme = lightColorScheme(
+    primary = Color(0xFF0077B6),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFD0E8FF),
+    onPrimaryContainer = Color(0xFF001830),
+    secondary = Color(0xFF00B4D8),
+    onSecondary = Color(0xFF003040),
+    secondaryContainer = Color(0xFF006080),
+    onSecondaryContainer = Color(0xFF001830),
+    tertiary = Color(0xFF0096C7),
+    background = Color(0xFFF0F8FF),
+    onBackground = Color(0xFF001830),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF001830),
+    surfaceVariant = Color(0xFFD0E8FF),
+    onSurfaceVariant = Color(0xFF406080),
+    error = ErrorRed,
+    onError = Color.White,
+    outline = Color(0xFF8099AA),
+    outlineVariant = Color(0xFFB0C8DD)
+)
+
+// ═══════════════════════════════════════════════════════════
+// Forest Light (nature light) — Green / mint on light green
+// ═══════════════════════════════════════════════════════════
+
+val ForestLightAppColors = AppColorScheme(
+    background = Color(0xFFF0FFF0),
+    surfaceLow = Color(0xFFE0FFE0),
+    surface = Color(0xFFFFFFFF),
+    surfaceHigh = Color(0xFFD0F0D0),
+    surfaceHighest = Color(0xFFC0E8C0),
+    surfaceVariant = Color(0xFFD0F0D0),
+    cardBackground = Color(0xFFFFFFFF),
+    primary = Color(0xFF10B981),
+    primaryDim = Color(0xFF059669),
+    primaryContainer = Color(0xFF059669),
+    onPrimary = Color.White,
+    secondary = Color(0xFF34D399),
+    onSecondary = Color(0xFF003020),
+    secondaryContainer = Color(0xFF06A070),
+    tertiary = Color(0xFF6EE7B7),
+    onSurface = Color(0xFF0A1F0A),
+    onSurfaceVariant = Color(0xFF406040),
+    outline = Color(0xFF80A080),
+    success = SuccessGreen,
+    warning = WarningOrange,
+    error = ErrorRed,
+    textPrimary = Color(0xFF0A1F0A),
+    textSecondary = Color(0xFF406040),
+    textTertiary = Color(0xFF80A080),
+    fabColor = Color(0xFFD0F0D0),
+    isDark = false
+)
+
+private val ForestLightColorScheme = lightColorScheme(
+    primary = Color(0xFF10B981),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFD0F0D0),
+    onPrimaryContainer = Color(0xFF0A1F0A),
+    secondary = Color(0xFF34D399),
+    onSecondary = Color(0xFF003020),
+    secondaryContainer = Color(0xFF06A070),
+    onSecondaryContainer = Color(0xFF0A1F0A),
+    tertiary = Color(0xFF6EE7B7),
+    background = Color(0xFFF0FFF0),
+    onBackground = Color(0xFF0A1F0A),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF0A1F0A),
+    surfaceVariant = Color(0xFFD0F0D0),
+    onSurfaceVariant = Color(0xFF406040),
+    error = ErrorRed,
+    onError = Color.White,
+    outline = Color(0xFF80A080),
+    outlineVariant = Color(0xFFB0D8B0)
+)
+
+// ═══════════════════════════════════════════════════════════
 // Light (clean light) — Indigo on neutral white
 // ═══════════════════════════════════════════════════════════
 
@@ -381,6 +552,9 @@ fun OpenHealthTheme(
         "ocean" -> Triple(OceanColorScheme, OceanAppColors, true)
         "forest" -> Triple(ForestColorScheme, ForestAppColors, true)
         "light" -> Triple(LightColorScheme, LightAppColors, false)
+        "solar_dark" -> Triple(SolarDarkColorScheme, SolarDarkAppColors, true)
+        "ocean_light" -> Triple(OceanLightColorScheme, OceanLightAppColors, false)
+        "forest_light" -> Triple(ForestLightColorScheme, ForestLightAppColors, false)
         else -> Triple(DarkColorScheme, DarkAppColors, true) // nocturne
     }
 

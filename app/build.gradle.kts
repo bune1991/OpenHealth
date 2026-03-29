@@ -31,8 +31,8 @@ android {
         applicationId = "com.openhealth.openhealth"
         minSdk = 28
         targetSdk = 34
-        versionCode = 5
-        versionName = "1.5.0"
+        versionCode = 6
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

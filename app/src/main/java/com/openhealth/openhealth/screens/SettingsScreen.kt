@@ -266,6 +266,7 @@ fun SettingsScreen(
                 SectionHeader("Visual Frequency")
             }
 
+            // Row 1: Dark themes
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -278,10 +279,10 @@ fun SettingsScreen(
                         onClick = { onSettingsChanged(settings.copy(themeName = "nocturne")) }
                     )
                     ThemeCircle(
-                        label = "Solar",
-                        colors = listOf(Color(0xFFFF8C00), Color(0xFFFFD700)),
-                        isSelected = settings.themeName == "solar",
-                        onClick = { onSettingsChanged(settings.copy(themeName = "solar")) }
+                        label = "Solar Dark",
+                        colors = listOf(Color(0xFFFF8C00), Color(0xFF3D2A00), Color(0xFF1A1000)),
+                        isSelected = settings.themeName == "solar_dark",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "solar_dark")) }
                     )
                     ThemeCircle(
                         label = "Ocean",
@@ -295,11 +296,37 @@ fun SettingsScreen(
                         isSelected = settings.themeName == "forest",
                         onClick = { onSettingsChanged(settings.copy(themeName = "forest")) }
                     )
+                }
+            }
+            // Row 2: Light themes
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
                     ThemeCircle(
                         label = "Light",
                         colors = listOf(Color(0xFFB89FFF), Color(0xFFF5F5F5)),
                         isSelected = settings.themeName == "light",
                         onClick = { onSettingsChanged(settings.copy(themeName = "light")) }
+                    )
+                    ThemeCircle(
+                        label = "Solar",
+                        colors = listOf(Color(0xFFFF8C00), Color(0xFFFFD700)),
+                        isSelected = settings.themeName == "solar",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "solar")) }
+                    )
+                    ThemeCircle(
+                        label = "Ocean Lt",
+                        colors = listOf(Color(0xFF00B4D8), Color(0xFFF0F8FF)),
+                        isSelected = settings.themeName == "ocean_light",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "ocean_light")) }
+                    )
+                    ThemeCircle(
+                        label = "Forest Lt",
+                        colors = listOf(Color(0xFF34D399), Color(0xFFF0FFF0)),
+                        isSelected = settings.themeName == "forest_light",
+                        onClick = { onSettingsChanged(settings.copy(themeName = "forest_light")) }
                     )
                 }
             }
