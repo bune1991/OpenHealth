@@ -3818,16 +3818,12 @@ private fun SleepStagesChart(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Legend — 2x2 grid matching Stitch
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SleepStageLegendItem(color = c.outline, label = "Awake", value = sleepStages.awakeHours, percent = (awakePercent * 100).roundToInt())
-                    SleepStageLegendItem(color = c.primary, label = "Deep", value = sleepStages.deepSleepHours, percent = (deepPercent * 100).roundToInt())
-                }
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SleepStageLegendItem(color = c.tertiary, label = "Light", value = sleepStages.lightSleepHours, percent = (lightPercent * 100).roundToInt())
-                    SleepStageLegendItem(color = c.secondary, label = "REM", value = sleepStages.remSleepHours, percent = (remPercent * 100).roundToInt())
-                }
+            // Legend — clean 4 rows
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SleepStageLegendItem(color = c.outline, label = "Awake", value = sleepStages.awakeHours, percent = (awakePercent * 100).roundToInt())
+                SleepStageLegendItem(color = c.tertiary, label = "Light", value = sleepStages.lightSleepHours, percent = (lightPercent * 100).roundToInt())
+                SleepStageLegendItem(color = c.primary, label = "Deep", value = sleepStages.deepSleepHours, percent = (deepPercent * 100).roundToInt())
+                SleepStageLegendItem(color = c.secondary, label = "REM", value = sleepStages.remSleepHours, percent = (remPercent * 100).roundToInt())
             }
         }
     }
