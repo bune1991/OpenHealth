@@ -39,8 +39,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -183,10 +187,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                     showWorkoutDetail && selectedWorkoutSession != null -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             WorkoutDetailScreen(
                                                 session = selectedWorkoutSession!!,
                                                 healthData = healthData,
@@ -195,10 +196,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     showPerformance -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             PerformanceScreen(
                                                 healthData = healthData,
                                                 settings = settings,
@@ -212,10 +210,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     showHydration -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             HydrationScreen(
                                                 hydrationEntries = hydrationEntries,
                                                 dailyTotal = hydrationDailyTotal,
@@ -228,10 +223,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     showSettings -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             // Show settings screen
                                             SettingsScreen(
                                                 settings = settings,
@@ -245,10 +237,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     showAiInsights -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             // Calculate readiness for AI screen
                                             val hrv = healthData.heartRateVariability.rmssdMs ?: 30.0
                                             val sleepH = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
@@ -269,10 +258,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     showStressDetail -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             StressDetailScreen(
                                                 healthData = healthData,
                                                 onBackClick = { viewModel.hideStressDetail() },
@@ -284,10 +270,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     showReports -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             ReportsScreen(
                                                 reportsData = reportsData,
                                                 onBackClick = { viewModel.hideReports() },
@@ -299,10 +282,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     selectedMetric != null -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             // Show detail screen
                                             MetricDetailScreen(
                                                 metricType = selectedMetric!!,
@@ -320,10 +300,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     showReadinessDetail -> {
-                                        AnimatedVisibility(
-                                            visible = true,
-                                            enter = fadeIn(tween(250)) + slideInHorizontally { it / 4 }
-                                        ) {
+                                        SlideInScreen {
                                             ReadinessDetailScreen(
                                                 healthData = healthData,
                                                 onBackClick = { viewModel.hideReadinessDetail() },
@@ -573,5 +550,17 @@ fun HealthConnectNotAvailableScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SlideInScreen(content: @Composable () -> Unit) {
+    var visible by remember { androidx.compose.runtime.mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(200)) + slideInHorizontally { it / 3 }
+    ) {
+        content()
     }
 }
