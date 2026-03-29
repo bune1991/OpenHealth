@@ -13,6 +13,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -3280,9 +3282,10 @@ private fun FloatingBottomNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .pointerInput(Unit) { awaitPointerEventScope { while (true) { awaitPointerEvent() } } } // Block touch passthrough
             .padding(horizontal = 24.dp, vertical = 16.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(c.surfaceLow.copy(alpha = 0.85f))
+            .background(c.surfaceLow.copy(alpha = 0.95f))
             .padding(horizontal = 8.dp, vertical = 8.dp)
     ) {
         Row(
