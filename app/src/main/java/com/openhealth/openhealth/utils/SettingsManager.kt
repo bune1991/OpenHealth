@@ -2,6 +2,8 @@ package com.openhealth.openhealth.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.openhealth.openhealth.model.SettingsData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +14,18 @@ class SettingsManager private constructor(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(
         PREFS_NAME,
         Context.MODE_PRIVATE
+    )
+
+    private val masterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
+
+    private val securePrefs: SharedPreferences = EncryptedSharedPreferences.create(
+        context,
+        "openhealth_secure",
+        masterKey,
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
     private val _settings = MutableStateFlow(loadSettings())
@@ -107,13 +121,13 @@ class SettingsManager private constructor(context: Context) {
         return SettingsData(
             // AI Insights
             aiProvider = try { com.openhealth.openhealth.model.AiProvider.valueOf(prefs.getString(KEY_AI_PROVIDER, "NONE") ?: "NONE") } catch (e: Exception) { com.openhealth.openhealth.model.AiProvider.NONE },
-            aiApiKey = prefs.getString(KEY_AI_API_KEY, "") ?: "",
-            aiClaudeKey = prefs.getString(KEY_AI_CLAUDE_KEY, "") ?: "",
-            aiGeminiKey = prefs.getString(KEY_AI_GEMINI_KEY, "") ?: "",
-            aiChatgptKey = prefs.getString(KEY_AI_CHATGPT_KEY, "") ?: "",
-            aiCustomKey = prefs.getString(KEY_AI_CUSTOM_KEY, "") ?: "",
-            aiCustomUrl = prefs.getString(KEY_AI_CUSTOM_URL, "") ?: "",
-            aiCustomModel = prefs.getString(KEY_AI_CUSTOM_MODEL, "") ?: "",
+            aiApiKey = securePrefs.getString(KEY_AI_API_KEY, "") ?: "",
+            aiClaudeKey = securePrefs.getString(KEY_AI_CLAUDE_KEY, "") ?: "",
+            aiGeminiKey = securePrefs.getString(KEY_AI_GEMINI_KEY, "") ?: "",
+            aiChatgptKey = securePrefs.getString(KEY_AI_CHATGPT_KEY, "") ?: "",
+            aiCustomKey = securePrefs.getString(KEY_AI_CUSTOM_KEY, "") ?: "",
+            aiCustomUrl = securePrefs.getString(KEY_AI_CUSTOM_URL, "") ?: "",
+            aiCustomModel = securePrefs.getString(KEY_AI_CUSTOM_MODEL, "") ?: "",
             // App State
             onboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false),
             // Theme
@@ -179,9 +193,8 @@ class SettingsManager private constructor(context: Context) {
     }
 
     private fun saveSettings(settings: SettingsData) {
-        prefs.edit().apply {
-            // AI Insights
-            putString(KEY_AI_PROVIDER, settings.aiProvider.name)
+        // Save sensitive API keys to encrypted storage
+        securePrefs.edit().apply {
             putString(KEY_AI_API_KEY, settings.aiApiKey)
             putString(KEY_AI_CLAUDE_KEY, settings.aiClaudeKey)
             putString(KEY_AI_GEMINI_KEY, settings.aiGeminiKey)
@@ -189,6 +202,12 @@ class SettingsManager private constructor(context: Context) {
             putString(KEY_AI_CUSTOM_KEY, settings.aiCustomKey)
             putString(KEY_AI_CUSTOM_URL, settings.aiCustomUrl)
             putString(KEY_AI_CUSTOM_MODEL, settings.aiCustomModel)
+            apply()
+        }
+
+        prefs.edit().apply {
+            // AI Provider (not sensitive — just an enum name)
+            putString(KEY_AI_PROVIDER, settings.aiProvider.name)
             // App State
             putBoolean(KEY_ONBOARDING_COMPLETED, settings.onboardingCompleted)
             // Theme

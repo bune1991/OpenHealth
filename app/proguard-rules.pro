@@ -19,3 +19,20 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep Health Connect classes
+-keep class androidx.health.connect.** { *; }
+
+# Keep OkHttp
+-dontwarn okhttp3.**
+-keep class okhttp3.** { *; }
+
+# Keep JSON parsing
+-keep class org.json.** { *; }
+
+# Keep data classes
+-keep class com.openhealth.openhealth.model.** { *; }
+
+# Keep Compose
+-keep class androidx.compose.** { *; }
+-dontwarn androidx.compose.**
