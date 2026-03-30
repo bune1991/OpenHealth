@@ -4,29 +4,27 @@ import com.openhealth.openhealth.model.HealthData
 
 object HealthPromptBuilder {
 
-    fun buildDailySummaryPrompt(data: HealthData, hydrationMl: Int = 0): String {
+    fun buildDailySummaryPrompt(
+        data: HealthData,
+        hydrationMl: Int = 0,
+        weeklySteps: List<Pair<String, Long>> = emptyList(),
+        readinessScore: Int = 0,
+        stressLevel: Int = 0
+    ): String {
         val sb = StringBuilder()
-        sb.appendLine("You are a personal health analyst. Analyze the following daily health data and provide personalized insights. Be concise, actionable, and encouraging. Use simple language that anyone can understand.")
+        sb.appendLine("You are an elite personal health coach and sports scientist. Analyze my health data and provide expert-level insights that rival WHOOP and Bevel premium analytics.")
         sb.appendLine()
-        sb.appendLine("IMPORTANT: The user may have an irregular sleep schedule (night owl). Do NOT assume they just woke up or that it's morning. Base your advice on the actual data, not time assumptions.")
+        sb.appendLine("IMPORTANT CONTEXT:")
+        sb.appendLine("- I may have an irregular sleep schedule (night owl). Don't assume morning routines.")
+        sb.appendLine("- Be specific with numbers from my data. Don't be generic.")
+        sb.appendLine("- Compare today vs my recent trends when possible.")
         sb.appendLine()
 
-        // Calculate and include readiness/stress
-        val hrv = data.heartRateVariability.rmssdMs ?: 0.0
-        val stressLevel = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
-        val hrvScore = ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0) * 0.40
-        val sleepHours = data.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
-        val sleepScore = (if (sleepHours >= 8) 100.0 else if (sleepHours >= 7) 85.0 else if (sleepHours >= 6) 65.0 else if (sleepHours >= 5) 45.0 else 20.0) * 0.25
-        val rhr = data.restingHeartRate.bpm ?: 70
-        val rhrScore = (if (rhr <= 55) 90.0 else if (rhr <= 60) 80.0 else if (rhr <= 65) 70.0 else if (rhr <= 70) 55.0 else 30.0) * 0.10
-        val readinessScore = (hrvScore + sleepScore + rhrScore + 50.0 * 0.25).toInt().coerceIn(5, 100)
-
-        sb.appendLine("=== Recovery & Stress ===")
+        sb.appendLine("=== RECOVERY STATUS ===")
         sb.appendLine("Readiness Score: $readinessScore/100")
         sb.appendLine("Stress Level: $stressLevel/100")
         sb.appendLine()
-        sb.appendLine("=== Today's Health Data ===")
-        sb.appendLine()
+        sb.appendLine("=== TODAY'S HEALTH DATA ===")
 
         // Steps
         if (data.steps.count > 0) {
@@ -110,11 +108,6 @@ object HealthPromptBuilder {
             }
         }
 
-        // Hydration
-        if (hydrationMl > 0) {
-            sb.appendLine("Hydration: ${hydrationMl}ml (${String.format("%.1f", hydrationMl / 1000.0)}L)")
-        }
-
         // Blood Pressure
         data.bloodPressure.systolicMmHg?.let {
             sb.appendLine("Blood Pressure: ${String.format("%.0f", it)}/${String.format("%.0f", data.bloodPressure.diastolicMmHg)} mmHg")
@@ -125,14 +118,41 @@ object HealthPromptBuilder {
             sb.appendLine("Blood Glucose: ${String.format("%.0f", it)} mg/dL")
         }
 
+        // Weekly history
+        if (weeklySteps.isNotEmpty()) {
+            sb.appendLine()
+            sb.appendLine("=== 7-DAY HISTORY ===")
+            weeklySteps.forEach { (date, steps) ->
+                sb.appendLine("$date: $steps steps")
+            }
+        }
+
+        // Hydration
+        if (hydrationMl > 0) {
+            sb.appendLine()
+            sb.appendLine("Hydration today: ${hydrationMl}ml (${String.format("%.1f", hydrationMl / 1000.0)}L)")
+        }
+
         sb.appendLine()
-        sb.appendLine("Based on this data, provide:")
-        sb.appendLine("1. **Overall Assessment** - How is my health today? (2-3 sentences)")
-        sb.appendLine("2. **Key Observations** - What stands out? (bullet points)")
-        sb.appendLine("3. **Recommendations** - What should I do? (bullet points)")
-        sb.appendLine("4. **Focus for Today** - One specific thing to prioritize")
+        sb.appendLine("Based on ALL this data, provide a comprehensive analysis with these sections:")
         sb.appendLine()
-        sb.appendLine("Keep your response under 300 words. Be specific with numbers from my data.")
+        sb.appendLine("1. **Overall Recovery Assessment** - How recovered am I? Rate my readiness and explain why. (2-3 sentences)")
+        sb.appendLine()
+        sb.appendLine("2. **Key Observations** - What stands out in my data today? Compare to my weekly trends. (bullet points)")
+        sb.appendLine()
+        sb.appendLine("3. **Recovery Prediction** - Based on my current HRV and sleep trends, when will I be at peak recovery? Give a specific time estimate.")
+        sb.appendLine()
+        sb.appendLine("4. **Workout Recommendation** - Based on my readiness score of $readinessScore, what type of workout should I do TODAY? Be specific (e.g., '30-minute zone 2 run' or 'rest day with light stretching'). Include intensity level.")
+        sb.appendLine()
+        sb.appendLine("5. **Sleep Coaching** - Based on my recent sleep data, give ONE specific actionable tip to improve my sleep quality.")
+        sb.appendLine()
+        sb.appendLine("6. **Nutrition Insight** - Based on my calorie intake vs expenditure, am I in surplus or deficit? Give a specific meal suggestion.")
+        sb.appendLine()
+        sb.appendLine("7. **Hydration Status** - Rate my hydration and suggest adjustments.")
+        sb.appendLine()
+        sb.appendLine("8. **Focus for Today** - One single priority action that will have the biggest impact on my health today.")
+        sb.appendLine()
+        sb.appendLine("Keep each section concise. Use specific numbers from my data. Total response under 500 words.")
 
         return sb.toString()
     }

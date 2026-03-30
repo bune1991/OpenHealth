@@ -616,7 +616,25 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
             _aiInsightLoading.value = true
             _aiInsightError.value = null
 
-            val prompt = HealthPromptBuilder.buildDailySummaryPrompt(_healthData.value, _hydrationDailyTotal.value)
+            val stepsHistory = _stepsCalendarData.value.takeLast(7).map {
+                it.date.toString() to it.value.toLong()
+            }
+            val hrv = _healthData.value.heartRateVariability.rmssdMs ?: 30.0
+            val hrvScore = ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0) * 0.40
+            val sleepH = _healthData.value.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+            val sleepScore = (if (sleepH >= 8) 100.0 else if (sleepH >= 7) 85.0 else if (sleepH >= 6) 65.0 else if (sleepH >= 5) 45.0 else 20.0) * 0.25
+            val rhr = _healthData.value.restingHeartRate.bpm ?: 70
+            val rhrScore = (if (rhr <= 55) 90.0 else if (rhr <= 60) 80.0 else if (rhr <= 65) 70.0 else if (rhr <= 70) 55.0 else 30.0) * 0.10
+            val readiness = (hrvScore + sleepScore + rhrScore + 50.0 * 0.25).toInt().coerceIn(5, 100)
+            val stress = ((80.0 - hrv.coerceIn(10.0, 80.0)) / 70.0 * 100).toInt().coerceIn(0, 100)
+
+            val prompt = HealthPromptBuilder.buildDailySummaryPrompt(
+                _healthData.value,
+                _hydrationDailyTotal.value,
+                stepsHistory,
+                readiness,
+                stress
+            )
             Log.d("AiInsights", "Prompt length: ${prompt.length} chars")
 
             val result = aiHealthService.getInsights(
