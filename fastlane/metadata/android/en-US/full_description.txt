@@ -1,0 +1,38 @@
+OpenHealth is a beautiful, open-source health dashboard that reads your data from Android Health Connect — and keeps it completely private.
+
+COMPREHENSIVE HEALTH DATA
+• Steps, distance, floors climbed
+• Heart rate, resting heart rate, HRV
+• Sleep sessions with stage breakdown (Awake, Light, Deep, REM)
+• Blood oxygen (SpO2), respiratory rate
+• Blood pressure, blood glucose, body temperature
+• Body composition (weight, body fat, BMR, bone mass, water)
+• Calories burned, nutrition & macros
+• Exercise sessions with type detection
+
+SMART INSIGHTS
+• Daily Readiness Score based on HRV, sleep, and activity
+• Stress & Energy tracking
+• Sleep Bank (7-day debt/surplus tracking)
+• Sleep Clock visualization
+• Step streaks and trends
+
+AI HEALTH ANALYSIS (Optional, Bring Your Own Key)
+• Get personalized health insights powered by Claude, Gemini, ChatGPT, or any OpenAI-compatible API
+• Your key, your data — we never see either
+
+HYDRATION TRACKING
+• Log water intake throughout the day
+• Daily goal tracking with ring gauge
+
+8 BEAUTIFUL THEMES
+• 4 dark + 4 light themes
+
+100% PRIVATE
+• All data stays on your device
+• No accounts, no registration, no cloud sync
+• No analytics, no ads, no tracking SDKs
+• API keys encrypted with AES-256
+• Fully open source (GPL-3.0)
+
+Source code: https://github.com/bune1991/OpenHealth

@@ -1,0 +1,11 @@
+v2.0.0 — Electric Nocturne
+• Complete redesign with 8 themes
+• AI Health Analysis (Claude, Gemini, ChatGPT)
+• Hydration tracking
+• Spring animations & haptic feedback
+• Splash screen
+• Share health stats
+• Security hardening (encrypted API keys)
+• Material 3 Expressive
+• Goal celebrations
+• Weekly trends
