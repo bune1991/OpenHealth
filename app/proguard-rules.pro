@@ -20,6 +20,16 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+# Strip all Log calls from release builds (security: prevents health data leaking in logcat)
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+    public static int e(...);
+    public static int wtf(...);
+}
+
 # Keep Health Connect classes
 -keep class androidx.health.connect.** { *; }
 
