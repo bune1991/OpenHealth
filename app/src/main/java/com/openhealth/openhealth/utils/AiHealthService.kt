@@ -78,13 +78,53 @@ class AiHealthService {
     }
 
     private suspend fun getOnDeviceInsights(prompt: String): Result<String> {
-        // On-device Gemini Nano requires ML Kit GenAI (Kotlin 2.2+)
-        // Currently blocked by Kotlin version mismatch. Will be enabled in a future update.
-        return Result.failure(Exception(
-            "On-device AI (Gemini Nano) is coming soon! " +
-            "It requires ML Kit GenAI which needs a Kotlin upgrade. " +
-            "For now, use Claude, Gemini, or ChatGPT with an API key."
-        ))
+        return try {
+            val client = com.google.mlkit.genai.prompt.Generation.getClient()
+
+            // Check if on-device model is available (returns @FeatureStatus int)
+            val status = client.checkStatus()
+            when (status) {
+                com.google.mlkit.genai.common.FeatureStatus.UNAVAILABLE ->
+                    return Result.failure(Exception("Gemini Nano not available on this device. Requires Pixel 9+, Samsung S25+, or similar flagship."))
+                com.google.mlkit.genai.common.FeatureStatus.DOWNLOADABLE -> {
+                    // Start download and wait for it to complete
+                    Log.d("AiHealthService", "Starting Gemini Nano model download...")
+                    client.download().collect { downloadStatus ->
+                        Log.d("AiHealthService", "Download status: $downloadStatus")
+                    }
+                    // After download completes, re-check status
+                    val newStatus = client.checkStatus()
+                    if (newStatus != com.google.mlkit.genai.common.FeatureStatus.AVAILABLE) {
+                        return Result.failure(Exception("Gemini Nano model download finished but not ready yet. Try again."))
+                    }
+                }
+                com.google.mlkit.genai.common.FeatureStatus.DOWNLOADING -> {
+                    // Wait for ongoing download to complete
+                    Log.d("AiHealthService", "Waiting for Gemini Nano download...")
+                    client.download().collect { downloadStatus ->
+                        Log.d("AiHealthService", "Download status: $downloadStatus")
+                    }
+                    val newStatus = client.checkStatus()
+                    if (newStatus != com.google.mlkit.genai.common.FeatureStatus.AVAILABLE) {
+                        return Result.failure(Exception("Gemini Nano model still downloading. Try again shortly."))
+                    }
+                }
+                com.google.mlkit.genai.common.FeatureStatus.AVAILABLE -> { /* ready */ }
+            }
+
+            // Shorten prompt for on-device — Nano works better with concise input
+            val truncatedPrompt = if (prompt.length > 4000) prompt.take(4000) + "\n\nKeep response concise, under 300 words." else prompt
+
+            Log.d("AiHealthService", "Sending to Gemini Nano on-device...")
+            val response = client.generateContent(truncatedPrompt)
+            val text = response.candidates.firstOrNull()?.text ?: ""
+
+            Log.d("AiHealthService", "On-device response: ${text.take(100)}...")
+            Result.success(text)
+        } catch (e: Exception) {
+            Log.e("AiHealthService", "On-device AI error: ${e.message}", e)
+            Result.failure(Exception("On-device AI error: ${e.message}"))
+        }
     }
 
     // Claude (Anthropic)

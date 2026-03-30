@@ -313,7 +313,10 @@ class MainActivity : ComponentActivity() {
                                                 insightText = aiInsightText,
                                                 isLoading = aiInsightLoading,
                                                 error = aiInsightError,
-                                                providerName = settings.aiProvider.name,
+                                                providerName = when (settings.aiProvider) {
+                                                    com.openhealth.openhealth.model.AiProvider.ON_DEVICE -> "On-Device"
+                                                    else -> settings.aiProvider.name
+                                                },
                                                 readinessScore = aiReadiness,
                                                 chatMessages = chatMessages,
                                                 chatLoading = chatLoading,
