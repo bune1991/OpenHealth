@@ -136,6 +136,15 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val _aiInsightError = MutableStateFlow<String?>(null)
     val aiInsightError: StateFlow<String?> = _aiInsightError.asStateFlow()
     private val aiHealthService = AiHealthService()
+
+    // Chat
+    data class ChatMessage(val text: String, val isUser: Boolean, val timestamp: Long = System.currentTimeMillis())
+
+    private val _chatMessages = MutableStateFlow<List<ChatMessage>>(emptyList())
+    val chatMessages: StateFlow<List<ChatMessage>> = _chatMessages.asStateFlow()
+
+    private val _chatLoading = MutableStateFlow(false)
+    val chatLoading: StateFlow<Boolean> = _chatLoading.asStateFlow()
     private lateinit var aiInsightCache: AiInsightCache
 
     // Settings
@@ -584,6 +593,57 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun refreshAiInsight() {
         fetchAiInsight(forceRefresh = true)
+    }
+
+    fun sendChatMessage(question: String) {
+        if (question.isBlank()) return
+        val userMsg = ChatMessage(question, true)
+        _chatMessages.value = _chatMessages.value + userMsg
+        _chatLoading.value = true
+
+        viewModelScope.launch {
+            try {
+                val currentSettings = settingsManager.settings.value
+                if (currentSettings.aiProvider == com.openhealth.openhealth.model.AiProvider.NONE) {
+                    _chatMessages.value = _chatMessages.value + ChatMessage("Please set up an AI provider in Settings first.", false)
+                    _chatLoading.value = false
+                    return@launch
+                }
+
+                val activeKey = when (currentSettings.aiProvider) {
+                    com.openhealth.openhealth.model.AiProvider.CLAUDE -> currentSettings.aiClaudeKey
+                    com.openhealth.openhealth.model.AiProvider.GEMINI -> currentSettings.aiGeminiKey
+                    com.openhealth.openhealth.model.AiProvider.CHATGPT -> currentSettings.aiChatgptKey
+                    com.openhealth.openhealth.model.AiProvider.CUSTOM -> currentSettings.aiCustomKey
+                    com.openhealth.openhealth.model.AiProvider.NONE -> ""
+                }
+
+                // Build context-aware prompt
+                val context = HealthPromptBuilder.buildDailySummaryPrompt(_healthData.value, _hydrationDailyTotal.value)
+                val chatPrompt = "$context\n\nThe user is asking a specific question about their health data. Answer concisely and specifically using the data above.\n\nUser question: $question\n\nAnswer in 2-4 sentences. Be specific with numbers."
+
+                val result = aiHealthService.getInsights(
+                    provider = currentSettings.aiProvider,
+                    apiKey = activeKey,
+                    healthSummaryPrompt = chatPrompt,
+                    customUrl = currentSettings.aiCustomUrl,
+                    customModel = currentSettings.aiCustomModel
+                )
+
+                result.onSuccess { text: String ->
+                    _chatMessages.value = _chatMessages.value + ChatMessage(text, false)
+                }.onFailure { err: Throwable ->
+                    _chatMessages.value = _chatMessages.value + ChatMessage("Error: ${err.message}", false)
+                }
+            } catch (e: Exception) {
+                _chatMessages.value = _chatMessages.value + ChatMessage("Error: ${e.message}", false)
+            }
+            _chatLoading.value = false
+        }
+    }
+
+    fun clearChat() {
+        _chatMessages.value = emptyList()
     }
 
     private fun fetchAiInsight(forceRefresh: Boolean) {

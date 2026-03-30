@@ -3,6 +3,7 @@ package com.openhealth.openhealth
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -89,6 +90,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         // Schedule periodic widget updates and daily summary notification
@@ -137,6 +139,7 @@ class MainActivity : ComponentActivity() {
             }
 
             OpenHealthTheme(themeName = settings.themeName) {
+                val c = LocalAppColors.current
 
                 val uiState by viewModel.uiState.collectAsState()
                 val healthData by viewModel.healthData.collectAsState()
@@ -158,17 +161,18 @@ class MainActivity : ComponentActivity() {
                 val aiInsightText by viewModel.aiInsightText.collectAsState()
                 val aiInsightLoading by viewModel.aiInsightLoading.collectAsState()
                 val aiInsightError by viewModel.aiInsightError.collectAsState()
+                val chatMessages by viewModel.chatMessages.collectAsState()
+                val chatLoading by viewModel.chatLoading.collectAsState()
                 val reportsData by viewModel.reportsData.collectAsState()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = SurfaceLowest
-                ) { paddingValues ->
+                    containerColor = c.background
+                ) { _ ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(SurfaceLowest)
-                            .padding(paddingValues)
+                            .background(c.background)
                     ) {
                         when (uiState) {
                             is HealthViewModel.UiState.HealthConnectNotAvailable -> {
@@ -254,6 +258,12 @@ class MainActivity : ComponentActivity() {
                                                 error = aiInsightError,
                                                 providerName = settings.aiProvider.name,
                                                 readinessScore = aiReadiness,
+                                                chatMessages = chatMessages,
+                                                chatLoading = chatLoading,
+                                                chatEnabled = settings.healthChatEnabled,
+                                                chatBubbleMode = settings.chatBubbleMode,
+                                                onSendMessage = { viewModel.sendChatMessage(it) },
+                                                onClearChat = { viewModel.clearChat() },
                                                 onRefreshClick = { viewModel.refreshAiInsight() },
                                                 onBackClick = { viewModel.hideAiInsights() }
                                             )
@@ -424,10 +434,11 @@ class MainActivity : ComponentActivity() {
 fun PermissionsRequiredScreen(
     onGrantPermissionsClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SurfaceLowest)
+            .background(c.background)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -435,7 +446,7 @@ fun PermissionsRequiredScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = SurfaceDark
+                containerColor = c.surface
             )
         ) {
             Column(
@@ -448,14 +459,14 @@ fun PermissionsRequiredScreen(
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
-                    tint = PrimaryBlue,
+                    tint = c.primary,
                     modifier = Modifier.size(64.dp)
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
                     text = "Permissions Required",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = TextPrimary,
+                    color = c.onSurface,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
@@ -463,7 +474,7 @@ fun PermissionsRequiredScreen(
                 Text(
                     text = "OpenHealth needs permission to access your health data from Health Connect. This includes:",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = c.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -483,8 +494,8 @@ fun PermissionsRequiredScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryBlue,
-                        contentColor = BackgroundBlack
+                        containerColor = c.primary,
+                        contentColor = c.onPrimary
                     )
                 ) {
                     Text(
@@ -501,20 +512,21 @@ fun PermissionsRequiredScreen(
 
 @Composable
 private fun PermissionItem(text: String) {
+    val c = LocalAppColors.current
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Default.Favorite,
             contentDescription = null,
-            tint = SuccessGreen,
+            tint = c.success,
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary
+            color = c.onSurfaceVariant
         )
     }
 }
@@ -523,10 +535,11 @@ private fun PermissionItem(text: String) {
 fun HealthConnectNotAvailableScreen(
     onInstallClick: () -> Unit
 ) {
+    val c = LocalAppColors.current
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SurfaceLowest)
+            .background(c.background)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -534,7 +547,7 @@ fun HealthConnectNotAvailableScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = SurfaceDark
+                containerColor = c.surface
             )
         ) {
             Column(
@@ -547,14 +560,14 @@ fun HealthConnectNotAvailableScreen(
                 Icon(
                     imageVector = Icons.Default.Download,
                     contentDescription = null,
-                    tint = ErrorRed,
+                    tint = c.error,
                     modifier = Modifier.size(64.dp)
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
                     text = "Health Connect Required",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = TextPrimary,
+                    color = c.onSurface,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
@@ -562,7 +575,7 @@ fun HealthConnectNotAvailableScreen(
                 Text(
                     text = "OpenHealth requires the Health Connect app to access your health data. Please install it from the Play Store.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = c.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(32.dp))
@@ -571,8 +584,8 @@ fun HealthConnectNotAvailableScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryBlue,
-                        contentColor = BackgroundBlack
+                        containerColor = c.primary,
+                        contentColor = c.onPrimary
                     )
                 ) {
                     Text(

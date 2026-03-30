@@ -27,19 +27,28 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +61,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openhealth.openhealth.ui.theme.*
+import com.openhealth.openhealth.viewmodel.HealthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,10 +71,28 @@ fun AiInsightsScreen(
     error: String?,
     providerName: String,
     readinessScore: Int = 0,
+    chatMessages: List<HealthViewModel.ChatMessage> = emptyList(),
+    chatLoading: Boolean = false,
+    chatEnabled: Boolean = true,
+    chatBubbleMode: Boolean = false,
+    onSendMessage: (String) -> Unit = {},
+    onClearChat: () -> Unit = {},
     onRefreshClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
+    var chatInput by remember { mutableStateOf("") }
     val c = LocalAppColors.current
+    val scrollState = rememberScrollState()
+
+    // Auto-scroll to bottom only when new chat messages arrive (not on initial load)
+    var previousMessageCount by remember { mutableStateOf(chatMessages.size) }
+    LaunchedEffect(chatMessages.size) {
+        if (chatMessages.size > previousMessageCount) {
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+        previousMessageCount = chatMessages.size
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -107,7 +135,7 @@ fun AiInsightsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             when {
@@ -448,6 +476,142 @@ fun AiInsightsScreen(
                 }
             }
 
+            // ─── Health Chat Section ───
+            if (chatEnabled && insightText != null && !isLoading) {
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Section header with clear button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "ASK YOUR HEALTH COACH",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = c.tertiary,
+                        letterSpacing = 2.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (chatMessages.isNotEmpty()) {
+                        IconButton(onClick = onClearChat, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Clear chat",
+                                tint = c.outline,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Chat messages
+                chatMessages.forEach { msg ->
+                    if (msg.isUser) {
+                        // User message — right aligned
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.85f)
+                                    .clip(
+                                        if (chatBubbleMode) RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
+                                        else RoundedCornerShape(16.dp)
+                                    )
+                                    .background(c.primary)
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = msg.text,
+                                    color = c.onPrimary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    } else {
+                        // AI response — left aligned
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.85f)
+                                .clip(
+                                    if (chatBubbleMode) RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp)
+                                    else RoundedCornerShape(16.dp)
+                                )
+                                .background(c.surfaceLow)
+                                .padding(12.dp)
+                        ) {
+                            Text(
+                                text = msg.text,
+                                color = c.onSurface,
+                                style = MaterialTheme.typography.bodyMedium,
+                                lineHeight = 22.sp
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Loading indicator
+                if (chatLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = c.primary,
+                            strokeWidth = 2.dp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Input field + send button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = chatInput,
+                        onValueChange = { chatInput = it },
+                        placeholder = { Text("Ask about your health...", color = c.outline) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(24.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = c.surfaceLow,
+                            unfocusedContainerColor = c.surfaceLow,
+                            focusedBorderColor = c.primary.copy(alpha = 0.5f),
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedTextColor = c.onSurface,
+                            unfocusedTextColor = c.onSurface,
+                            cursorColor = c.primary
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = c.onSurface)
+                    )
+                    IconButton(
+                        onClick = {
+                            if (chatInput.isNotBlank()) {
+                                onSendMessage(chatInput)
+                                chatInput = ""
+                            }
+                        },
+                        enabled = chatInput.isNotBlank() && !chatLoading
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Send",
+                            tint = if (chatInput.isNotBlank() && !chatLoading) c.primary else c.outline
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -540,7 +704,8 @@ private fun parseInsightSections(text: String): List<Pair<String, String>> {
 
     for (line in lines) {
         val trimmed = line.trim()
-        val isHeader = trimmed.startsWith("**") || trimmed.startsWith("##") || trimmed.startsWith("# ")
+        val isHeader = trimmed.startsWith("###") || trimmed.startsWith("##") || trimmed.startsWith("# ") ||
+            (trimmed.startsWith("**") && trimmed.endsWith("**") && trimmed.length < 80)
 
         if (isHeader) {
             // Save previous section
@@ -548,13 +713,18 @@ private fun parseInsightSections(text: String): List<Pair<String, String>> {
                 sections.add(currentTitle to currentContent.toString().trim())
             }
             currentTitle = trimmed
-                .removePrefix("## ").removePrefix("# ")
-                .removePrefix("**").removeSuffix("**")
+                .removePrefix("### ").removePrefix("## ").removePrefix("# ")
+                .replace("**", "")
+                .replace(Regex("^\\d+\\.\\s*"), "") // Remove leading "1. ", "2. " etc
                 .removeSuffix(":").trim()
             currentContent = StringBuilder()
         } else if (trimmed.isNotEmpty()) {
             if (currentContent.isNotEmpty()) currentContent.append("\n")
-            currentContent.append(trimmed.removePrefix("- ").removePrefix("* "))
+            // Strip markdown bold markers from content
+            currentContent.append(
+                trimmed.removePrefix("- ").removePrefix("* ")
+                    .replace("**", "")
+            )
         }
     }
 

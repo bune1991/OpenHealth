@@ -82,7 +82,9 @@ data class SettingsData(
     val distanceGoalKm: Float = 5.0f,
     val weightTargetKg: Float = 70.0f,
     val hydrationGoalMl: Int = 2500,
-    val hapticFeedback: Boolean = true
+    val hapticFeedback: Boolean = true,
+    val healthChatEnabled: Boolean = true,
+    val chatBubbleMode: Boolean = false
 ) {
     companion object {
         val DEFAULT = SettingsData()

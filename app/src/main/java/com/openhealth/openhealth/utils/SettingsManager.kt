@@ -106,6 +106,8 @@ class SettingsManager private constructor(context: Context) {
         private const val KEY_WEIGHT_TARGET_KG = "weight_target_kg"
         private const val KEY_HYDRATION_GOAL_ML = "hydration_goal_ml"
         private const val KEY_HAPTIC_FEEDBACK = "haptic_feedback"
+        private const val KEY_HEALTH_CHAT = "health_chat"
+        private const val KEY_CHAT_BUBBLE_MODE = "chat_bubble_mode"
 
         @Volatile
         private var instance: SettingsManager? = null
@@ -192,7 +194,9 @@ class SettingsManager private constructor(context: Context) {
             distanceGoalKm = prefs.getFloat(KEY_DISTANCE_GOAL_KM, 5.0f),
             weightTargetKg = prefs.getFloat(KEY_WEIGHT_TARGET_KG, 70.0f),
             hydrationGoalMl = prefs.getInt(KEY_HYDRATION_GOAL_ML, 2500),
-            hapticFeedback = prefs.getBoolean(KEY_HAPTIC_FEEDBACK, true)
+            hapticFeedback = prefs.getBoolean(KEY_HAPTIC_FEEDBACK, true),
+            healthChatEnabled = prefs.getBoolean(KEY_HEALTH_CHAT, true),
+            chatBubbleMode = prefs.getBoolean(KEY_CHAT_BUBBLE_MODE, false)
         )
     }
 
@@ -275,6 +279,8 @@ class SettingsManager private constructor(context: Context) {
             putFloat(KEY_WEIGHT_TARGET_KG, settings.weightTargetKg)
             putInt(KEY_HYDRATION_GOAL_ML, settings.hydrationGoalMl)
             putBoolean(KEY_HAPTIC_FEEDBACK, settings.hapticFeedback)
+            putBoolean(KEY_HEALTH_CHAT, settings.healthChatEnabled)
+            putBoolean(KEY_CHAT_BUBBLE_MODE, settings.chatBubbleMode)
 
             apply()
         }

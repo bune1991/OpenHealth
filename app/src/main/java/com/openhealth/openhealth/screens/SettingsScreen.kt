@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -155,6 +157,32 @@ fun SettingsScreen(
                     isEnabled = settings.hapticFeedback,
                     onToggle = { onSettingsChanged(settings.copy(hapticFeedback = it)) }
                 )
+            }
+
+            // Health Chat
+            item {
+                FeatureTogglePill(
+                    icon = Icons.AutoMirrored.Filled.Chat,
+                    iconColor = c.secondary,
+                    title = "Health Chat",
+                    subtitle = "Ask questions about your health data",
+                    isEnabled = settings.healthChatEnabled,
+                    onToggle = { onSettingsChanged(settings.copy(healthChatEnabled = it)) }
+                )
+            }
+
+            // Chat Bubble Mode (only when Health Chat is enabled)
+            if (settings.healthChatEnabled) {
+                item {
+                    FeatureTogglePill(
+                        icon = Icons.Default.ChatBubble,
+                        iconColor = c.tertiary,
+                        title = "Chat Bubble Mode",
+                        subtitle = "Show messages as chat bubbles",
+                        isEnabled = settings.chatBubbleMode,
+                        onToggle = { onSettingsChanged(settings.copy(chatBubbleMode = it)) }
+                    )
+                }
             }
 
             // ═══════════════════════════════════════════
