@@ -114,6 +114,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.ui.platform.LocalView
 import com.openhealth.openhealth.ui.theme.*
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 import java.time.format.DateTimeFormatter
@@ -143,6 +145,7 @@ fun DashboardScreen(
     onRefresh: () -> Unit,
     onMetricClick: (HealthViewModel.MetricType) -> Unit,
     onSettingsClick: () -> Unit,
+    onShareClick: () -> Unit = {},
     onReadinessClick: () -> Unit,
     onPreviousDay: () -> Unit,
     onNextDay: () -> Unit,
@@ -241,6 +244,7 @@ fun DashboardScreen(
                         onToday = onToday,
                         onDateClick = { showDatePicker = true },
                         onSettingsClick = onSettingsClick,
+                        onShareClick = onShareClick,
                         onReportsClick = onReportsClick
                     )
                 }
@@ -2295,6 +2299,7 @@ private fun DashboardHeader(
     onToday: () -> Unit,
     onDateClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onShareClick: () -> Unit,
     onReportsClick: () -> Unit
 ) {
     val c = LocalAppColors.current
@@ -2356,6 +2361,13 @@ private fun DashboardHeader(
                     imageVector = Icons.AutoMirrored.Filled.ArrowRight,
                     contentDescription = "Next Day",
                     tint = if (isToday) c.outline else c.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onShareClick, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = "Share Stats",
+                    tint = c.onSurfaceVariant
                 )
             }
             IconButton(onClick = onReportsClick, modifier = Modifier.size(36.dp)) {
@@ -3813,6 +3825,7 @@ private fun WeeklyTrendRow(
 
 @Composable
 fun Modifier.bounceClick(onClick: () -> Unit): Modifier {
+    val view = LocalView.current
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.95f else 1f,
@@ -3825,6 +3838,7 @@ fun Modifier.bounceClick(onClick: () -> Unit): Modifier {
             awaitEachGesture {
                 awaitFirstDown(requireUnconsumed = false)
                 pressed = true
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
                 waitForUpOrCancellation()
                 pressed = false
             }

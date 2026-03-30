@@ -3,6 +3,7 @@ package com.openhealth.openhealth
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
@@ -87,6 +88,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         // Schedule periodic widget updates and daily summary notification
@@ -337,6 +339,37 @@ class MainActivity : ComponentActivity() {
                                                 viewModel.selectMetric(metricType)
                                             },
                                             onSettingsClick = { viewModel.showSettings() },
+                                            onShareClick = {
+                                                val hrv = healthData.heartRateVariability.rmssdMs ?: 30.0
+                                                val sleepH = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+                                                val rhr = healthData.restingHeartRate.bpm ?: 70
+                                                val hrvS = ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0) * 0.40
+                                                val sleepS = (if (sleepH >= 8) 100.0 else if (sleepH >= 7) 85.0 else if (sleepH >= 6) 65.0 else if (sleepH >= 5) 45.0 else 20.0) * 0.25
+                                                val rhrS = (if (rhr <= 55) 90.0 else if (rhr <= 60) 80.0 else if (rhr <= 65) 70.0 else if (rhr <= 70) 55.0 else 30.0) * 0.10
+                                                val readiness = (hrvS + sleepS + rhrS + 50.0 * 0.25).toInt().coerceIn(5, 100)
+                                                val readinessLabel = when {
+                                                    readiness >= 80 -> "Peak"
+                                                    readiness >= 60 -> "Good"
+                                                    readiness >= 40 -> "Fair"
+                                                    else -> "Low"
+                                                }
+                                                val shareText = buildString {
+                                                    appendLine("OpenHealth Daily Report")
+                                                    appendLine("Readiness: $readiness/100 ($readinessLabel)")
+                                                    appendLine("Steps: ${java.text.NumberFormat.getNumberInstance().format(healthData.steps.count)} / ${java.text.NumberFormat.getNumberInstance().format(settings.stepsGoal)}")
+                                                    healthData.heartRate.currentBpm?.let { appendLine("Heart Rate: $it bpm") }
+                                                    healthData.heartRateVariability.rmssdMs?.let { appendLine("HRV: ${it.toInt()} ms") }
+                                                    if (healthData.sleep.hours > 0 || healthData.sleep.minutes > 0) {
+                                                        appendLine("Sleep: ${healthData.sleep.hours}h ${healthData.sleep.minutes}m")
+                                                    }
+                                                    appendLine("#OpenHealth")
+                                                }
+                                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                                }
+                                                startActivity(Intent.createChooser(intent, "Share Health Stats"))
+                                            },
                                         onReadinessClick = { viewModel.showReadinessDetail() },
                                             onPreviousDay = { viewModel.navigateToPreviousDay() },
                                             onNextDay = { viewModel.navigateToNextDay() },

@@ -81,7 +81,8 @@ data class SettingsData(
     val caloriesGoal: Int = 500,
     val distanceGoalKm: Float = 5.0f,
     val weightTargetKg: Float = 70.0f,
-    val hydrationGoalMl: Int = 2500
+    val hydrationGoalMl: Int = 2500,
+    val hapticFeedback: Boolean = true
 ) {
     companion object {
         val DEFAULT = SettingsData()

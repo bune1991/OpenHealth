@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -141,6 +142,18 @@ fun SettingsScreen(
                     subtitle = "AI health report every Sunday",
                     isEnabled = settings.weeklyAiSummary,
                     onToggle = { onSettingsChanged(settings.copy(weeklyAiSummary = it)) }
+                )
+            }
+
+            // Haptic Feedback
+            item {
+                FeatureTogglePill(
+                    icon = Icons.Default.Vibration,
+                    iconColor = c.tertiary,
+                    title = "Haptic Feedback",
+                    subtitle = "Vibrate on tap interactions",
+                    isEnabled = settings.hapticFeedback,
+                    onToggle = { onSettingsChanged(settings.copy(hapticFeedback = it)) }
                 )
             }
 

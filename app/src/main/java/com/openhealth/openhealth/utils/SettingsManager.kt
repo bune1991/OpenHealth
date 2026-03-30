@@ -105,6 +105,7 @@ class SettingsManager private constructor(context: Context) {
         private const val KEY_DISTANCE_GOAL_KM = "distance_goal_km"
         private const val KEY_WEIGHT_TARGET_KG = "weight_target_kg"
         private const val KEY_HYDRATION_GOAL_ML = "hydration_goal_ml"
+        private const val KEY_HAPTIC_FEEDBACK = "haptic_feedback"
 
         @Volatile
         private var instance: SettingsManager? = null
@@ -190,7 +191,8 @@ class SettingsManager private constructor(context: Context) {
             caloriesGoal = prefs.getInt(KEY_CALORIES_GOAL, 500),
             distanceGoalKm = prefs.getFloat(KEY_DISTANCE_GOAL_KM, 5.0f),
             weightTargetKg = prefs.getFloat(KEY_WEIGHT_TARGET_KG, 70.0f),
-            hydrationGoalMl = prefs.getInt(KEY_HYDRATION_GOAL_ML, 2500)
+            hydrationGoalMl = prefs.getInt(KEY_HYDRATION_GOAL_ML, 2500),
+            hapticFeedback = prefs.getBoolean(KEY_HAPTIC_FEEDBACK, true)
         )
     }
 
@@ -272,6 +274,7 @@ class SettingsManager private constructor(context: Context) {
             putFloat(KEY_DISTANCE_GOAL_KM, settings.distanceGoalKm)
             putFloat(KEY_WEIGHT_TARGET_KG, settings.weightTargetKg)
             putInt(KEY_HYDRATION_GOAL_ML, settings.hydrationGoalMl)
+            putBoolean(KEY_HAPTIC_FEEDBACK, settings.hapticFeedback)
 
             apply()
         }
