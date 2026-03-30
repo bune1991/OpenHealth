@@ -57,12 +57,9 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-private val GradientBrush = Brush.horizontalGradient(
-    colors = listOf(Color(0xFFB89FFF), Color(0xFFFF51FA))
-)
-
-private val TrendUp = Color(0xFF5BF5A0)
-private val TrendDown = Color(0xFFFF5252)
+// TrendUp/TrendDown are theme-independent status colors
+private val TrendUp = Color(0xFF4CAF50)
+private val TrendDown = Color(0xFFE53935)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -305,7 +302,7 @@ private fun TrendCard(
                         .fillMaxWidth(progressFraction.coerceAtLeast(0.01f))
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(2.dp))
-                        .background(GradientBrush)
+                        .background(Brush.horizontalGradient(listOf(c.primary, c.secondary)))
                 )
             }
         }
@@ -386,7 +383,7 @@ private fun StepsBreakdownChart(data: List<com.openhealth.openhealth.model.Daily
                                         .fillMaxWidth()
                                         .fillMaxHeight(heightFraction)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(GradientBrush)
+                                        .background(Brush.horizontalGradient(listOf(c.primary, c.secondary)))
                                 )
                             }
                         }
