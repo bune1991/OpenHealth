@@ -1,7 +1,7 @@
 package com.openhealth.openhealth.model
 
 enum class AiProvider {
-    NONE, CLAUDE, GEMINI, CHATGPT, CUSTOM
+    NONE, CLAUDE, GEMINI, CHATGPT, CUSTOM, ON_DEVICE
 }
 
 data class SettingsData(

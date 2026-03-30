@@ -2,8 +2,13 @@ package com.openhealth.openhealth.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -117,6 +122,7 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.platform.LocalView
 import com.openhealth.openhealth.ui.theme.*
+import com.openhealth.openhealth.utils.PersonalRecord
 import com.openhealth.openhealth.viewmodel.HealthViewModel
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -156,6 +162,8 @@ fun DashboardScreen(
     onAiInsightsClick: () -> Unit = {},
     onHydrationClick: () -> Unit = {},
     onPerformanceClick: () -> Unit = {},
+    onSleepCoachClick: () -> Unit = {},
+    onFitnessCoachClick: () -> Unit = {},
     selectedTab: Int = 0,
     onTabChanged: (Int) -> Unit = {},
     hydrationDailyTotalMl: Int = 0,
@@ -169,7 +177,10 @@ fun DashboardScreen(
     onVitalsExpandedChange: (Boolean) -> Unit = {},
     initialScrollIndex: Int = 0,
     initialScrollOffset: Int = 0,
-    onScrollPositionChanged: (Int, Int) -> Unit = { _, _ -> }
+    onScrollPositionChanged: (Int, Int) -> Unit = { _, _ -> },
+    personalRecords: List<PersonalRecord> = emptyList(),
+    goalCelebration: String? = null,
+    onClearCelebration: () -> Unit = {}
 ) {
     val c = LocalAppColors.current
     val listState = rememberLazyListState(
@@ -339,7 +350,7 @@ fun DashboardScreen(
 
                         // ── 3. Vitals Grid — SQUARE cards with glows ──
                         item {
-                            val restingHr = healthData.heartRate.minBpm
+                            val restingHr = healthData.restingHeartRate.bpm ?: healthData.heartRate.restingBpm ?: healthData.heartRate.minBpm
                             val hrvVal = healthData.heartRateVariability.rmssdMs
 
                             // Animated count-up values
@@ -798,6 +809,97 @@ fun DashboardScreen(
                                                 modifier = Modifier.padding(top = 8.dp)
                                             )
                                         }
+                                    }
+                                }
+                            }
+                        }
+
+                        // ── Sleep Score + Strain Score — side by side ──
+                        item {
+                            val sleepScore = calculateSleepScore(healthData)
+                            val strainScore = calculateStrainScore(healthData)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Sleep Score
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(c.surfaceLow)
+                                        .bounceClick { onMetricClick(HealthViewModel.MetricType.SLEEP) }
+                                        .padding(16.dp)
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                                        Icon(Icons.Default.NightsStay, null, tint = c.tertiary, modifier = Modifier.size(20.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        val animSleep by animateIntAsState(targetValue = sleepScore, animationSpec = tween(1000), label = "sleep_score")
+                                        Text("$animSleep", fontSize = 32.sp, fontWeight = FontWeight.Black, color = c.onSurface)
+                                        Text("SLEEP SCORE", fontSize = 9.sp, color = c.onSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            when { sleepScore >= 80 -> "Excellent"; sleepScore >= 60 -> "Good"; sleepScore >= 40 -> "Fair"; else -> "Poor" },
+                                            fontSize = 11.sp, color = c.tertiary, fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                // Strain Score
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(c.surfaceLow)
+                                        .bounceClick { onMetricClick(HealthViewModel.MetricType.EXERCISE) }
+                                        .padding(16.dp)
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                                        Icon(Icons.Default.Bolt, null, tint = c.secondary, modifier = Modifier.size(20.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(String.format("%.1f", strainScore), fontSize = 32.sp, fontWeight = FontWeight.Black, color = c.onSurface)
+                                        Text("STRAIN", fontSize = 9.sp, color = c.onSurfaceVariant, letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            when { strainScore >= 14 -> "Overreaching"; strainScore >= 10 -> "High"; strainScore >= 5 -> "Moderate"; strainScore > 0 -> "Light"; else -> "Rest Day" },
+                                            fontSize = 11.sp, color = c.secondary, fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // ── Sleep Coach + Fitness Coach buttons ──
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Brush.horizontalGradient(listOf(c.tertiary.copy(alpha = 0.15f), c.tertiary.copy(alpha = 0.05f))))
+                                        .bounceClick { onSleepCoachClick() }
+                                        .padding(14.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.NightsStay, null, tint = c.tertiary, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Sleep Coach", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = c.tertiary)
+                                    }
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Brush.horizontalGradient(listOf(c.secondary.copy(alpha = 0.15f), c.secondary.copy(alpha = 0.05f))))
+                                        .bounceClick { onFitnessCoachClick() }
+                                        .padding(14.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.FitnessCenter, null, tint = c.secondary, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Fitness Coach", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = c.secondary)
                                     }
                                 }
                             }
@@ -2216,6 +2318,43 @@ fun DashboardScreen(
                             }
                         }
 
+                        // ── Personal Records ──
+                        if (personalRecords.isNotEmpty()) {
+                            item {
+                                Text("PERSONAL RECORDS", fontSize = 10.sp, color = c.secondary, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                            }
+                            item {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(c.surfaceLow)
+                                        .padding(20.dp),
+                                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
+                                    personalRecords.forEach { record ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text("\uD83C\uDFC6", fontSize = 16.sp)
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Column {
+                                                    Text(record.label, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = c.onSurface)
+                                                    if (record.date.isNotEmpty()) {
+                                                        Text(record.date, fontSize = 10.sp, color = c.outline)
+                                                    }
+                                                }
+                                            }
+                                            Text(record.value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = c.secondary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // Milestones section
                         item {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -2281,6 +2420,12 @@ fun DashboardScreen(
                 selectedTab = selectedTab,
                 onTabSelected = { onTabChanged(it) },
                 modifier = Modifier.align(Alignment.BottomCenter)
+            )
+
+            // ─── Confetti Overlay ───
+            ConfettiOverlay(
+                trigger = goalCelebration != null,
+                onComplete = onClearCelebration
             )
         }
     }
@@ -3739,6 +3884,172 @@ private fun calculateReadinessScore(healthData: HealthData): ReadinessScore {
 
     return ReadinessScore(score, label, color)
 }
+
+// ═══════════════════════════════════════════════════════════
+// Sleep Quality Score (0-100)
+// ═══════════════════════════════════════════════════════════
+
+private fun calculateSleepScore(healthData: HealthData): Int {
+    val sleep = healthData.sleep
+    val totalMinutes = sleep.totalDuration?.toMinutes() ?: return 0
+    if (totalMinutes < 30) return 0
+
+    // Duration score (40%) — 7-9 hours is optimal
+    val hours = totalMinutes / 60.0
+    val durationScore = when {
+        hours >= 8.5 -> 95.0
+        hours >= 7.5 -> 100.0
+        hours >= 7.0 -> 90.0
+        hours >= 6.5 -> 75.0
+        hours >= 6.0 -> 60.0
+        hours >= 5.0 -> 40.0
+        else -> 20.0
+    }
+
+    // Deep sleep score (25%) — 15-25% of total is optimal
+    val stages = sleep.stages
+    val deepPercent = if (stages != null && stages.totalMinutes > 0) {
+        stages.deepSleepMinutes.toDouble() / stages.totalMinutes * 100
+    } else 15.0 // assume average if no data
+    val deepScore = when {
+        deepPercent >= 20 -> 100.0
+        deepPercent >= 15 -> 85.0
+        deepPercent >= 10 -> 65.0
+        deepPercent >= 5 -> 40.0
+        else -> 20.0
+    }
+
+    // REM score (20%) — 20-25% of total is optimal
+    val remPercent = if (stages != null && stages.totalMinutes > 0) {
+        stages.remSleepMinutes.toDouble() / stages.totalMinutes * 100
+    } else 20.0
+    val remScore = when {
+        remPercent >= 22 -> 100.0
+        remPercent >= 18 -> 85.0
+        remPercent >= 12 -> 65.0
+        remPercent >= 5 -> 40.0
+        else -> 20.0
+    }
+
+    // Awake interruptions score (15%) — less awake = better
+    val awakePercent = if (stages != null && stages.totalMinutes > 0) {
+        stages.awakeMinutes.toDouble() / stages.totalMinutes * 100
+    } else 5.0
+    val awakeScore = when {
+        awakePercent <= 3 -> 100.0
+        awakePercent <= 5 -> 85.0
+        awakePercent <= 10 -> 65.0
+        awakePercent <= 15 -> 40.0
+        else -> 20.0
+    }
+
+    return (durationScore * 0.40 + deepScore * 0.25 + remScore * 0.20 + awakeScore * 0.15)
+        .toInt().coerceIn(0, 100)
+}
+
+// ═══════════════════════════════════════════════════════════
+// Strain Score (0-21 scale like WHOOP)
+// ═══════════════════════════════════════════════════════════
+
+private fun calculateStrainScore(healthData: HealthData): Double {
+    val readings = healthData.heartRate.readings
+    if (readings.isEmpty()) return 0.0
+
+    // Estimate max HR (use 190 as default — age can be added to settings later)
+    val maxHr = 190
+
+    // Calculate time in each HR zone based on readings
+    var zone1Minutes = 0.0 // 50-60% max HR
+    var zone2Minutes = 0.0 // 60-70%
+    var zone3Minutes = 0.0 // 70-80%
+    var zone4Minutes = 0.0 // 80-90%
+    var zone5Minutes = 0.0 // 90-100%
+
+    // Estimate minutes per reading (assume readings are ~5 min apart on average)
+    val avgMinutesPerReading = if (readings.size >= 2) {
+        val totalSpan = java.time.Duration.between(readings.first().timestamp, readings.last().timestamp).toMinutes().toDouble()
+        (totalSpan / readings.size).coerceIn(1.0, 15.0)
+    } else 5.0
+
+    readings.forEach { reading ->
+        val pct = reading.bpm.toDouble() / maxHr * 100
+        when {
+            pct >= 90 -> zone5Minutes += avgMinutesPerReading
+            pct >= 80 -> zone4Minutes += avgMinutesPerReading
+            pct >= 70 -> zone3Minutes += avgMinutesPerReading
+            pct >= 60 -> zone2Minutes += avgMinutesPerReading
+            pct >= 50 -> zone1Minutes += avgMinutesPerReading
+        }
+    }
+
+    // WHOOP-style strain: exponential weighting for higher zones
+    val strain = (zone1Minutes * 0.02 + zone2Minutes * 0.06 + zone3Minutes * 0.15 + zone4Minutes * 0.40 + zone5Minutes * 1.0)
+        .coerceIn(0.0, 21.0)
+
+    return (strain * 10).roundToInt() / 10.0
+}
+
+// ═══════════════════════════════════════════════════════════
+// Confetti Overlay
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun ConfettiOverlay(trigger: Boolean, onComplete: () -> Unit) {
+    if (!trigger) return
+    val c = LocalAppColors.current
+    val particles = remember {
+        List(50) {
+            ConfettiParticle(
+                x = (Math.random() * 1f).toFloat(),
+                y = -0.1f,
+                speedX = ((Math.random() - 0.5) * 0.02f).toFloat(),
+                speedY = ((Math.random() * 0.015) + 0.005).toFloat(),
+                size = ((Math.random() * 8 + 4)).toFloat(),
+                color = listOf(
+                    Color(0xFFFF6B6B), Color(0xFFFFD93D), Color(0xFF6BCB77),
+                    Color(0xFF4D96FF), Color(0xFFFF6EC7), Color(0xFFA855F7)
+                ).random(),
+                rotation = (Math.random() * 360).toFloat(),
+                rotationSpeed = ((Math.random() - 0.5) * 10).toFloat()
+            )
+        }
+    }
+
+    val progress by rememberInfiniteTransition(label = "confetti").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(50, easing = LinearEasing)),
+        label = "confetti_tick"
+    )
+
+    var elapsed by remember { mutableStateOf(0f) }
+    LaunchedEffect(progress) {
+        elapsed += 0.05f
+        if (elapsed > 3f) onComplete()
+    }
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        particles.forEach { p ->
+            val currentY = p.y + p.speedY * elapsed * 60
+            val currentX = p.x + p.speedX * elapsed * 60
+            if (currentY <= 1.2f) {
+                val alpha = (1f - (currentY).coerceIn(0f, 1f) * 0.5f).coerceIn(0f, 1f)
+                drawCircle(
+                    color = p.color.copy(alpha = alpha),
+                    radius = p.size,
+                    center = Offset(currentX * size.width, currentY * size.height)
+                )
+            }
+        }
+    }
+}
+
+private data class ConfettiParticle(
+    val x: Float, val y: Float,
+    val speedX: Float, val speedY: Float,
+    val size: Float, val color: Color,
+    val rotation: Float, val rotationSpeed: Float
+)
 
 // ═══════════════════════════════════════════════════════════
 // Sparkline Data Generators

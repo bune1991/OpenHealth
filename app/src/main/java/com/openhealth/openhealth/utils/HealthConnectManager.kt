@@ -1161,12 +1161,26 @@ object HealthConnectManager {
                 )
             )
 
-            val latestRecord = response.records.maxByOrNull { it.time } ?: return BodyTemperatureData()
+            val latestRecord = response.records.maxByOrNull { it.time }
 
-            BodyTemperatureData(
-                temperatureCelsius = latestRecord.temperature.inCelsius,
-                measurementTime = latestRecord.time
-            )
+            if (latestRecord != null) {
+                return BodyTemperatureData(
+                    temperatureCelsius = latestRecord.temperature.inCelsius,
+                    measurementTime = latestRecord.time
+                )
+            }
+
+            // Fallback: use skin temperature variation if body temp not available
+            val skinTemp = getSkinTemperature()
+            if (skinTemp.temperatureCelsius != null && skinTemp.temperatureCelsius != 0.0) {
+                return BodyTemperatureData(
+                    temperatureCelsius = skinTemp.temperatureCelsius,
+                    measurementTime = skinTemp.measurementTime,
+                    isSkinTemperature = true
+                )
+            }
+
+            BodyTemperatureData()
         } catch (e: Exception) {
             Log.e("HealthConnectManager", "Error reading body temperature: ${e.message}", e)
             BodyTemperatureData()
@@ -1194,28 +1208,40 @@ object HealthConnectManager {
             )
 
             val records = response.records
-            val latestRecord = records.maxByOrNull { it.time }
-            val latestValue = latestRecord?.heartRateVariabilityMillis ?: 0.0
+            if (records.isEmpty()) return HeartRateVariabilityData()
 
-            // Stats for today only
-            val todayStart = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant()
-            val todayRecords = records.filter { it.time >= todayStart }
-            val todayValues = todayRecords.map { it.heartRateVariabilityMillis }
-            val avg = if (todayValues.isNotEmpty()) todayValues.average() else latestValue
-            val min = todayValues.minOrNull() ?: latestValue
-            val max = todayValues.maxOrNull() ?: latestValue
+            // Use overnight/sleep-period readings (like Garmin) — 8 PM yesterday to 10 AM today
+            val today = LocalDate.now(ZoneId.systemDefault())
+            val sleepStart = today.minusDays(1).atTime(LocalTime.of(20, 0)).atZone(ZoneId.systemDefault()).toInstant()
+            val sleepEnd = today.atTime(LocalTime.of(10, 0)).atZone(ZoneId.systemDefault()).toInstant()
 
-            Log.d("OpenHealth_HRV", "Records: ${records.size} (today: ${todayRecords.size}), Latest: ${String.format("%.1f", latestValue)}, Avg: ${String.format("%.1f", avg)}, Range: ${String.format("%.0f", min)}-${String.format("%.0f", max)} ms")
+            val sleepRecords = records.filter { it.time >= sleepStart && it.time <= sleepEnd }
+            val useRecords = if (sleepRecords.isNotEmpty()) sleepRecords else records
 
-            if (latestRecord == null) return HeartRateVariabilityData()
+            val values = useRecords.map { it.heartRateVariabilityMillis }.filter { it > 0 }
+            if (values.isEmpty()) return HeartRateVariabilityData()
+
+            val avg = values.average()
+            val min = values.min()
+            val max = values.max()
+            val latestRecord = useRecords.maxByOrNull { it.time }!!
+
+            // Previous day's avg for comparison
+            val prevDayStart = today.minusDays(2).atTime(LocalTime.of(20, 0)).atZone(ZoneId.systemDefault()).toInstant()
+            val prevDayEnd = today.minusDays(1).atTime(LocalTime.of(10, 0)).atZone(ZoneId.systemDefault()).toInstant()
+            val prevRecords = records.filter { it.time >= prevDayStart && it.time <= prevDayEnd }
+            val prevAvg = if (prevRecords.isNotEmpty()) prevRecords.map { it.heartRateVariabilityMillis }.filter { it > 0 }.average() else avg
+
+            Log.d("OpenHealth_HRV", "Records: ${records.size} (sleep: ${sleepRecords.size}), Overnight Avg: ${String.format("%.1f", avg)}, Range: ${String.format("%.0f", min)}-${String.format("%.0f", max)} ms, Prev: ${String.format("%.1f", prevAvg)}")
 
             HeartRateVariabilityData(
-                rmssdMs = latestValue,
+                rmssdMs = avg,
                 avgMs = avg,
                 minMs = min,
                 maxMs = max,
-                readingCount = todayRecords.size,
-                measurementTime = latestRecord.time
+                readingCount = useRecords.size,
+                measurementTime = latestRecord.time,
+                previousDayAvg = prevAvg
             )
         } catch (e: Exception) {
             Log.e("OpenHealth_HRV", "Error reading HRV: ${e.message}", e)
@@ -1315,27 +1341,33 @@ object HealthConnectManager {
             }
 
             val records = allRecords.toList()
-            val latestRecord = records.maxByOrNull { it.time }
-            val latestValue = latestRecord?.rate?.toDouble() ?: 0.0
+            if (records.isEmpty()) return RespiratoryRateData()
 
-            // Stats for today only
-            val todayStartRR = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant()
-            val todayRecords = records.filter { it.time >= todayStartRR }
-            val todayRates = todayRecords.map { it.rate }
-            val avgRate = if (todayRates.isNotEmpty()) todayRates.average() else latestValue
-            val minRate = todayRates.minOrNull() ?: latestValue
-            val maxRate = todayRates.maxOrNull() ?: latestValue
+            // Use overnight/sleep-period readings (like Garmin) — 8 PM yesterday to 10 AM today
+            val today = LocalDate.now(ZoneId.systemDefault())
+            val sleepStartRR = today.minusDays(1).atTime(LocalTime.of(20, 0)).atZone(ZoneId.systemDefault()).toInstant()
+            val sleepEndRR = today.atTime(LocalTime.of(10, 0)).atZone(ZoneId.systemDefault()).toInstant()
 
-            Log.d("OpenHealth_RespiratoryRate", "Records: ${records.size} (today: ${todayRecords.size}), Latest: $latestValue, Avg: ${String.format("%.1f", avgRate)}, Range: ${String.format("%.0f", minRate)}-${String.format("%.0f", maxRate)} breaths/min")
+            val sleepRecords = records.filter { it.time >= sleepStartRR && it.time <= sleepEndRR }
+            val useRecords = if (sleepRecords.isNotEmpty()) sleepRecords else records
 
-            if (latestRecord == null) return RespiratoryRateData()
+            // Filter out 0 and invalid readings
+            val validRates = useRecords.map { it.rate }.filter { it > 0 }
+            if (validRates.isEmpty()) return RespiratoryRateData()
+
+            val avgRate = validRates.average()
+            val minRate = validRates.min()
+            val maxRate = validRates.max()
+            val latestRecord = useRecords.maxByOrNull { it.time }!!
+
+            Log.d("OpenHealth_RespiratoryRate", "Records: ${records.size} (sleep: ${sleepRecords.size}), Overnight Avg: ${String.format("%.1f", avgRate)}, Range: ${String.format("%.0f", minRate)}-${String.format("%.0f", maxRate)} breaths/min")
 
             RespiratoryRateData(
-                ratePerMinute = latestValue,
+                ratePerMinute = avgRate,
                 avgRate = avgRate,
                 minRate = minRate,
                 maxRate = maxRate,
-                readingCount = todayRecords.size,
+                readingCount = useRecords.size,
                 measurementTime = latestRecord.time
             )
         } catch (e: Exception) {

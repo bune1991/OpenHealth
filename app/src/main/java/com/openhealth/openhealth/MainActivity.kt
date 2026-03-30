@@ -66,6 +66,8 @@ import com.openhealth.openhealth.screens.OnboardingScreen
 import com.openhealth.openhealth.viewmodel.ReportsData
 import com.openhealth.openhealth.screens.SettingsScreen
 import com.openhealth.openhealth.screens.PerformanceScreen
+import com.openhealth.openhealth.screens.SleepCoachScreen
+import com.openhealth.openhealth.screens.FitnessCoachScreen
 import com.openhealth.openhealth.screens.WorkoutDetailScreen
 import com.openhealth.openhealth.ui.theme.*
 import com.openhealth.openhealth.viewmodel.HealthViewModel
@@ -96,6 +98,7 @@ class MainActivity : ComponentActivity() {
         // Schedule periodic widget updates and daily summary notification
         com.openhealth.openhealth.widget.WidgetUpdateWorker.enqueue(this)
         com.openhealth.openhealth.widget.DailySummaryWorker.enqueue(this)
+        com.openhealth.openhealth.widget.WeeklyAiSummaryWorker.enqueue(this)
 
         // Back press handling is done in setContent via LaunchedEffect
 
@@ -112,12 +115,16 @@ class MainActivity : ComponentActivity() {
                 viewModel.showAiInsights.collectAsState().value ||
                 viewModel.showHydration.collectAsState().value ||
                 viewModel.showPerformance.collectAsState().value ||
-                viewModel.showWorkoutDetail.collectAsState().value
+                viewModel.showWorkoutDetail.collectAsState().value ||
+                viewModel.showSleepCoach.collectAsState().value ||
+                viewModel.showFitnessCoach.collectAsState().value
             androidx.compose.runtime.LaunchedEffect(hasSubScreen) {
                 onBackPressedDispatcher.addCallback(this@MainActivity) {
                     if (::viewModel.isInitialized) {
                         when {
                             viewModel.showWorkoutDetail.value -> viewModel.hideWorkoutDetail()
+                            viewModel.showSleepCoach.value -> viewModel.hideSleepCoach()
+                            viewModel.showFitnessCoach.value -> viewModel.hideFitnessCoach()
                             viewModel.showPerformance.value -> viewModel.hidePerformance()
                             viewModel.showHydration.value -> viewModel.hideHydration()
                             viewModel.showSettings.value -> viewModel.hideSettings()
@@ -155,6 +162,8 @@ class MainActivity : ComponentActivity() {
                 val showHydration by viewModel.showHydration.collectAsState()
                 val showPerformance by viewModel.showPerformance.collectAsState()
                 val showWorkoutDetail by viewModel.showWorkoutDetail.collectAsState()
+                val showSleepCoach by viewModel.showSleepCoach.collectAsState()
+                val showFitnessCoach by viewModel.showFitnessCoach.collectAsState()
                 val selectedWorkoutSession by viewModel.selectedWorkoutSession.collectAsState()
                 val hydrationEntries by viewModel.hydrationEntries.collectAsState()
                 val hydrationDailyTotal by viewModel.hydrationDailyTotal.collectAsState()
@@ -198,6 +207,54 @@ class MainActivity : ComponentActivity() {
                                                 session = selectedWorkoutSession!!,
                                                 healthData = healthData,
                                                 onBackClick = { viewModel.hideWorkoutDetail() }
+                                            )
+                                        }
+                                    }
+                                    showSleepCoach -> {
+                                        SlideInScreen {
+                                            SleepCoachScreen(
+                                                healthData = healthData,
+                                                onBackClick = { viewModel.hideSleepCoach() }
+                                            )
+                                        }
+                                    }
+                                    showFitnessCoach -> {
+                                        SlideInScreen {
+                                            // Calculate readiness and strain for fitness coach
+                                            val hrv = healthData.heartRateVariability.rmssdMs ?: 30.0
+                                            val sleepH = healthData.sleep.totalDuration?.toMinutes()?.div(60.0) ?: 0.0
+                                            val rhr = healthData.restingHeartRate.bpm ?: 70
+                                            val hrvS = ((hrv - 20.0) / 60.0 * 100.0).coerceIn(0.0, 100.0) * 0.40
+                                            val sleepS = (if (sleepH >= 8) 100.0 else if (sleepH >= 7) 85.0 else if (sleepH >= 6) 65.0 else if (sleepH >= 5) 45.0 else 20.0) * 0.25
+                                            val rhrS = (if (rhr <= 55) 90.0 else if (rhr <= 60) 80.0 else if (rhr <= 65) 70.0 else if (rhr <= 70) 55.0 else 30.0) * 0.10
+                                            val readiness = (hrvS + sleepS + rhrS + 50.0 * 0.25).toInt().coerceIn(5, 100)
+
+                                            val readings = healthData.heartRate.readings
+                                            val maxHr = 190
+                                            var strain = 0.0
+                                            if (readings.isNotEmpty()) {
+                                                val avgMin = if (readings.size >= 2) {
+                                                    val span = java.time.Duration.between(readings.first().timestamp, readings.last().timestamp).toMinutes().toDouble()
+                                                    (span / readings.size).coerceIn(1.0, 15.0)
+                                                } else 5.0
+                                                readings.forEach { r ->
+                                                    val pct = r.bpm.toDouble() / maxHr * 100
+                                                    when {
+                                                        pct >= 90 -> strain += avgMin * 1.0
+                                                        pct >= 80 -> strain += avgMin * 0.40
+                                                        pct >= 70 -> strain += avgMin * 0.15
+                                                        pct >= 60 -> strain += avgMin * 0.06
+                                                        pct >= 50 -> strain += avgMin * 0.02
+                                                    }
+                                                }
+                                                strain = strain.coerceIn(0.0, 21.0)
+                                            }
+
+                                            FitnessCoachScreen(
+                                                healthData = healthData,
+                                                readinessScore = readiness,
+                                                strainScore = (strain * 10).toInt() / 10.0,
+                                                onBackClick = { viewModel.hideFitnessCoach() }
                                             )
                                         }
                                     }
@@ -337,6 +394,8 @@ class MainActivity : ComponentActivity() {
                                         val stepsStreak by viewModel.stepsStreak.collectAsState()
                                         val bodyExpanded by viewModel.bodyExpanded.collectAsState()
                                         val vitalsExpanded by viewModel.vitalsExpanded.collectAsState()
+                                        val personalRecords by viewModel.personalRecords.collectAsState()
+                                        val goalCelebration by viewModel.goalCelebration.collectAsState()
                                         DashboardScreen(
                                             healthData = healthData,
                                             isLoading = isLoading,
@@ -390,6 +449,8 @@ class MainActivity : ComponentActivity() {
                                             onAiInsightsClick = { viewModel.showAiInsights() },
                                             onHydrationClick = { viewModel.showHydration() },
                                             onPerformanceClick = { viewModel.showPerformance() },
+                                            onSleepCoachClick = { viewModel.showSleepCoach() },
+                                            onFitnessCoachClick = { viewModel.showFitnessCoach() },
                                             selectedTab = viewModel.selectedTab.collectAsState().value,
                                             onTabChanged = { viewModel.setSelectedTab(it) },
                                             hydrationDailyTotalMl = hydrationDailyTotal,
@@ -405,7 +466,10 @@ class MainActivity : ComponentActivity() {
                                             initialScrollOffset = scrollOffset,
                                             onScrollPositionChanged = { index, offset ->
                                                 viewModel.saveDashboardScrollPosition(index, offset)
-                                            }
+                                            },
+                                            personalRecords = personalRecords,
+                                            goalCelebration = goalCelebration,
+                                            onClearCelebration = { viewModel.clearGoalCelebration() }
                                         )
                                     }
                                 }

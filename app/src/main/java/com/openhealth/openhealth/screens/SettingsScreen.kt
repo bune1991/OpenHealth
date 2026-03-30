@@ -204,7 +204,8 @@ fun SettingsScreen(
                             com.openhealth.openhealth.model.AiProvider.CLAUDE to "Claude",
                             com.openhealth.openhealth.model.AiProvider.GEMINI to "Gemini",
                             com.openhealth.openhealth.model.AiProvider.CHATGPT to "ChatGPT",
-                            com.openhealth.openhealth.model.AiProvider.CUSTOM to "Custom"
+                            com.openhealth.openhealth.model.AiProvider.CUSTOM to "Custom",
+                            com.openhealth.openhealth.model.AiProvider.ON_DEVICE to "On-Device"
                         ).forEach { (provider, label) ->
                             val isSelected = settings.aiProvider == provider
                             Box(
@@ -229,8 +230,8 @@ fun SettingsScreen(
                     }
                 }
 
-                // API Key input
-                item {
+                // API Key input (hide for on-device)
+                if (settings.aiProvider != com.openhealth.openhealth.model.AiProvider.ON_DEVICE) { item {
                     val currentKey = when (settings.aiProvider) {
                         com.openhealth.openhealth.model.AiProvider.CLAUDE -> settings.aiClaudeKey
                         com.openhealth.openhealth.model.AiProvider.GEMINI -> settings.aiGeminiKey
@@ -273,6 +274,27 @@ fun SettingsScreen(
                             onValueChange = { onSettingsChanged(settings.copy(aiCustomModel = it)) },
                             placeholder = "e.g. llama3, mistral, gemma2"
                         )
+                    }
+                } }
+
+                // On-device info
+                if (settings.aiProvider == com.openhealth.openhealth.model.AiProvider.ON_DEVICE) {
+                    item {
+                        val c = LocalAppColors.current
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(c.primary.copy(alpha = 0.1f))
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Gemini Nano runs entirely on your device. No API key needed. No data leaves your phone. Requires Pixel 9+, Samsung S25+, or similar flagship.",
+                                fontSize = 12.sp,
+                                color = c.onSurfaceVariant,
+                                lineHeight = 18.sp
+                            )
+                        }
                     }
                 }
             }

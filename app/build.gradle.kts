@@ -126,4 +126,8 @@ dependencies {
 
     // Splash Screen API (Android 12+)
     implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // On-device AI: Gemini Nano via ML Kit GenAI requires Kotlin 2.2+
+    // Will be enabled when Kotlin is upgraded. For now, ON_DEVICE option
+    // shows a setup guide to users.
 }

@@ -156,4 +156,27 @@ object HealthPromptBuilder {
 
         return sb.toString()
     }
+
+    fun buildWeeklySummaryPrompt(
+        avgSteps: Long = 0,
+        avgHr: Int = 0,
+        avgSleepHours: Int = 0,
+        avgSleepMinutes: Int = 0
+    ): String {
+        val sb = StringBuilder()
+        sb.appendLine("You are an elite health coach. Write a brief weekly health summary for a notification (max 200 words).")
+        sb.appendLine()
+        sb.appendLine("This week's averages:")
+        sb.appendLine("- Steps: $avgSteps/day")
+        if (avgHr > 0) sb.appendLine("- Heart Rate: $avgHr bpm")
+        if (avgSleepHours > 0 || avgSleepMinutes > 0) sb.appendLine("- Sleep: ${avgSleepHours}h ${avgSleepMinutes}m")
+        sb.appendLine()
+        sb.appendLine("Provide:")
+        sb.appendLine("1. One sentence overall assessment")
+        sb.appendLine("2. What went well this week")
+        sb.appendLine("3. One focus area for next week")
+        sb.appendLine()
+        sb.appendLine("Be encouraging but specific. Use the actual numbers.")
+        return sb.toString()
+    }
 }

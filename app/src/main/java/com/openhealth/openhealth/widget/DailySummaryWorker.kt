@@ -39,7 +39,17 @@ class DailySummaryWorker(
         val sleepText = if (sleepH > 0 || sleepM > 0) "${sleepH}h${sleepM}m" else "No data"
         val hrText = if (hr > 0) "$hr bpm" else "No data"
 
-        val message = "Yesterday: $steps steps, $sleepText sleep, HR $hrText"
+        // Calculate readiness from cached data
+        val hrvPrefs = applicationContext.getSharedPreferences("openhealth_widget", android.content.Context.MODE_PRIVATE)
+        val readiness = calculateReadinessFromCache(hrvPrefs)
+        val readinessLabel = when {
+            readiness >= 80 -> "Excellent"
+            readiness >= 60 -> "Good"
+            readiness >= 40 -> "Fair"
+            else -> "Low"
+        }
+
+        val message = "Readiness: $readiness/100 ($readinessLabel) | $steps steps, $sleepText sleep, HR $hrText"
 
         showNotification(applicationContext, message)
         return Result.success()
@@ -75,6 +85,22 @@ class DailySummaryWorker(
             .build()
 
         notificationManager.notify(1001, notification)
+    }
+
+    private fun calculateReadinessFromCache(prefs: android.content.SharedPreferences): Int {
+        val hr = prefs.getInt("heart_rate", 70)
+        val sleepH = prefs.getInt("sleep_hours", 0)
+        val sleepHours = sleepH.toDouble()
+        // Simplified readiness from cached data
+        val sleepScore = when {
+            sleepHours >= 8 -> 100.0; sleepHours >= 7 -> 85.0; sleepHours >= 6 -> 65.0
+            sleepHours >= 5 -> 45.0; else -> 20.0
+        }
+        val rhrScore = when {
+            hr <= 55 -> 90.0; hr <= 60 -> 80.0; hr <= 65 -> 70.0
+            hr <= 70 -> 55.0; else -> 30.0
+        }
+        return (sleepScore * 0.50 + rhrScore * 0.30 + 50.0 * 0.20).toInt().coerceIn(5, 100)
     }
 
     companion object {

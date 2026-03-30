@@ -47,6 +47,8 @@ import com.openhealth.openhealth.utils.AiHealthService
 import com.openhealth.openhealth.utils.AiInsightCache
 import com.openhealth.openhealth.utils.HealthConnectManager
 import com.openhealth.openhealth.utils.HealthPromptBuilder
+import com.openhealth.openhealth.utils.PersonalRecord
+import com.openhealth.openhealth.utils.PersonalRecordsManager
 import com.openhealth.openhealth.utils.PermissionManager
 import com.openhealth.openhealth.utils.SettingsManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -126,6 +128,16 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     val weatherData: StateFlow<com.openhealth.openhealth.utils.WeatherData> = _weatherData.asStateFlow()
     private val weatherService = com.openhealth.openhealth.utils.WeatherService()
 
+    // Personal Records
+    private val personalRecordsManager = PersonalRecordsManager(context)
+    private val _personalRecords = MutableStateFlow<List<PersonalRecord>>(emptyList())
+    val personalRecords: StateFlow<List<PersonalRecord>> = _personalRecords.asStateFlow()
+
+    // Goal celebration event (null = no celebration, string = what was achieved)
+    private val _goalCelebration = MutableStateFlow<String?>(null)
+    val goalCelebration: StateFlow<String?> = _goalCelebration.asStateFlow()
+    fun clearGoalCelebration() { _goalCelebration.value = null }
+
     // AI Insights
     private val _showAiInsights = MutableStateFlow(false)
     val showAiInsights: StateFlow<Boolean> = _showAiInsights.asStateFlow()
@@ -192,6 +204,18 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     private val _showPerformance = MutableStateFlow(false)
     val showPerformance: StateFlow<Boolean> = _showPerformance.asStateFlow()
 
+    // Sleep Coach navigation
+    private val _showSleepCoach = MutableStateFlow(false)
+    val showSleepCoach: StateFlow<Boolean> = _showSleepCoach.asStateFlow()
+    fun showSleepCoach() { _showSleepCoach.value = true }
+    fun hideSleepCoach() { _showSleepCoach.value = false }
+
+    // Fitness Coach navigation
+    private val _showFitnessCoach = MutableStateFlow(false)
+    val showFitnessCoach: StateFlow<Boolean> = _showFitnessCoach.asStateFlow()
+    fun showFitnessCoach() { _showFitnessCoach.value = true }
+    fun hideFitnessCoach() { _showFitnessCoach.value = false }
+
     // Workout detail navigation
     private val _showWorkoutDetail = MutableStateFlow(false)
     val showWorkoutDetail: StateFlow<Boolean> = _showWorkoutDetail.asStateFlow()
@@ -207,6 +231,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
         PermissionManager.init(context)
         checkHealthConnectAvailability()
         loadHydrationEntries()
+        _personalRecords.value = personalRecordsManager.getRecords()
     }
 
     private fun checkHealthConnectAvailability() {
@@ -500,6 +525,21 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 } catch (e: Exception) {
                     Log.e("OpenHealth_Weather", "Error: ${e.message}")
                 }
+
+                // Check personal records
+                val newRecords = personalRecordsManager.checkAndUpdate(newHealthData)
+                _personalRecords.value = personalRecordsManager.getRecords()
+                if (newRecords.isNotEmpty()) {
+                    _goalCelebration.value = newRecords.first()
+                }
+
+                // Check goal celebrations (once per day per goal)
+                val celebratedPrefs = context.getSharedPreferences("celebrations", android.content.Context.MODE_PRIVATE)
+                val todayKey = today.toString()
+                if (newHealthData.steps.count >= currentSettings.stepsGoal && !celebratedPrefs.getBoolean("steps_$todayKey", false)) {
+                    _goalCelebration.value = "Step goal reached!"
+                    celebratedPrefs.edit().putBoolean("steps_$todayKey", true).apply()
+                }
             } catch (e: Exception) {
                 Log.e("HealthViewModel", "Error refreshing data: ${e.message}", e)
                 _isLoading.value = false
@@ -615,6 +655,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                     com.openhealth.openhealth.model.AiProvider.GEMINI -> currentSettings.aiGeminiKey
                     com.openhealth.openhealth.model.AiProvider.CHATGPT -> currentSettings.aiChatgptKey
                     com.openhealth.openhealth.model.AiProvider.CUSTOM -> currentSettings.aiCustomKey
+                    com.openhealth.openhealth.model.AiProvider.ON_DEVICE -> ""
                     com.openhealth.openhealth.model.AiProvider.NONE -> ""
                 }
 
@@ -653,10 +694,11 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
             com.openhealth.openhealth.model.AiProvider.GEMINI -> currentSettings.aiGeminiKey
             com.openhealth.openhealth.model.AiProvider.CHATGPT -> currentSettings.aiChatgptKey
             com.openhealth.openhealth.model.AiProvider.CUSTOM -> currentSettings.aiCustomKey
+            com.openhealth.openhealth.model.AiProvider.ON_DEVICE -> ""
             com.openhealth.openhealth.model.AiProvider.NONE -> ""
         }
 
-        if (currentSettings.aiProvider == com.openhealth.openhealth.model.AiProvider.NONE || (activeKey.isBlank() && currentSettings.aiProvider != com.openhealth.openhealth.model.AiProvider.CUSTOM)) {
+        if (currentSettings.aiProvider == com.openhealth.openhealth.model.AiProvider.NONE || (activeKey.isBlank() && currentSettings.aiProvider != com.openhealth.openhealth.model.AiProvider.CUSTOM && currentSettings.aiProvider != com.openhealth.openhealth.model.AiProvider.ON_DEVICE)) {
             _aiInsightError.value = "Configure an AI provider and API key in Settings"
             return
         }

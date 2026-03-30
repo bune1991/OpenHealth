@@ -261,7 +261,8 @@ data class BloodPressureData(
 // Body Temperature Data
 data class BodyTemperatureData(
     val temperatureCelsius: Double? = null,
-    val measurementTime: Instant? = null
+    val measurementTime: Instant? = null,
+    val isSkinTemperature: Boolean = false
 )
 
 // Heart Rate Variability (HRV) Data
@@ -271,7 +272,8 @@ data class HeartRateVariabilityData(
     val minMs: Double? = null,
     val maxMs: Double? = null,
     val readingCount: Int = 0,
-    val measurementTime: Instant? = null
+    val measurementTime: Instant? = null,
+    val previousDayAvg: Double? = null
 )
 
 // Oxygen Saturation (SpO2) Data

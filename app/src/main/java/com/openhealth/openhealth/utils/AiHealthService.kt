@@ -21,6 +21,8 @@ class AiHealthService {
 
     private val jsonMedia = "application/json; charset=utf-8".toMediaType()
 
+    // On-device Gemini Nano client (Play Services)
+
     suspend fun getInsights(
         provider: AiProvider,
         apiKey: String,
@@ -29,6 +31,11 @@ class AiHealthService {
         customModel: String = ""
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
+            // Handle on-device AI separately (no network needed)
+            if (provider == AiProvider.ON_DEVICE) {
+                return@withContext getOnDeviceInsights(healthSummaryPrompt)
+            }
+
             val (request) = when (provider) {
                 AiProvider.CLAUDE -> buildClaudeRequest(apiKey, healthSummaryPrompt)
                 AiProvider.GEMINI -> buildGeminiRequest(apiKey, healthSummaryPrompt)
@@ -36,6 +43,9 @@ class AiHealthService {
                 AiProvider.CUSTOM -> buildCustomRequest(apiKey, healthSummaryPrompt, customUrl, customModel)
                 AiProvider.NONE -> return@withContext Result.failure(
                     IllegalStateException("No AI provider configured")
+                )
+                AiProvider.ON_DEVICE -> return@withContext Result.failure(
+                    IllegalStateException("Handled above")
                 )
             }
 
@@ -55,8 +65,8 @@ class AiHealthService {
                 AiProvider.CLAUDE -> parseClaudeResponse(body)
                 AiProvider.GEMINI -> parseGeminiResponse(body)
                 AiProvider.CHATGPT -> parseOpenAiResponse(body)
-                AiProvider.CUSTOM -> parseOpenAiResponse(body) // OpenAI-compatible format
-                AiProvider.NONE -> ""
+                AiProvider.CUSTOM -> parseOpenAiResponse(body)
+                AiProvider.NONE, AiProvider.ON_DEVICE -> ""
             }
 
             Log.d("AiHealthService", "Got response: ${text.take(100)}...")
@@ -65,6 +75,16 @@ class AiHealthService {
             Log.e("AiHealthService", "Error: ${e.message}", e)
             Result.failure(e)
         }
+    }
+
+    private suspend fun getOnDeviceInsights(prompt: String): Result<String> {
+        // On-device Gemini Nano requires ML Kit GenAI (Kotlin 2.2+)
+        // Currently blocked by Kotlin version mismatch. Will be enabled in a future update.
+        return Result.failure(Exception(
+            "On-device AI (Gemini Nano) is coming soon! " +
+            "It requires ML Kit GenAI which needs a Kotlin upgrade. " +
+            "For now, use Claude, Gemini, or ChatGPT with an API key."
+        ))
     }
 
     // Claude (Anthropic)
