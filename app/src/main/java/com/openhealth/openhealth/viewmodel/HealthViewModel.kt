@@ -672,7 +672,7 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
                 )
 
                 result.onSuccess { text: String ->
-                    _chatMessages.value = _chatMessages.value + ChatMessage(text, false)
+                    _chatMessages.value = _chatMessages.value + ChatMessage(stripMarkdown(text), false)
                 }.onFailure { err: Throwable ->
                     _chatMessages.value = _chatMessages.value + ChatMessage("Error: ${err.message}", false)
                 }
@@ -685,6 +685,16 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
 
     fun clearChat() {
         _chatMessages.value = emptyList()
+    }
+
+    private fun stripMarkdown(text: String): String {
+        return text
+            .replace(Regex("^#{1,4}\\s*", RegexOption.MULTILINE), "")
+            .replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1")
+            .replace(Regex("^\\*\\s+", RegexOption.MULTILINE), "• ")
+            .replace(Regex("^-\\s+", RegexOption.MULTILINE), "• ")
+            .replace(Regex("^\\d+\\.\\s*\\*\\*", RegexOption.MULTILINE), "")
+            .trim()
     }
 
     private fun fetchAiInsight(forceRefresh: Boolean) {
