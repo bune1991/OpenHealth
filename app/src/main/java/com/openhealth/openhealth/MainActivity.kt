@@ -9,7 +9,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
+// Health Connect permissions use PermissionController.createRequestPermissionResultContract()
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,14 +78,13 @@ class MainActivity : ComponentActivity() {
 
     // Permission launcher for Health Connect
     private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val allGranted = permissions.entries.all { it.value }
-        if (allGranted) {
-            Log.d("MainActivity", "All permissions granted")
+        PermissionController.createRequestPermissionResultContract()
+    ) { grantedPermissions ->
+        if (grantedPermissions.isNotEmpty()) {
+            Log.d("MainActivity", "Health Connect permissions granted: ${grantedPermissions.size}")
             viewModel.onPermissionsGranted()
         } else {
-            Log.w("MainActivity", "Some permissions denied")
+            Log.w("MainActivity", "No permissions granted")
             viewModel.onPermissionsDenied()
         }
     }
@@ -485,7 +484,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestHealthConnectPermissions() {
-        val permissions = viewModel.requiredPermissions.map { it.toString() }.toTypedArray()
+        val permissions = viewModel.requiredPermissions.map { it.toString() }.toSet()
         requestPermissionLauncher.launch(permissions)
     }
 
